@@ -83,7 +83,12 @@ func TestErrataIDsAreDistinctAndWellFormed(t *testing.T) {
 
 // TestParseHexRejectsWhatIsNotOnTheGrid (p. 3: eight columns of ten rows).
 func TestParseHexRejectsWhatIsNotOnTheGrid(t *testing.T) {
-	for _, bad := range []string{"", "01", "010101", "0000", "0900", "0101x", "0111", "0011", "ab01", "01ab"} {
+	for _, bad := range []string{
+		"", "01", "010101", "0000", "0900", "0101x", "0111", "0011", "ab01", "01ab",
+		// strconv.Atoi would read the sign and hand back 0101 for each of
+		// these; "four digits" has to mean four digits.
+		"+101", "01+1", "+1+1", "-101",
+	} {
 		if _, err := worldgen.ParseHex(bad); !errors.Is(err, worldgen.ErrBadHex) {
 			t.Errorf("ParseHex(%q): err = %v, want ErrBadHex", bad, err)
 		}

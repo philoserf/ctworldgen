@@ -124,7 +124,7 @@ func (g *generator) occurrence() {
 		}
 	}
 
-	g.outcome(StepOccurrence, "", fmt.Sprintf("%s in %d hexes", plural(len(g.sub.Worlds), "world"), Hexes), 0)
+	g.outcome(StepOccurrence, "", fmt.Sprintf("%s in %d hexes", Plural(len(g.sub.Worlds), "world"), Hexes), 0)
 }
 
 // starports is p. 1 step 2 and, with it, the p. 5 chart's base throws:
@@ -203,7 +203,7 @@ func (g *generator) routes() error {
 		}
 	}
 
-	g.outcome(StepRoutes, "", plural(len(g.sub.Routes), "space lane")+" charted", 0)
+	g.outcome(StepRoutes, "", Plural(len(g.sub.Routes), "space lane")+" charted", 0)
 
 	return nil
 }

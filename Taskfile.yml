@@ -137,8 +137,13 @@ tasks:
           fi
         done
         [ "$failed" -eq 0 ] || exit 1
+    # tables went 23 -> 24 when checkStarportFacilities was added: the guard
+    # itself is tested, but loadStarports' `return err` for it is one more
+    # propagation line the embedded chart — which is valid — cannot reach,
+    # the same shape as the ones already there for loadBaseTargets and
+    # loadStarportThrows.
     vars:
-      CEILINGS: "cmd/ctworldgen:33 dice:0 render:2 tables:23 worldgen:25"
+      CEILINGS: "cmd/ctworldgen:33 dice:0 render:2 tables:24 worldgen:25"
 
   # The fixtures under worldgen/testdata and render/testdata are the
   # engine's and renderer's own output, compared byte for byte.

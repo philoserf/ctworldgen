@@ -53,7 +53,7 @@ func title(sub *worldgen.Subsector) string {
 func summary(sub *worldgen.Subsector) string {
 	lines := []string{
 		fmt.Sprintf("%s in %d hexes; %s.",
-			plural(len(sub.Worlds), "world"), worldgen.Hexes, plural(len(sub.Routes), "space lane")),
+			worldgen.Plural(len(sub.Worlds), "world"), worldgen.Hexes, worldgen.Plural(len(sub.Routes), "space lane")),
 		fmt.Sprintf("Generated from seed %d, occurrence DM %+d.", sub.RNG.Seed, sub.Inputs.OccurrenceDM),
 		"Book 3 pp. 1–12, © 1977 text. Characteristics are written as the string of",
 		"digits of p. 4: starport, size, atmosphere, hydrographics, population,",
@@ -77,7 +77,7 @@ func writeWorldTable(b *strings.Builder, sub *worldgen.Subsector) {
 	b.WriteString("| Hex | Name | Profile | Bases |\n| --- | --- | --- | --- |\n")
 
 	for _, w := range sub.Worlds {
-		fmt.Fprintf(b, "| %s | %s | %s | %s |\n", w.Hex, w.Name, w.Profile, bases(w))
+		fmt.Fprintf(b, "| %s | %s | %s | %s |\n", w.Hex, cell(w.Name), w.Profile, bases(w))
 	}
 
 	b.WriteString("\n")
@@ -99,6 +99,22 @@ func writeLaneTable(b *strings.Builder, sub *worldgen.Subsector) {
 	}
 
 	b.WriteString("\n")
+}
+
+// cell renders a value into a Markdown table cell.
+//
+// Naming each world is step 3 of the p. 12 checklist and the book prints no
+// table for it, so the name is the referee's, written into the record by
+// hand afterwards. That makes it the one string on this page that can hold
+// a pipe or a line break — and either silently breaks the table's shape
+// rather than merely reading wrong, which is a poor way to answer someone
+// who did exactly what the book asked.
+func cell(s string) string {
+	for _, br := range []string{"\r\n", "\n", "\r"} {
+		s = strings.ReplaceAll(s, br, " ")
+	}
+
+	return strings.ReplaceAll(s, "|", "\\|")
 }
 
 func bases(w worldgen.World) string {
@@ -186,10 +202,19 @@ func characteristicLines(charts *tables.Charts, w worldgen.World) []string {
 	for _, row := range rows {
 		line := fmt.Sprintf("%s %d", row.name, row.value)
 
-		if label, ok := charts.Label(row.table, row.value); ok {
+		maximum, tabled := charts.MaxValue(row.table)
+
+		switch label, ok := charts.Label(row.table, row.value); {
+		case ok:
 			line += ": " + label
-		} else {
+		case tabled && row.value > maximum:
 			line += ": above the last row the printed table gives (docs/ERRATA.md E004)"
+		default:
+			// Below the first row, or a table this build does not have. The
+			// engine clamps at zero, so only a hand-edited record gets here,
+			// and saying "above" for a negative value would misdirect the
+			// reader who has to find the edit.
+			line += ": outside the printed table, which the engine does not produce"
 		}
 
 		out = append(out, line)
@@ -280,12 +305,4 @@ func describeThrow(ev worldgen.Event) string {
 	}
 
 	return out.String()
-}
-
-func plural(n int, word string) string {
-	if n == 1 {
-		return "1 " + word
-	}
-
-	return strconv.Itoa(n) + " " + word + "s"
 }

@@ -30,6 +30,43 @@ func TestReplayRoundTrip(t *testing.T) {
 	}
 }
 
+// TestReplayAcceptsSpelledOutEmptySlices: Dice and DMs carry omitempty, so
+// a throw with no DMs is written with no dms key. A record that spells that
+// out as an empty array is the same record — it marshals back to the same
+// bytes — and must replay, not be reported as diverged. The event loop
+// compares parsed values rather than the marshaled form, so this is the one
+// place the two halves of compare could disagree.
+func TestReplayAcceptsSpelledOutEmptySlices(t *testing.T) {
+	sub := generate(t, worldgen.Config{Seed: 7, Name: "Vega"})
+
+	data, err := sub.MarshalRecord()
+	if err != nil {
+		t.Fatalf("MarshalRecord: %v", err)
+	}
+
+	rec, err := worldgen.UnmarshalRecord(data)
+	if err != nil {
+		t.Fatalf("UnmarshalRecord: %v", err)
+	}
+
+	spelled := 0
+
+	for i, ev := range rec.Events {
+		if ev.Kind == worldgen.KindThrow && len(ev.DMs) == 0 {
+			rec.Events[i].DMs = []worldgen.EventDM{}
+			spelled++
+		}
+	}
+
+	if spelled == 0 {
+		t.Fatal("no throw in the record has an empty DM list; the case is untested")
+	}
+
+	if err := worldgen.Replay(rec, false); err != nil {
+		t.Errorf("Replay of a record spelling out %d empty DM lists: %v", spelled, err)
+	}
+}
+
 // TestReplayDetectsATamperedThrow: the event log is verification data, so
 // a record whose log has been edited must fail rather than be believed.
 func TestReplayDetectsATamperedThrow(t *testing.T) {

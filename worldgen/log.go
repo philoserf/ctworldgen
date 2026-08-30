@@ -25,10 +25,14 @@ func (g *generator) stamped() []string {
 	return out
 }
 
-// plural writes a count with its noun. The event log's text is compared
-// verbatim by Replay, so "1 worlds" would be frozen into every record
-// written before anyone fixed it.
-func plural(n int, word string) string {
+// Plural writes a count with its noun.
+//
+// Exported because render says the same counts in its listing, and the two
+// must not drift: the event log's text is compared verbatim by Replay, so a
+// wording fixed on one side alone would leave the rendered listing and the
+// record it renders disagreeing, with nothing to catch it. "1 worlds" would
+// otherwise be frozen into every record written before anyone fixed it.
+func Plural(n int, word string) string {
 	if n == 1 {
 		return "1 " + word
 	}

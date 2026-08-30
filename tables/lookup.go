@@ -34,13 +34,22 @@ func (c *Charts) StarportForThrow(total int) (string, error) {
 }
 
 // Starport reads the p. 5 starport chart.
+//
+// A fresh copy each call, for the reason StarportTypes and its siblings
+// clone: what a caller is handed must not be the package's own chart. This
+// one is a pointer into a map rather than a slice header, so without the
+// copy a single write through it would edit the chart for every later
+// lookup on the same Charts — the loaded charts are the book, and nothing
+// downstream should be able to rewrite them.
 func (c *Charts) Starport(t string) (*Starport, error) {
 	sp, ok := c.starports[t]
 	if !ok {
 		return nil, fmt.Errorf("%w: starport chart, type %q", ErrNoSuchValue, t)
 	}
 
-	return sp, nil
+	out := *sp
+
+	return &out, nil
 }
 
 // NavalBaseTarget is the p. 5 chart's naval base throw for a starport

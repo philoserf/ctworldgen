@@ -105,11 +105,29 @@ func ParseTarget(s string) (Target, error) {
 	}
 
 	value, err := strconv.Atoi(digits)
-	if err != nil || value < minTarget || value > maxTarget {
+	if err != nil || !allDigits(digits) || value < minTarget || value > maxTarget {
 		return Target{}, fmt.Errorf("%w: %q, want a die value %d-%d with optional +/-", ErrBadTarget, s, minTarget, maxTarget)
 	}
 
 	return Target{Value: value, Mode: mode}, nil
+}
+
+// allDigits reports whether every byte is a decimal digit.
+//
+// strconv.Atoi accepts a leading sign, and the book's notation puts the
+// sign after the number: "8+" is a target and "+8" is a typo for it, which
+// Atoi alone would read as the exact target 8 — a different rule, silently.
+// ParseTarget is the load-time validator for the p. 5 chart's printed base
+// throws, so a typo there has to fail the build rather than load as
+// something else.
+func allDigits(s string) bool {
+	for i := range len(s) {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+
+	return true
 }
 
 // String renders the target in the book's notation: "8+", "8-", "8".

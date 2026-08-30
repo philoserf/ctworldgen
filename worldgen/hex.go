@@ -3,7 +3,6 @@ package worldgen
 import (
 	"errors"
 	"fmt"
-	"strconv"
 )
 
 // The subsector grid printed on Book 3 p. 3: eight columns of ten rows,
@@ -27,19 +26,24 @@ type Hex struct {
 }
 
 // ParseHex reads the four-digit identifier the p. 3 grid prints.
+//
+// Four digits means four digits: strconv.Atoi accepts a leading sign, so
+// without the check below "+101" and "01+1" would both parse as 0101 —
+// values whose String() is not what was read, and which the record schema's
+// own hex pattern rejects.
 func ParseHex(s string) (Hex, error) {
-	if len(s) != 4 {
+	if len(s) != 4 || !allDigits(s) {
 		return Hex{}, fmt.Errorf("%w: %q, want four digits like 0101", ErrBadHex, s)
 	}
 
-	col, colErr := strconv.Atoi(s[:2])
-	row, rowErr := strconv.Atoi(s[2:])
-
-	if colErr != nil || rowErr != nil {
-		return Hex{}, fmt.Errorf("%w: %q, want four digits like 0101", ErrBadHex, s)
+	// Two digits each, read directly. Once the string is known to be four
+	// digits there is nothing left for strconv to reject, and an error path
+	// that cannot be reached is worse than none.
+	h := Hex{
+		Col: int(s[0]-'0')*10 + int(s[1]-'0'),
+		Row: int(s[2]-'0')*10 + int(s[3]-'0'),
 	}
 
-	h := Hex{Col: col, Row: row}
 	if !h.OnGrid() {
 		return Hex{}, fmt.Errorf("%w: %q is outside the %dx%d grid of p. 3", ErrBadHex, s, Columns, Rows)
 	}
@@ -113,4 +117,16 @@ func abs(n int) int {
 	}
 
 	return n
+}
+
+// allDigits reports whether every byte is a decimal digit, which is what
+// "four digits" in ParseHex's contract actually means.
+func allDigits(s string) bool {
+	for i := range len(s) {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+
+	return true
 }

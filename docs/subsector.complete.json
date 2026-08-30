@@ -25,8 +25,8 @@
     {
       "hex": "0203",
       "name": "",
-      "profile": "X0009A0J",
-      "starport": "X",
+      "profile": "C0009A89",
+      "starport": "C",
       "naval_base": false,
       "scout_base": false,
       "size": 0,
@@ -34,11 +34,11 @@
       "hydrographics": 0,
       "population": 9,
       "government": 10,
-      "law_level": 0,
-      "technological_index": 18
+      "law_level": 8,
+      "technological_index": 9
     }
   ],
-  "routes": [{ "from": "0101", "to": "0203", "distance": 2 }],
+  "routes": [{ "from": "0101", "to": "0203", "distance": 3 }],
   "events": [
     {
       "seq": 1,

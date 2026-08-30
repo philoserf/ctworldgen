@@ -93,16 +93,22 @@ func run(args []string, seedSource func() (uint64, error), stdout, stderr io.Wri
 	}
 }
 
+// newFlagSet builds a subcommand's flag set. Its output is discarded
+// because reportParse is what reports a parse failure, to the stderr this
+// run was handed: left at its default the flag package writes the same
+// message a second time, to the process's real os.Stderr, which duplicates
+// it for a user and hides it from any caller that injected a writer.
 func newFlagSet(name string) *flag.FlagSet {
 	fs := flag.NewFlagSet(name, flag.ContinueOnError)
 	fs.Usage = func() {}
+	fs.SetOutput(io.Discard)
 
 	return fs
 }
 
 // reportParse turns a flag parse failure into an exit code. -h is a
 // request answered on stdout; anything else is a usage error.
-func reportParse(fs *flag.FlagSet, err error, stdout, stderr io.Writer) int {
+func reportParse(err error, stdout, stderr io.Writer) int {
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, usage)
 
@@ -112,9 +118,23 @@ func reportParse(fs *flag.FlagSet, err error, stdout, stderr io.Writer) int {
 	fmt.Fprintf(stderr, "ctworldgen: %v\n", err)
 	fmt.Fprint(stderr, usage)
 
-	_ = fs
-
 	return exitUsage
+}
+
+// rejectStrayArgs refuses positional arguments a generating subcommand
+// takes none of. Without it `ctworldgen new --seed 1 subsector.json` — the
+// -o flag forgotten — exits clean, drops the filename, and writes the
+// record to stdout instead.
+func rejectStrayArgs(fs *flag.FlagSet, stderr io.Writer) bool {
+	if fs.NArg() == 0 {
+		return false
+	}
+
+	fmt.Fprintf(stderr, "ctworldgen: %s takes no file arguments (did you mean -o %s?): %s\n",
+		fs.Name(), fs.Arg(0), strings.Join(fs.Args(), " "))
+	fmt.Fprint(stderr, usage)
+
+	return true
 }
 
 // config is the flag set every generating subcommand shares.
@@ -141,7 +161,11 @@ func runNew(args []string, seedSource func() (uint64, error), stdout, stderr io.
 	cfg.bind(fs)
 
 	if err := fs.Parse(args); err != nil {
-		return reportParse(fs, err, stdout, stderr)
+		return reportParse(err, stdout, stderr)
+	}
+
+	if rejectStrayArgs(fs, stderr) {
+		return exitUsage
 	}
 
 	if err := resolveSeed(fs, &cfg.seed, seedSource); err != nil {
@@ -177,7 +201,11 @@ func runBatch(args []string, seedSource func() (uint64, error), stdout, stderr i
 	count := fs.Int("count", 0, "how many subsectors to generate (a sector is 16)")
 
 	if err := fs.Parse(args); err != nil {
-		return reportParse(fs, err, stdout, stderr)
+		return reportParse(err, stdout, stderr)
+	}
+
+	if rejectStrayArgs(fs, stderr) {
+		return exitUsage
 	}
 
 	if *count < 1 {
@@ -235,7 +263,7 @@ func runReplay(args []string, stdout, stderr io.Writer) int {
 	ignore := fs.Bool("ignore-provenance", false, "waive the version-stamp match (and nothing else)")
 
 	if err := fs.Parse(args); err != nil {
-		return reportParse(fs, err, stdout, stderr)
+		return reportParse(err, stdout, stderr)
 	}
 
 	sub, code := readRecord(fs.Args(), stderr)
@@ -259,7 +287,7 @@ func runRender(args []string, stdout, stderr io.Writer) int {
 	history := fs.Bool("history", false, "render the generation transcript instead of the subsector listing")
 
 	if err := fs.Parse(args); err != nil {
-		return reportParse(fs, err, stdout, stderr)
+		return reportParse(err, stdout, stderr)
 	}
 
 	sub, code := readRecord(fs.Args(), stderr)

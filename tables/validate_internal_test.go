@@ -129,6 +129,39 @@ func TestLoadBaseTargetsRejectsUnparseableNotation(t *testing.T) {
 	}
 }
 
+// TestCheckStarportFacilitiesRejectsABrokenChart: render decides between
+// "no fuel" and "<grade> fuel" by comparing the fuel column to "none"
+// exactly, so the value has to come from a closed set — a chart that said
+// "None" would otherwise load and then print "None fuel".
+func TestCheckStarportFacilitiesRejectsABrokenChart(t *testing.T) {
+	for name, bad := range map[string]Starport{
+		"unknown fuel grade": {Fuel: "None", Quality: "q", Shipyard: "none"},
+		"empty fuel grade":   {Fuel: "", Quality: "q", Shipyard: "none"},
+		"no quality":         {Fuel: "none", Quality: "  ", Shipyard: "none"},
+		"no shipyard":        {Fuel: "none", Quality: "q", Shipyard: ""},
+	} {
+		c := &Charts{starports: map[string]*Starport{}}
+
+		for _, tp := range starportTypes {
+			c.starports[tp] = &Starport{Type: tp, Fuel: "none", Quality: "q", Shipyard: "none"}
+		}
+
+		row := bad
+		row.Type = StarportA
+		c.starports[StarportA] = &row
+
+		if err := c.checkStarportFacilities(); !errors.Is(err, ErrInvalidData) {
+			t.Errorf("%s: err = %v, want ErrInvalidData", name, err)
+		}
+	}
+
+	// The guard for a type the presence check should already have caught.
+	empty := &Charts{starports: map[string]*Starport{}}
+	if err := empty.checkStarportFacilities(); !errors.Is(err, ErrInvalidData) {
+		t.Errorf("a chart with no rows: err = %v, want ErrInvalidData", err)
+	}
+}
+
 // TestTheEmbeddedChartsLoad is the assertion the rest of the program
 // assumes: this repository's own data files are valid.
 func TestTheEmbeddedChartsLoad(t *testing.T) {

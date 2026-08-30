@@ -4,7 +4,7 @@
   "engine_version": "0.1.0",
   "rng": { "algorithm": "go-math-rand-v2-pcg", "seed": 0 },
   "inputs": { "name": "", "occurrence_dm": 0 },
-  "errata": [],
+  "errata": ["E002"],
   "name": "",
   "worlds": [],
   "routes": [],

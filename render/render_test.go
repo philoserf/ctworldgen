@@ -126,6 +126,64 @@ func TestListingNamesAWorldThatHasOne(t *testing.T) {
 	}
 }
 
+// TestListingOfAValueOutsideItsTable: law level is floored but never
+// capped (docs/ERRATA.md E004), so a value above the p. 7 table's last row
+// is a real state and says so. A value below zero is not — only a
+// hand-edited record reaches it — and it must not be reported as being
+// above the table.
+func TestListingOfAValueOutsideItsTable(t *testing.T) {
+	sub := &worldgen.Subsector{
+		Name:   "Edge",
+		Worlds: []worldgen.World{{Hex: "0101", Profile: "A000000J", Starport: "A", LawLevel: 18, Size: -1}},
+		Routes: []worldgen.Route{},
+	}
+
+	out, err := render.Listing(sub)
+	if err != nil {
+		t.Fatalf("Listing: %v", err)
+	}
+
+	if !strings.Contains(out, "Law level 18: above the last row the printed table gives") {
+		t.Errorf("an uncapped law level is not reported as above the table:\n%s", out)
+	}
+
+	if !strings.Contains(out, "Planetary size -1: outside the printed table") {
+		t.Errorf("a below-range value is not reported as outside the table:\n%s", out)
+	}
+}
+
+// TestListingEscapesARefereesName: the name is hand-written into the record
+// after generation, so it can hold a pipe, which would otherwise shift
+// every column boundary in its row.
+func TestListingEscapesARefereesName(t *testing.T) {
+	sub := &worldgen.Subsector{
+		Name:   "Marches",
+		Worlds: []worldgen.World{{Hex: "0101", Name: "Ally | Fortress\nsecond line", Profile: "A0000000", Starport: "A"}},
+		Routes: []worldgen.Route{},
+	}
+
+	out, err := render.Listing(sub)
+	if err != nil {
+		t.Fatalf("Listing: %v", err)
+	}
+
+	if !strings.Contains(out, `| Ally \| Fortress second line |`) {
+		t.Errorf("the name was not escaped into one cell:\n%s", out)
+	}
+
+	// The escaped pipe still is a pipe, so count only the unescaped ones:
+	// those are the cell boundaries, and the table has four columns.
+	for line := range strings.SplitSeq(out, "\n") {
+		if !strings.HasPrefix(line, "| 0101 ") {
+			continue
+		}
+
+		if got := strings.Count(strings.ReplaceAll(line, `\|`, ""), "|"); got != 5 {
+			t.Errorf("the world row has %d cell boundaries, want the table's 5: %q", got, line)
+		}
+	}
+}
+
 // TestHistoryReportsTheReadings: the transcript is the audit trail, so it
 // has to say which docs/ERRATA.md readings governed the run.
 func TestHistoryReportsTheReadings(t *testing.T) {

@@ -1,6 +1,7 @@
 package tables_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/philoserf/ctworldgen/dice"
@@ -401,6 +402,59 @@ func TestDigitNotation(t *testing.T) {
 	}
 }
 
+// TestStarportFacilitiesMatchThePage is the second transcription of the
+// p. 5 chart's facility columns, read off the page the way the base throws
+// beside them are (docs/ERRATA.md, Noted discrepancies).
+//
+// It is the fuel grade render actually branches on, and the chart states
+// each type's in a sentence rather than a cell: A and B have "Refined fuel
+// available", C and D "Only unrefined fuel available", E is "a bare spot of
+// bedrock with no fuel, facilities, or bases", and X makes "no provision
+// ... for any starship landings". Overhaul is the "Annual maintenance
+// overhaul available" sentence, which only A and B carry, and a shipyard is
+// present only where the chart says one is — C's "reasonable repair
+// facilities" are not one.
+func TestStarportFacilitiesMatchThePage(t *testing.T) {
+	charts := load(t)
+
+	for _, page := range []struct {
+		starport string
+		fuel     string
+		overhaul bool
+		shipyard bool
+	}{
+		{tables.StarportA, "refined", true, true},
+		{tables.StarportB, "refined", true, true},
+		{tables.StarportC, "unrefined", false, false},
+		{tables.StarportD, "unrefined", false, false},
+		{tables.StarportE, "none", false, false},
+		{tables.StarportX, "none", false, false},
+	} {
+		sp, err := charts.Starport(page.starport)
+		if err != nil {
+			t.Errorf("Starport(%q): %v", page.starport, err)
+
+			continue
+		}
+
+		if sp.Fuel != page.fuel {
+			t.Errorf("starport %s fuel is %q, p. 5 says %q", page.starport, sp.Fuel, page.fuel)
+		}
+
+		if sp.Overhaul != page.overhaul {
+			t.Errorf("starport %s overhaul is %v, p. 5 says %v", page.starport, sp.Overhaul, page.overhaul)
+		}
+
+		// "none" is how the chart's no-shipyard rows are encoded; C's row
+		// names its repair facilities in the same field and is still not a
+		// shipyard, so the test asks whether the value starts with "none".
+		if got := !strings.HasPrefix(sp.Shipyard, "none"); got != page.shipyard {
+			t.Errorf("starport %s shipyard present = %v (%q), p. 5 says %v",
+				page.starport, got, sp.Shipyard, page.shipyard)
+		}
+	}
+}
+
 // TestStarportChartIsComplete: every type has a chart row, and the
 // accessors report the ones the book does not print.
 func TestStarportChartIsComplete(t *testing.T) {
@@ -421,6 +475,30 @@ func TestStarportChartIsComplete(t *testing.T) {
 
 	if _, err := charts.Starport("Q"); err == nil {
 		t.Error("Starport answered for a type the p. 5 chart does not print")
+	}
+}
+
+// TestStarportChartRowsAreCopies is TestExportedSlicesAreCopies' other
+// half: Starport hands back a pointer rather than a slice, so it is the one
+// accessor a caller could write straight through into the loaded chart.
+func TestStarportChartRowsAreCopies(t *testing.T) {
+	charts := load(t)
+
+	sp, err := charts.Starport(tables.StarportA)
+	if err != nil {
+		t.Fatalf("Starport: %v", err)
+	}
+
+	want := sp.Quality
+	sp.Quality = "clobbered"
+
+	again, err := charts.Starport(tables.StarportA)
+	if err != nil {
+		t.Fatalf("Starport: %v", err)
+	}
+
+	if again.Quality != want {
+		t.Errorf("writing to a returned chart row changed the chart: %q", again.Quality)
 	}
 }
 

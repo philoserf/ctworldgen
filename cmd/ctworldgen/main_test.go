@@ -286,6 +286,67 @@ func TestVersionReportsTheStampsARecordCarries(t *testing.T) {
 	}
 }
 
+// TestGeneratingSubcommandsRejectStrayArguments: `new` and `batch` take
+// no positional arguments, so a filename typed without -o has to be an
+// error. Left unchecked it exits clean, drops the name, and writes the
+// record to stdout — the one failure a user is least likely to notice.
+func TestGeneratingSubcommandsRejectStrayArguments(t *testing.T) {
+	for _, args := range [][]string{
+		{"new", "--seed", "1", "subsector.json"},
+		{"new", "--seed", "1", "a.json", "b.json"},
+		{"batch", "--count", "2", "--seed", "1", "sector"},
+	} {
+		got := invoke(t, args...)
+		if got.code != exitUsage {
+			t.Errorf("%v: code %d, want %d", args, got.code, exitUsage)
+		}
+
+		if !strings.Contains(got.stderr, "takes no file arguments") {
+			t.Errorf("%v: stderr does not say why: %s", args, got.stderr)
+		}
+
+		if got.stdout != "" {
+			t.Errorf("%v: wrote %d bytes to stdout anyway", args, len(got.stdout))
+		}
+	}
+}
+
+// TestFlagErrorsGoOnlyToTheInjectedWriter: the flag package writes its own
+// parse errors to the flag set's output, which defaults to the process's
+// real os.Stderr. Left there a user sees the message twice — once from the
+// flag package, once from reportParse — and a caller that injected a writer
+// sees only half of it.
+func TestFlagErrorsGoOnlyToTheInjectedWriter(t *testing.T) {
+	read, write, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("os.Pipe: %v", err)
+	}
+
+	process := os.Stderr
+	os.Stderr = write
+
+	got := invoke(t, "new", "--nonesuch")
+
+	os.Stderr = process
+
+	if err := write.Close(); err != nil {
+		t.Fatalf("closing the pipe: %v", err)
+	}
+
+	var leaked bytes.Buffer
+	if _, err := leaked.ReadFrom(read); err != nil {
+		t.Fatalf("reading the pipe: %v", err)
+	}
+
+	if leaked.Len() != 0 {
+		t.Errorf("the flag package wrote %q to the real stderr", leaked.String())
+	}
+
+	if !strings.Contains(got.stderr, "not defined") {
+		t.Errorf("the injected stderr did not get the message: %s", got.stderr)
+	}
+}
+
 func TestBadFlagsAreUsageErrors(t *testing.T) {
 	for _, args := range [][]string{
 		{"new", "--nonesuch"},

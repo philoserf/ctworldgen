@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/philoserf/ctworldgen/dice"
 )
@@ -72,7 +73,7 @@ func compare(rec, regen *Subsector, ignoreProvenance bool) error {
 				ErrDiverged, len(rec.Events), len(regen.Events), describe(want))
 		}
 
-		if got := rec.Events[i]; !reflect.DeepEqual(got, want) {
+		if got := rec.Events[i]; !sameEvent(got, want) {
 			return fmt.Errorf("%w at event %d: the record has %s, the replay has %s",
 				ErrDiverged, want.Seq, describe(got), describe(want))
 		}
@@ -84,6 +85,40 @@ func compare(rec, regen *Subsector, ignoreProvenance bool) error {
 	}
 
 	return compareRecords(rec, regen, ignoreProvenance)
+}
+
+// sameEvent reports whether a recorded event and the regenerated one are
+// the same event, comparing copies with their empty slices normalised
+// away.
+//
+// The normalisation is what keeps this check as strict as, and no stricter
+// than, the record comparison below. Dice and DMs carry omitempty, so a
+// throw with no DMs is written with no dms key at all; a record that spells
+// that out as "dms": [] parses to an empty non-nil slice where the engine
+// holds nil, and reflect.DeepEqual calls those different. The two records
+// are byte-identical once marshaled, so compareRecords would pass the very
+// pair this loop rejected — and it rejected it with a message that reads
+// the same on both sides, because no field describe prints had changed.
+//
+// Only the slices are degenerate this way. Success is a *bool and marshals
+// as false rather than being omitted, so a nil-versus-false difference
+// there is a real divergence and is left alone.
+func sameEvent(got, want Event) bool {
+	return reflect.DeepEqual(withoutEmptySlices(got), withoutEmptySlices(want))
+}
+
+// withoutEmptySlices returns the event with empty Dice and DMs replaced by
+// nil. Event is taken by value, so the caller's copy is untouched.
+func withoutEmptySlices(ev Event) Event {
+	if len(ev.Dice) == 0 {
+		ev.Dice = nil
+	}
+
+	if len(ev.DMs) == 0 {
+		ev.DMs = nil
+	}
+
+	return ev
 }
 
 // compareRecords compares the two records byte for byte, in canonical
@@ -157,16 +192,28 @@ func withoutWorldNames(sub *Subsector) *Subsector {
 func describe(ev Event) string {
 	switch ev.Kind {
 	case KindThrow:
-		out := fmt.Sprintf("throw %q %v total %d", ev.Label, ev.Dice, ev.Total)
+		// The DMs are printed, not just the total they produced: a
+		// divergence message whose two halves read identically tells the
+		// reader nothing, and the DMs are the field most likely to differ
+		// while every other printed field matches.
+		var out strings.Builder
+		fmt.Fprintf(&out, "throw %q %v", ev.Label, ev.Dice)
+
+		for _, dm := range ev.DMs {
+			fmt.Fprintf(&out, " %+d %s", dm.Value, dm.Source)
+		}
+
+		fmt.Fprintf(&out, " total %d", ev.Total)
+
 		if ev.Target != "" {
-			out += " vs " + ev.Target
+			out.WriteString(" vs " + ev.Target)
 		}
 
 		if ev.Hex != "" {
-			out += " at " + ev.Hex
+			out.WriteString(" at " + ev.Hex)
 		}
 
-		return out
+		return out.String()
 	case KindOutcome:
 		return fmt.Sprintf("outcome %q", ev.Text)
 	case KindStep:

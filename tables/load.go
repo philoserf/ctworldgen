@@ -42,11 +42,56 @@ func (c *Charts) loadStarports() error {
 			ErrInvalidData, len(c.starports), len(starportTypes))
 	}
 
+	if err := c.checkStarportFacilities(); err != nil {
+		return err
+	}
+
 	if err := c.loadBaseTargets(); err != nil {
 		return err
 	}
 
 	return c.loadStarportThrows(data.Throws)
+}
+
+// fuelGrades is the p. 5 chart's fuel column as this file encodes it: the
+// chart offers refined fuel, only unrefined fuel, or none at all.
+var fuelGrades = [...]string{"refined", "unrefined", "none"}
+
+// checkStarportFacilities holds the p. 5 chart's descriptive columns to a
+// shape the renderer can rely on.
+//
+// It is the fuel grade that makes this more than tidiness: render decides
+// between "no fuel" and "<grade> fuel" by comparing the value to "none"
+// exactly, so a chart that said "None" — or carried a stray space — would
+// load without complaint and then print a starport that offers "None fuel".
+// A closed set turns that into the load failure every other chart error
+// already is. Quality and shipyard are only required to be present, since
+// they are printed as written.
+func (c *Charts) checkStarportFacilities() error {
+	for _, t := range starportTypes {
+		sp, ok := c.starports[t]
+		if !ok {
+			// loadStarports asserts every type is present before calling
+			// this, so reaching here means that check was removed.
+			return fmt.Errorf("%w: starports.json: no chart row for starport %q", ErrInvalidData, t)
+		}
+
+		if !slices.Contains(fuelGrades[:], sp.Fuel) {
+			return fmt.Errorf("%w: starports.json: starport %s fuel is %q, want one of %v",
+				ErrInvalidData, t, sp.Fuel, fuelGrades)
+		}
+
+		for _, field := range []struct{ name, value string }{
+			{"quality", sp.Quality},
+			{"shipyard", sp.Shipyard},
+		} {
+			if strings.TrimSpace(field.value) == "" {
+				return fmt.Errorf("%w: starports.json: starport %s has no %s", ErrInvalidData, t, field.name)
+			}
+		}
+	}
+
+	return nil
 }
 
 // loadBaseTargets parses the p. 5 chart's printed base throws. An empty

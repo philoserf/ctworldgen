@@ -73,9 +73,23 @@ minus sign to `3`. A text extraction therefore renders the jump routes
 table's empty cells as the digit 4 — `B-E 4 4 4 4` for `4 — — —` — and the
 size formula `2D − 2` as `2D32`. Both readings are wrong and both look like
 data. Every table in `tables/data/` was transcribed from a **visual** read
-of the page (`Read` the PDF with a `pages` range), and each is transcribed
-a second time inside `tables/tables_test.go` so the two must agree. Any
-future table work does the same.
+of the page (`Read` the PDF with a `pages` range), and any future table
+work does the same.
+
+Every table of **numbers** is then transcribed a second time inside
+`tables/tables_test.go`, so the two must agree: the starports table, the
+jump routes table, the technological index matrix, the p. 5 base throws and
+the p. 5 facility columns. That is the check the font trap needs, and it is
+where a new numeric table belongs.
+
+The one deliberate exception is the descriptive **labels** in
+`characteristics.json` — "Feudal Technocracy", "Dense, tainted", "Portable
+energy weapons prohibited". Those are editorial abbreviations of the book's
+printed prose rather than transcriptions of it, so retyping them in a test
+would compare an abbreviation against itself and prove nothing. They are
+checked against the page by reading pp. 5–7, not by the suite; the suite
+only asserts that every value in range has a non-empty label. Treat a label
+change as a documentation change and re-read the page.
 
 ## Clean room
 

@@ -125,8 +125,14 @@ func TestParseTargetRoundTrips(t *testing.T) {
 
 // TestParseTargetRejectsWhatIsNotNotation. The floor is 1, not the
 // character procedure's 2: Book 3 throws one die as often as two.
+//
+// "+8" and "-8" are the cases worth naming: the sign goes after the number
+// in the book's notation, and strconv.Atoi would happily read a leading one
+// and hand back the exact target 8 — a different rule than the "8+" the
+// writer meant. This function validates the p. 5 chart's printed throws at
+// load time, so that has to be a build failure.
 func TestParseTargetRejectsWhatIsNotNotation(t *testing.T) {
-	for _, bad := range []string{"", "0+", "13+", "0", "13", "-1", "x+", "+", "8++", "eight"} {
+	for _, bad := range []string{"", "0+", "13+", "0", "13", "-1", "x+", "+", "8++", "eight", "+8", "-8", "+8+"} {
 		if _, err := dice.ParseTarget(bad); !errors.Is(err, dice.ErrBadTarget) {
 			t.Errorf("ParseTarget(%q): err = %v, want ErrBadTarget", bad, err)
 		}
