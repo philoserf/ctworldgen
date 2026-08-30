@@ -1,0 +1,79 @@
+{
+  "schema_version": "1",
+  "ruleset": "Classic Traveller Book 3 pp. 1-12 (with Book 1 pp. 2-3, 8), © 1977 text, FFE reprints",
+  "engine_version": "0.1.0",
+  "rng": { "algorithm": "go-math-rand-v2-pcg", "seed": 42 },
+  "inputs": { "name": "Example", "occurrence_dm": 1 },
+  "errata": ["E001", "E002", "E003", "E004", "E005"],
+  "name": "Example",
+  "worlds": [
+    {
+      "hex": "0101",
+      "name": "Kinorb",
+      "profile": "A8679A6C",
+      "starport": "A",
+      "naval_base": true,
+      "scout_base": false,
+      "size": 8,
+      "atmosphere": 6,
+      "hydrographics": 7,
+      "population": 9,
+      "government": 10,
+      "law_level": 6,
+      "technological_index": 12
+    },
+    {
+      "hex": "0203",
+      "name": "",
+      "profile": "X0009A0J",
+      "starport": "X",
+      "naval_base": false,
+      "scout_base": false,
+      "size": 0,
+      "atmosphere": 0,
+      "hydrographics": 0,
+      "population": 9,
+      "government": 10,
+      "law_level": 0,
+      "technological_index": 18
+    }
+  ],
+  "routes": [{ "from": "0101", "to": "0203", "distance": 2 }],
+  "events": [
+    {
+      "seq": 1,
+      "kind": "step",
+      "step": "world-occurrence",
+      "text": "Check each hex of the subsector for a world (p. 1)"
+    },
+    {
+      "seq": 2,
+      "kind": "throw",
+      "step": "world-occurrence",
+      "label": "world occurrence",
+      "hex": "0101",
+      "dice": [3],
+      "dms": [
+        { "source": "referee's subsector-wide modifier (p. 1)", "value": 1 }
+      ],
+      "target": "4+",
+      "total": 4,
+      "success": true
+    },
+    {
+      "seq": 3,
+      "kind": "outcome",
+      "step": "world-occurrence",
+      "hex": "0101",
+      "text": "a world and its attendant star system are present",
+      "ref": 2
+    },
+    {
+      "seq": 4,
+      "kind": "outcome",
+      "step": "world-creation",
+      "hex": "0203",
+      "text": "planetary atmosphere 0 automatically: the world is an asteroid/planetoid complex (p. 4)"
+    }
+  ]
+}

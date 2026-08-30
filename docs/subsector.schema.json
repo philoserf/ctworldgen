@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/philoserf/ctworldgen/docs/subsector.schema.json",
+  "title": "Classic Traveller subsector record",
+  "description": "A subsector generated per Book 3 pp. 1-12 (© 1977 text). The JSON record is the source of truth; the Markdown listing is a render of it. Versioned by schema_version: a constraint that only narrows this schema to what the engine already produced is a clarification; one that would invalidate a record the current engine writes is a bump.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ruleset",
+    "engine_version",
+    "rng",
+    "inputs",
+    "errata",
+    "name",
+    "worlds",
+    "routes",
+    "events"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "ruleset": {
+      "type": "string",
+      "description": "The pages every rule was read from."
+    },
+    "engine_version": { "type": "string" },
+    "rng": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "seed"],
+      "properties": {
+        "algorithm": { "type": "string" },
+        "seed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "description": "Everything the caller supplied. With the seed it is all a replay needs: the procedure has no choice points, so there is no choice channel to reapply.",
+      "additionalProperties": false,
+      "required": ["name", "occurrence_dm"],
+      "properties": {
+        "name": { "type": "string" },
+        "occurrence_dm": {
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 1,
+          "description": "The referee's subsector-wide world occurrence modifier: p. 1 offers +1 or -1 and no others."
+        }
+      }
+    },
+    "errata": {
+      "type": "array",
+      "description": "The docs/ERRATA.md readings that governed this generation.",
+      "items": { "type": "string", "pattern": "^E[0-9]{3}$" }
+    },
+    "name": { "type": "string" },
+    "worlds": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/world" }
+    },
+    "routes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/route" }
+    },
+    "events": {
+      "type": "array",
+      "description": "The generation record: every step, throw and outcome in the order the engine reached them.",
+      "items": { "$ref": "#/$defs/event" }
+    }
+  },
+  "$defs": {
+    "hex": {
+      "type": "string",
+      "pattern": "^0[1-8](0[1-9]|10)$",
+      "description": "A hex of the p. 3 grid: column 01-08 then row 01-10."
+    },
+    "world": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hex",
+        "name",
+        "profile",
+        "starport",
+        "naval_base",
+        "scout_base",
+        "size",
+        "atmosphere",
+        "hydrographics",
+        "population",
+        "government",
+        "law_level",
+        "technological_index"
+      ],
+      "properties": {
+        "hex": { "$ref": "#/$defs/hex" },
+        "name": {
+          "type": "string",
+          "description": "The referee's. P. 12 step 3 asks for a name and the book prints no table, so the engine leaves this empty."
+        },
+        "profile": {
+          "type": "string",
+          "pattern": "^[A-EX][0-9A-HJ-NP-Z]{7}$",
+          "description": "The eight characteristics as the string of digits of p. 4, in the p. 4 box's order and with no separator (docs/ERRATA.md E005)."
+        },
+        "starport": {
+          "type": "string",
+          "enum": ["A", "B", "C", "D", "E", "X"]
+        },
+        "naval_base": { "type": "boolean" },
+        "scout_base": { "type": "boolean" },
+        "size": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "atmosphere": { "type": "integer", "minimum": 0, "maximum": 12 },
+        "hydrographics": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "population": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "government": { "type": "integer", "minimum": 0, "maximum": 13 },
+        "law_level": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Not bounded above: the p. 7 table ends at 9 but its note is written for higher levels, so E004 floors law level without capping it."
+        },
+        "technological_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "description": "One commercial space lane (p. 2). From is always the lower hex identifier, which is the order the pair was examined in.",
+      "additionalProperties": false,
+      "required": ["from", "to", "distance"],
+      "properties": {
+        "from": { "$ref": "#/$defs/hex" },
+        "to": { "$ref": "#/$defs/hex" },
+        "distance": { "type": "integer", "minimum": 1, "maximum": 4 }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "kind", "step"],
+      "properties": {
+        "seq": { "type": "integer", "minimum": 1 },
+        "kind": { "type": "string", "enum": ["step", "throw", "outcome"] },
+        "step": { "type": "string" },
+        "label": { "type": "string" },
+        "hex": {
+          "type": "string",
+          "description": "The world the event concerns, or the two hexes of a lane joined by a hyphen."
+        },
+        "dice": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1, "maximum": 6 }
+        },
+        "dms": { "type": "array", "items": { "$ref": "#/$defs/dm" } },
+        "target": { "type": "string" },
+        "total": { "type": "integer" },
+        "success": { "type": "boolean" },
+        "text": { "type": "string" },
+        "ref": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The seq of the throw that caused this outcome; absent where the rules impose the outcome without a throw."
+        }
+      }
+    },
+    "dm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "value"],
+      "properties": {
+        "source": { "type": "string" },
+        "value": { "type": "integer" }
+      }
+    }
+  }
+}

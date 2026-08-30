@@ -1,0 +1,19 @@
+{
+  "schema_version": "1",
+  "ruleset": "Classic Traveller Book 3 pp. 1-12 (with Book 1 pp. 2-3, 8), © 1977 text, FFE reprints",
+  "engine_version": "0.1.0",
+  "rng": { "algorithm": "go-math-rand-v2-pcg", "seed": 0 },
+  "inputs": { "name": "", "occurrence_dm": 0 },
+  "errata": [],
+  "name": "",
+  "worlds": [],
+  "routes": [],
+  "events": [
+    {
+      "seq": 1,
+      "kind": "step",
+      "step": "world-occurrence",
+      "text": "Check each hex of the subsector for a world (p. 1)"
+    }
+  ]
+}
