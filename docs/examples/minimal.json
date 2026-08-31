@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "ruleset": "ct-1977-book3-pp1-12",
-  "engine_version": "0",
+  "engine_version": "1",
   "rng_algorithm": "go-math-rand-v2-pcg",
   "seed": 0,
   "errata": [

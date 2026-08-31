@@ -25,8 +25,12 @@ const (
 	// deliberately not the build's own version -- a tag cut for a
 	// documentation fix must not move it.
 	//
-	// It is "0" until the engine walks the whole of pp. 1-12.
-	EngineVersion = "0"
+	// It was "0" while the engine was being built, because during the
+	// milestones every increment would have been a rule change and the
+	// number would have been noise. It became "1" at the milestone that
+	// finished the walk of pp. 1-12, and the three conditions above are
+	// the whole rule from here.
+	EngineVersion = "1"
 )
 
 // Subsector is the record. The JSON record is the source of truth; the

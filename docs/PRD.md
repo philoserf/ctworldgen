@@ -374,10 +374,11 @@ golden fixtures pin it.
   construction. Nothing else can alter what a seed produces, and a tag cut
   for a documentation fix must not move it. The engine emits no prose at
   all, so there is no wording anywhere in the contract for a version to
-  track. It is `0` until the engine walks the whole of pp. 1–12 and `1`
-  from then on, the bump discipline governing from that point: during the
-  milestones every increment would be a rule change and the number would
-  be noise.
+  track. It was `0` while the engine was being built, because
+  during the milestones every increment would have been a rule change and
+  the number would have been noise. It became `1` at the milestone that
+  finished the walk of pp. 1–12, and the three conditions above are the
+  whole rule from there.
 - **The schema version tracks the shape of the records the engine
   writes.** A constraint that only narrows the schema to what the engine
   already produced is a clarification; one that would invalidate a record

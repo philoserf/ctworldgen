@@ -164,7 +164,8 @@ func TestRejectsDMsTheBookDoesNotOffer(t *testing.T) {
 }
 
 // TestInvariantsOverManySeeds sweeps the book's invariants for everything
-// milestone 1 generates.
+// the engine generates: the occurrence scan, starports, bases, lanes, and
+// the eight characteristics of every world.
 func TestInvariantsOverManySeeds(t *testing.T) {
 	t.Parallel()
 
@@ -666,7 +667,7 @@ func assertTechIndexIsTheMatrix(t *testing.T, charts *tables.Tables, world subse
 
 	reachable := map[int]bool{}
 	for die := 1; die <= 6; die++ {
-		reachable[min(max(die+modifier, 0), 18)] = true
+		reachable[min(max(die+modifier, 0), maxTechIndexUnderTest)] = true
 	}
 
 	if !reachable[world.TechIndex] {
