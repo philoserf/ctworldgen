@@ -270,6 +270,32 @@ The prose applies the −4 DM "if planetary atmosphere is 0, 1, or greater
 than 9"; the p. 12 checklist writes the same condition as "Atmosphere 0,
 1 or A+". Those agree — A is 10 — and are one condition.
 
+**A world with no atmosphere and a hydrographic percentage (pp. 4, 8).**
+The automatic zero belongs to planetary size, not to atmosphere. P. 4
+gives "a planetary size of O or 1" an "automatic result of 0", and gives
+an atmosphere of "0, 1, or greater than 9" a DM of -4; the p. 12 checklist
+writes the same split. So an airless world can carry surface liquid.
+
+It is uncommon rather than freakish -- about one world in sixty -- and it
+cannot be very wet. An atmosphere of 0 needs 2D - 7 + size at or below
+zero, so the size is 5 or less; hydrographics is then 2D - 11 + size,
+which reaches size + 1. Six is the ceiling, at a size-5 world that throws
+2 for its atmosphere and 12 for its water.
+
+It looks like a contradiction, and p. 8 answers it: "Common sense should
+rule in such cases; either the players or referee will generate a
+rationale which explains the situation, or an alternative description
+should be made."
+
+Worth noting where the book's own help stops. P. 4 glosses what the liquid
+might be -- "for normal worlds, this will be water; on other worlds (with
+corrosive or exotic atmospheres), it may instead be other liquids of
+fluids such as ammonia" -- and that gloss is offered for the *high* end of
+the same DM, atmospheres A through C. The low end gets the DM and no
+gloss. What covers a vacuum world is the referee's rationale, not a
+printed one, and the tool supplies none: the throw is made and the result
+recorded.
+
 **The planetary size table is wider than the throw that fills it
 (pp. 4, 5).** P. 4 gives size as 2D − 2, "the resulting value ranges from
 0 to 10," while the p. 5 table prints rows 0 through C (12000 miles

@@ -620,6 +620,11 @@ func assertAutomaticZeros(t *testing.T, world subsector.World, seed uint64) {
 // floored at 0 (R6-R11, R14). The hydrographics DM is not a maybe -- the
 // page applies it exactly when the atmosphere is 0, 1 or greater than 9 --
 // so its span is exact too.
+//
+// Nothing here forbids an airless world with water, and nothing should:
+// p. 4 ties the automatic zero to planetary size and gives atmosphere a
+// DM of -4 instead, so the combination is legal and about one world in
+// sixty has it (ERRATA.md, Noted discrepancies).
 func assertWithinFormula(t *testing.T, world subsector.World, seed uint64) {
 	t.Helper()
 
