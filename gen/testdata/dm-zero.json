@@ -5,7 +5,9 @@
   "rng_algorithm": "go-math-rand-v2-pcg",
   "seed": 1,
   "errata": [
-    "E002"
+    "E001",
+    "E002",
+    "E003"
   ],
   "name": "Aramis",
   "occurrence_dm": 0,
@@ -13,202 +15,644 @@
     {
       "hex": "0101",
       "name": "",
-      "starport": "B"
+      "starport": "B",
+      "naval_base": true,
+      "scout_base": true
     },
     {
       "hex": "0103",
       "name": "",
-      "starport": "D"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0104",
       "name": "",
-      "starport": "D"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0106",
       "name": "",
-      "starport": "C"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0107",
       "name": "",
-      "starport": "B"
+      "starport": "A",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0109",
       "name": "",
-      "starport": "B"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0202",
       "name": "",
-      "starport": "B"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0206",
       "name": "",
-      "starport": "B"
+      "starport": "D",
+      "naval_base": false,
+      "scout_base": true
     },
     {
       "hex": "0302",
       "name": "",
-      "starport": "C"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0303",
       "name": "",
-      "starport": "C"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0306",
       "name": "",
-      "starport": "A"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0307",
       "name": "",
-      "starport": "A"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0309",
       "name": "",
-      "starport": "C"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0401",
       "name": "",
-      "starport": "C"
+      "starport": "A",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0405",
       "name": "",
-      "starport": "B"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0406",
       "name": "",
-      "starport": "E"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0409",
       "name": "",
-      "starport": "D"
+      "starport": "B",
+      "naval_base": true,
+      "scout_base": true
     },
     {
       "hex": "0502",
       "name": "",
-      "starport": "C"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0505",
       "name": "",
-      "starport": "E"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0506",
       "name": "",
-      "starport": "B"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0508",
       "name": "",
-      "starport": "B"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": true
     },
     {
       "hex": "0509",
       "name": "",
-      "starport": "A"
+      "starport": "D",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0601",
       "name": "",
-      "starport": "E"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0602",
       "name": "",
-      "starport": "E"
+      "starport": "A",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0605",
       "name": "",
-      "starport": "B"
+      "starport": "B",
+      "naval_base": true,
+      "scout_base": false
     },
     {
       "hex": "0606",
       "name": "",
-      "starport": "B"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": true
     },
     {
       "hex": "0607",
       "name": "",
-      "starport": "A"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0608",
       "name": "",
-      "starport": "A"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0702",
       "name": "",
-      "starport": "B"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0704",
       "name": "",
-      "starport": "C"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0706",
       "name": "",
-      "starport": "C"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0707",
       "name": "",
-      "starport": "C"
+      "starport": "B",
+      "naval_base": true,
+      "scout_base": false
     },
     {
       "hex": "0708",
       "name": "",
-      "starport": "B"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": true
     },
     {
       "hex": "0710",
       "name": "",
-      "starport": "A"
+      "starport": "B",
+      "naval_base": true,
+      "scout_base": true
     },
     {
       "hex": "0801",
       "name": "",
-      "starport": "C"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0802",
       "name": "",
-      "starport": "B"
+      "starport": "A",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0804",
       "name": "",
-      "starport": "D"
+      "starport": "X",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0806",
       "name": "",
-      "starport": "E"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0807",
       "name": "",
-      "starport": "C"
+      "starport": "X",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0810",
       "name": "",
-      "starport": "B"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": true
+    }
+  ],
+  "routes": [
+    {
+      "from": "0101",
+      "to": "0104",
+      "distance": 3
+    },
+    {
+      "from": "0101",
+      "to": "0303",
+      "distance": 3
+    },
+    {
+      "from": "0103",
+      "to": "0104",
+      "distance": 1
+    },
+    {
+      "from": "0103",
+      "to": "0303",
+      "distance": 2
+    },
+    {
+      "from": "0104",
+      "to": "0106",
+      "distance": 2
+    },
+    {
+      "from": "0106",
+      "to": "0107",
+      "distance": 1
+    },
+    {
+      "from": "0106",
+      "to": "0206",
+      "distance": 1
+    },
+    {
+      "from": "0107",
+      "to": "0109",
+      "distance": 2
+    },
+    {
+      "from": "0107",
+      "to": "0206",
+      "distance": 1
+    },
+    {
+      "from": "0107",
+      "to": "0405",
+      "distance": 3
+    },
+    {
+      "from": "0107",
+      "to": "0406",
+      "distance": 3
+    },
+    {
+      "from": "0202",
+      "to": "0303",
+      "distance": 1
+    },
+    {
+      "from": "0302",
+      "to": "0303",
+      "distance": 1
+    },
+    {
+      "from": "0302",
+      "to": "0401",
+      "distance": 1
+    },
+    {
+      "from": "0303",
+      "to": "0401",
+      "distance": 2
+    },
+    {
+      "from": "0303",
+      "to": "0405",
+      "distance": 3
+    },
+    {
+      "from": "0303",
+      "to": "0406",
+      "distance": 4
+    },
+    {
+      "from": "0306",
+      "to": "0406",
+      "distance": 1
+    },
+    {
+      "from": "0309",
+      "to": "0409",
+      "distance": 1
+    },
+    {
+      "from": "0309",
+      "to": "0509",
+      "distance": 2
+    },
+    {
+      "from": "0309",
+      "to": "0607",
+      "distance": 3
+    },
+    {
+      "from": "0401",
+      "to": "0502",
+      "distance": 1
+    },
+    {
+      "from": "0401",
+      "to": "0602",
+      "distance": 2
+    },
+    {
+      "from": "0401",
+      "to": "0704",
+      "distance": 4
+    },
+    {
+      "from": "0405",
+      "to": "0406",
+      "distance": 1
+    },
+    {
+      "from": "0405",
+      "to": "0605",
+      "distance": 2
+    },
+    {
+      "from": "0405",
+      "to": "0606",
+      "distance": 2
+    },
+    {
+      "from": "0406",
+      "to": "0409",
+      "distance": 3
+    },
+    {
+      "from": "0406",
+      "to": "0506",
+      "distance": 1
+    },
+    {
+      "from": "0406",
+      "to": "0508",
+      "distance": 2
+    },
+    {
+      "from": "0406",
+      "to": "0605",
+      "distance": 2
+    },
+    {
+      "from": "0406",
+      "to": "0606",
+      "distance": 2
+    },
+    {
+      "from": "0406",
+      "to": "0707",
+      "distance": 3
+    },
+    {
+      "from": "0409",
+      "to": "0509",
+      "distance": 1
+    },
+    {
+      "from": "0502",
+      "to": "0601",
+      "distance": 1
+    },
+    {
+      "from": "0502",
+      "to": "0602",
+      "distance": 1
+    },
+    {
+      "from": "0505",
+      "to": "0506",
+      "distance": 1
+    },
+    {
+      "from": "0506",
+      "to": "0508",
+      "distance": 2
+    },
+    {
+      "from": "0506",
+      "to": "0605",
+      "distance": 1
+    },
+    {
+      "from": "0506",
+      "to": "0606",
+      "distance": 1
+    },
+    {
+      "from": "0508",
+      "to": "0509",
+      "distance": 1
+    },
+    {
+      "from": "0508",
+      "to": "0605",
+      "distance": 3
+    },
+    {
+      "from": "0508",
+      "to": "0607",
+      "distance": 1
+    },
+    {
+      "from": "0508",
+      "to": "0707",
+      "distance": 2
+    },
+    {
+      "from": "0508",
+      "to": "0708",
+      "distance": 2
+    },
+    {
+      "from": "0509",
+      "to": "0608",
+      "distance": 1
+    },
+    {
+      "from": "0509",
+      "to": "0710",
+      "distance": 2
+    },
+    {
+      "from": "0601",
+      "to": "0602",
+      "distance": 1
+    },
+    {
+      "from": "0601",
+      "to": "0702",
+      "distance": 1
+    },
+    {
+      "from": "0602",
+      "to": "0605",
+      "distance": 3
+    },
+    {
+      "from": "0602",
+      "to": "0606",
+      "distance": 4
+    },
+    {
+      "from": "0602",
+      "to": "0702",
+      "distance": 1
+    },
+    {
+      "from": "0602",
+      "to": "0704",
+      "distance": 2
+    },
+    {
+      "from": "0602",
+      "to": "0802",
+      "distance": 2
+    },
+    {
+      "from": "0605",
+      "to": "0606",
+      "distance": 1
+    },
+    {
+      "from": "0605",
+      "to": "0704",
+      "distance": 2
+    },
+    {
+      "from": "0605",
+      "to": "0707",
+      "distance": 2
+    },
+    {
+      "from": "0605",
+      "to": "0802",
+      "distance": 4
+    },
+    {
+      "from": "0606",
+      "to": "0607",
+      "distance": 1
+    },
+    {
+      "from": "0606",
+      "to": "0707",
+      "distance": 1
+    },
+    {
+      "from": "0607",
+      "to": "0608",
+      "distance": 1
+    },
+    {
+      "from": "0607",
+      "to": "0707",
+      "distance": 1
+    },
+    {
+      "from": "0607",
+      "to": "0708",
+      "distance": 1
+    },
+    {
+      "from": "0702",
+      "to": "0801",
+      "distance": 1
+    },
+    {
+      "from": "0702",
+      "to": "0802",
+      "distance": 1
+    },
+    {
+      "from": "0704",
+      "to": "0802",
+      "distance": 2
+    },
+    {
+      "from": "0706",
+      "to": "0707",
+      "distance": 1
+    },
+    {
+      "from": "0707",
+      "to": "0708",
+      "distance": 1
+    },
+    {
+      "from": "0707",
+      "to": "0710",
+      "distance": 3
+    },
+    {
+      "from": "0708",
+      "to": "0710",
+      "distance": 2
+    },
+    {
+      "from": "0710",
+      "to": "0810",
+      "distance": 1
+    },
+    {
+      "from": "0801",
+      "to": "0802",
+      "distance": 1
     }
   ]
 }

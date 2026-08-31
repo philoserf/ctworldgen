@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/philoserf/ctworldgen/docs/subsector.schema.json",
   "title": "Classic Traveller subsector record",
-  "description": "A subsector generated from Book 3 Worlds and Adventures pp. 1-12. This schema describes the record the engine writes at milestone 1: the world occurrence scan and starport types. It grows with each milestone that adds fields, all of it at schema_version 1, because pre-release growth invalidates no released record.",
+  "description": "A subsector generated from Book 3 Worlds and Adventures pp. 1-12. This schema describes the record the engine writes at milestone 2: the world occurrence scan, starport types, naval and scout bases, and space lanes. It grows with each milestone that adds fields, all of it at schema_version 1, because pre-release growth invalidates no released record.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,7 +14,8 @@
     "errata",
     "name",
     "occurrence_dm",
-    "worlds"
+    "worlds",
+    "routes"
   ],
   "properties": {
     "schema_version": {
@@ -59,13 +60,18 @@
     "worlds": {
       "type": "array",
       "items": { "$ref": "#/$defs/world" }
+    },
+    "routes": {
+      "description": "The commercial space lanes of p. 2, in ascending hex number of the first world and then of the second (ERRATA E003).",
+      "type": "array",
+      "items": { "$ref": "#/$defs/route" }
     }
   },
   "$defs": {
     "world": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["hex", "name", "starport"],
+      "required": ["hex", "name", "starport", "naval_base", "scout_base"],
       "properties": {
         "hex": {
           "description": "The four-digit column-and-row number the p. 3 grid prints, 0101 through 0810.",
@@ -79,6 +85,36 @@
         "starport": {
           "type": "string",
           "enum": ["A", "B", "C", "D", "E", "X"]
+        },
+        "naval_base": {
+          "description": "The p. 5 chart prints a naval base throw at starports A and B only; elsewhere this is false without a throw having been made.",
+          "type": "boolean"
+        },
+        "scout_base": {
+          "description": "The p. 5 chart prints a scout base throw at starports A through D; elsewhere this is false without a throw having been made.",
+          "type": "boolean"
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "distance"],
+      "properties": {
+        "from": {
+          "description": "The lower hex identifier of the pair. A lane is not directed; ordering the pair is what keeps one lane from being written two ways.",
+          "type": "string",
+          "pattern": "^0[1-8](0[1-9]|10)$"
+        },
+        "to": {
+          "type": "string",
+          "pattern": "^0[1-8](0[1-9]|10)$"
+        },
+        "distance": {
+          "description": "The jump distance in parsecs. The jump routes table states a target only at 1 through 4, so no lane exists beyond four hexes.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
         }
       }
     }

@@ -44,6 +44,7 @@ type Subsector struct {
 	Name          string   `json:"name"`
 	OccurrenceDM  int      `json:"occurrence_dm"`
 	Worlds        []World  `json:"worlds"`
+	Routes        []Route  `json:"routes"`
 }
 
 // World is one generated world.
@@ -55,6 +56,24 @@ type World struct {
 	Hex      Hex      `json:"hex"`
 	Name     string   `json:"name"`
 	Starport Starport `json:"starport"`
+
+	// NavalBase and ScoutBase are the throws the p. 5 starport chart
+	// prints and the p. 12 checklist omits (ERRATA E001). Which of them
+	// was thrown for at all is recomputable from the starport type: the
+	// chart prints a naval throw only at A and B, a scout throw at A
+	// through D, and neither at E or X.
+	NavalBase bool `json:"naval_base"`
+	ScoutBase bool `json:"scout_base"`
+}
+
+// Route is a commercial space lane between two worlds (p. 2).
+//
+// From is the lower hex identifier: a lane is not directed, and ordering
+// the pair is what keeps one lane from being written two ways.
+type Route struct {
+	From     Hex     `json:"from"`
+	To       Hex     `json:"to"`
+	Distance Parsecs `json:"distance"`
 }
 
 // New returns a record stamped with the provenance of the run that is
@@ -70,6 +89,7 @@ func New(seed uint64, name string, occurrenceDM int) *Subsector {
 		Name:          name,
 		OccurrenceDM:  occurrenceDM,
 		Worlds:        []World{},
+		Routes:        []Route{},
 	}
 }
 

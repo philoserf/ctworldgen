@@ -20,8 +20,8 @@ with a test named in it.
 | R1 Hex distance, even columns half a hex lower         | 3    | `subsector.Hex.cube`, `Hex.Distance`         | `TestDistanceAgainstPrintedGrid` -- measured by hand off the printed grid                              | done                    |
 | R2 World occurrence, one die at 4+, DM -1/0/+1         | 1    | `gen.occurrenceTarget`, `gen.scan`           | `TestOccurrenceDMChangesTheStream`, `TestRejectsDMsTheBookDoesNotOffer`, `TestInvariantsOverManySeeds` | done                    |
 | R3 Starport type, two dice against the starports table | 1    | `tables.Starports.Type`, `gen.Generate`      | `TestStarportsTable`, `TestStarportDistributionFollowsThePage`                                         | done                    |
-| R4 Naval and scout base throws                         | 5    | `tables.StarportChart.NavalBase`/`ScoutBase` | `TestStarportChartBaseThrows`                                                                          | data only (milestone 2) |
-| R5 Space lanes, one die against the jump routes table  | 2    | `tables.JumpRoutes.Target`, `tables.MaxJump` | `TestJumpRoutesTable`, `TestJumpRoutesHasNoRowForX`                                                    | data only (milestone 2) |
+| R4 Naval and scout base throws | 5 | `tables.StarportChart.NavalBase`/`ScoutBase`, `gen.Engine.Generate` | `TestStarportChartBaseThrows`, `assertBasesFollowTheChart` | done |
+| R5 Space lanes, one die against the jump routes table | 2 | `tables.JumpRoutes.Target`, `tables.MaxJump`, `gen.Engine.lanes` | `TestJumpRoutesTable`, `TestJumpRoutesHasNoRowForX`, `assertLanesFollowTheTable` | done |
 
 ## World creation (pp. 4-9)
 
@@ -44,7 +44,7 @@ with a test named in it.
 | Rule                                                          | Page   | Implementation                                             | Test                                                                                          | Status                    |
 | ------------------------------------------------------------- | ------ | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------- |
 | R17 Dice engine, one and two dice, cumulative DMs, N+ targets | B1 2-3 | `dice.Stream.Die`/`D2`, `dice.Sum`, `dice.Target`          | `TestDieIsOneDie`, `TestD2ConsumesTwoDiceInOrder`, `TestTargetIsNPlus`, `TestSumIsCumulative` | done                      |
-| R18 The subsector record and its provenance                   | --     | `subsector.Subsector`, `subsector.New`, `subsector.Decode`, `subsector.Marshal` | `TestNewRecordCarriesItsProvenance`, `TestGoldensValidate`, `TestDecodeRejectsUnknownFields`   | grows with each milestone |
+| R18 The subsector record and its provenance | -- | `subsector.Subsector`, `subsector.World`, `subsector.Route`, `subsector.New`, `subsector.Decode` | `TestNewRecordCarriesItsProvenance`, `TestGoldensValidate`, `TestDecodeRejectsUnknownFields` | grows with each milestone |
 | R19 Batch                                                     | --     | --                                                         | --                                                                                            | not yet (milestone 4)     |
 | R20 The subsector listing                                     | 4      | --                                                         | --                                                                                            | not yet (milestone 4)     |
 
@@ -69,9 +69,9 @@ reading is stamped only once the engine implements the step it governs.
 
 | Reading | Governs                                                       | Cited in                                | Stamped           |
 | ------- | ------------------------------------------------------------- | --------------------------------------- | ----------------- |
-| E001    | Where the base throws sit in the procedure                    | `tables/tables.go`, `dice/dice_test.go` | milestone 2       |
+| E001 | Where the base throws sit in the procedure | `gen/gen.go`, `tables/tables.go` | where any base throw was made, now |
 | E002    | The order of the passes, hexes and characteristics            | `gen/gen.go`, `subsector/hex.go`        | every record, now |
-| E003    | Which pairs are examined, when a die is thrown, in what order | `tables/tables.go`                      | milestone 2       |
+| E003 | Which pairs are examined, when a die is thrown, in what order | `gen/gen.go`, `tables/tables.go` | records with two or more worlds, now |
 | E004    | Floored at 0, capped only at the technological index          | `tables/tables.go`                      | milestone 3       |
 | E005    | The string of digits: order, alphabet, no separator           | `subsector/digit.go`                    | milestone 3       |
 

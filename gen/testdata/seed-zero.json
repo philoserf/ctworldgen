@@ -5,7 +5,9 @@
   "rng_algorithm": "go-math-rand-v2-pcg",
   "seed": 0,
   "errata": [
-    "E002"
+    "E001",
+    "E002",
+    "E003"
   ],
   "name": "",
   "occurrence_dm": 0,
@@ -13,172 +15,567 @@
     {
       "hex": "0102",
       "name": "",
-      "starport": "D"
+      "starport": "D",
+      "naval_base": false,
+      "scout_base": true
     },
     {
       "hex": "0107",
       "name": "",
-      "starport": "C"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0109",
       "name": "",
-      "starport": "E"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0110",
       "name": "",
-      "starport": "C"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0205",
       "name": "",
-      "starport": "C"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0207",
       "name": "",
-      "starport": "C"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0208",
       "name": "",
-      "starport": "B"
+      "starport": "B",
+      "naval_base": true,
+      "scout_base": false
     },
     {
       "hex": "0303",
       "name": "",
-      "starport": "B"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0304",
       "name": "",
-      "starport": "C"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0306",
       "name": "",
-      "starport": "C"
+      "starport": "B",
+      "naval_base": true,
+      "scout_base": false
     },
     {
       "hex": "0307",
       "name": "",
-      "starport": "B"
+      "starport": "A",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0308",
       "name": "",
-      "starport": "B"
+      "starport": "A",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0309",
       "name": "",
-      "starport": "B"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0402",
       "name": "",
-      "starport": "B"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": true
     },
     {
       "hex": "0403",
       "name": "",
-      "starport": "C"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0406",
       "name": "",
-      "starport": "B"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0407",
       "name": "",
-      "starport": "E"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": true
     },
     {
       "hex": "0408",
       "name": "",
-      "starport": "E"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0501",
       "name": "",
-      "starport": "B"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0505",
       "name": "",
-      "starport": "C"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0510",
       "name": "",
-      "starport": "B"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": true
     },
     {
       "hex": "0601",
       "name": "",
-      "starport": "A"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0604",
       "name": "",
-      "starport": "A"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": true
     },
     {
       "hex": "0610",
       "name": "",
-      "starport": "B"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": true
     },
     {
       "hex": "0702",
       "name": "",
-      "starport": "A"
+      "starport": "B",
+      "naval_base": true,
+      "scout_base": true
     },
     {
       "hex": "0703",
       "name": "",
-      "starport": "C"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0708",
       "name": "",
-      "starport": "C"
+      "starport": "A",
+      "naval_base": true,
+      "scout_base": true
     },
     {
       "hex": "0709",
       "name": "",
-      "starport": "C"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0710",
       "name": "",
-      "starport": "C"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": true
     },
     {
       "hex": "0803",
       "name": "",
-      "starport": "B"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0804",
       "name": "",
-      "starport": "B"
+      "starport": "C",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0807",
       "name": "",
-      "starport": "E"
+      "starport": "B",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0808",
       "name": "",
-      "starport": "E"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
     },
     {
       "hex": "0810",
       "name": "",
-      "starport": "C"
+      "starport": "E",
+      "naval_base": false,
+      "scout_base": false
+    }
+  ],
+  "routes": [
+    {
+      "from": "0107",
+      "to": "0207",
+      "distance": 1
+    },
+    {
+      "from": "0109",
+      "to": "0110",
+      "distance": 1
+    },
+    {
+      "from": "0109",
+      "to": "0207",
+      "distance": 2
+    },
+    {
+      "from": "0109",
+      "to": "0309",
+      "distance": 2
+    },
+    {
+      "from": "0110",
+      "to": "0308",
+      "distance": 3
+    },
+    {
+      "from": "0205",
+      "to": "0207",
+      "distance": 2
+    },
+    {
+      "from": "0205",
+      "to": "0306",
+      "distance": 1
+    },
+    {
+      "from": "0205",
+      "to": "0307",
+      "distance": 2
+    },
+    {
+      "from": "0205",
+      "to": "0406",
+      "distance": 2
+    },
+    {
+      "from": "0205",
+      "to": "0407",
+      "distance": 3
+    },
+    {
+      "from": "0205",
+      "to": "0408",
+      "distance": 4
+    },
+    {
+      "from": "0207",
+      "to": "0208",
+      "distance": 1
+    },
+    {
+      "from": "0207",
+      "to": "0306",
+      "distance": 2
+    },
+    {
+      "from": "0207",
+      "to": "0307",
+      "distance": 1
+    },
+    {
+      "from": "0207",
+      "to": "0308",
+      "distance": 1
+    },
+    {
+      "from": "0207",
+      "to": "0309",
+      "distance": 2
+    },
+    {
+      "from": "0207",
+      "to": "0406",
+      "distance": 2
+    },
+    {
+      "from": "0207",
+      "to": "0408",
+      "distance": 2
+    },
+    {
+      "from": "0207",
+      "to": "0510",
+      "distance": 4
+    },
+    {
+      "from": "0208",
+      "to": "0307",
+      "distance": 2
+    },
+    {
+      "from": "0208",
+      "to": "0308",
+      "distance": 1
+    },
+    {
+      "from": "0208",
+      "to": "0309",
+      "distance": 1
+    },
+    {
+      "from": "0306",
+      "to": "0307",
+      "distance": 1
+    },
+    {
+      "from": "0306",
+      "to": "0308",
+      "distance": 2
+    },
+    {
+      "from": "0306",
+      "to": "0406",
+      "distance": 1
+    },
+    {
+      "from": "0306",
+      "to": "0407",
+      "distance": 2
+    },
+    {
+      "from": "0306",
+      "to": "0408",
+      "distance": 3
+    },
+    {
+      "from": "0307",
+      "to": "0308",
+      "distance": 1
+    },
+    {
+      "from": "0307",
+      "to": "0406",
+      "distance": 1
+    },
+    {
+      "from": "0307",
+      "to": "0407",
+      "distance": 1
+    },
+    {
+      "from": "0307",
+      "to": "0408",
+      "distance": 2
+    },
+    {
+      "from": "0308",
+      "to": "0309",
+      "distance": 1
+    },
+    {
+      "from": "0308",
+      "to": "0407",
+      "distance": 1
+    },
+    {
+      "from": "0308",
+      "to": "0408",
+      "distance": 1
+    },
+    {
+      "from": "0308",
+      "to": "0510",
+      "distance": 3
+    },
+    {
+      "from": "0308",
+      "to": "0708",
+      "distance": 4
+    },
+    {
+      "from": "0309",
+      "to": "0408",
+      "distance": 1
+    },
+    {
+      "from": "0402",
+      "to": "0403",
+      "distance": 1
+    },
+    {
+      "from": "0402",
+      "to": "0604",
+      "distance": 3
+    },
+    {
+      "from": "0402",
+      "to": "0702",
+      "distance": 3
+    },
+    {
+      "from": "0402",
+      "to": "0703",
+      "distance": 3
+    },
+    {
+      "from": "0406",
+      "to": "0407",
+      "distance": 1
+    },
+    {
+      "from": "0407",
+      "to": "0408",
+      "distance": 1
+    },
+    {
+      "from": "0407",
+      "to": "0604",
+      "distance": 4
+    },
+    {
+      "from": "0407",
+      "to": "0708",
+      "distance": 3
+    },
+    {
+      "from": "0408",
+      "to": "0510",
+      "distance": 2
+    },
+    {
+      "from": "0408",
+      "to": "0610",
+      "distance": 3
+    },
+    {
+      "from": "0408",
+      "to": "0807",
+      "distance": 4
+    },
+    {
+      "from": "0505",
+      "to": "0604",
+      "distance": 1
+    },
+    {
+      "from": "0510",
+      "to": "0610",
+      "distance": 1
+    },
+    {
+      "from": "0510",
+      "to": "0709",
+      "distance": 2
+    },
+    {
+      "from": "0510",
+      "to": "0710",
+      "distance": 2
+    },
+    {
+      "from": "0601",
+      "to": "0702",
+      "distance": 1
+    },
+    {
+      "from": "0604",
+      "to": "0702",
+      "distance": 3
+    },
+    {
+      "from": "0604",
+      "to": "0703",
+      "distance": 2
+    },
+    {
+      "from": "0604",
+      "to": "0804",
+      "distance": 2
+    },
+    {
+      "from": "0610",
+      "to": "0710",
+      "distance": 1
+    },
+    {
+      "from": "0702",
+      "to": "0703",
+      "distance": 1
+    },
+    {
+      "from": "0702",
+      "to": "0804",
+      "distance": 3
+    },
+    {
+      "from": "0708",
+      "to": "0709",
+      "distance": 1
+    },
+    {
+      "from": "0708",
+      "to": "0710",
+      "distance": 2
+    },
+    {
+      "from": "0708",
+      "to": "0807",
+      "distance": 1
+    },
+    {
+      "from": "0709",
+      "to": "0807",
+      "distance": 2
+    },
+    {
+      "from": "0803",
+      "to": "0804",
+      "distance": 1
+    },
+    {
+      "from": "0807",
+      "to": "0808",
+      "distance": 1
     }
   ]
 }
