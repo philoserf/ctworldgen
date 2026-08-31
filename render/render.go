@@ -201,14 +201,23 @@ func occurrenceDM(value int) string {
 	return fmt.Sprintf("%+d", value)
 }
 
-// cell writes a value into a Markdown table cell. A world's name is the
-// one field a referee writes in himself, so it is the one that can carry
-// a pipe or a line break, either of which would otherwise break the row
-// into columns the table does not have.
-func cell(value string) string {
-	replaced := strings.NewReplacer("|", `\|`, "\n", " ", "\r", " ")
+// oneLine flattens a value to a single line. A world's name is the one
+// field a referee writes in himself, so it is the one that can carry a
+// line break, and a name broken over two lines is not a name any document
+// here can set.
+func oneLine(value string) string {
+	return strings.NewReplacer("\n", " ", "\r", " ").Replace(value)
+}
 
-	return replaced.Replace(value)
+// cell writes a value into a Markdown table cell, where a pipe would
+// otherwise break the row into columns the table does not have.
+//
+// This is Markdown's own syntax and nothing else's: the escape must not
+// reach a document with no pipes to escape. It did once -- named() called
+// this, so the PDF booklet drew a backslash the referee never typed,
+// while the roster and the map beside it drew the same name plain.
+func cell(value string) string {
+	return strings.ReplaceAll(oneLine(value), "|", `\|`)
 }
 
 // namesByHex indexes the names the referee wrote in, so the lane table
@@ -221,7 +230,7 @@ func namesByHex(record *subsector.Subsector) map[subsector.Hex]string {
 
 	for _, world := range record.Worlds {
 		if world.Name != "" {
-			names[world.Hex] = world.Name
+			names[world.Hex] = oneLine(world.Name)
 		}
 	}
 
@@ -237,7 +246,7 @@ func named(names map[subsector.Hex]string, hex subsector.Hex) string {
 		return hex.String()
 	}
 
-	return hex.String() + " " + cell(name)
+	return hex.String() + " " + name
 }
 
 // bases names the bases a world has, which p. 5 prints throws for at
@@ -272,7 +281,8 @@ func (r *Renderer) lanes(built *strings.Builder, names map[subsector.Hex]string,
 	built.WriteString("| From | To | Parsecs |\n| --- | --- | --- |\n")
 
 	for _, route := range record.Routes {
-		fmt.Fprintf(built, "| %s | %s | %d |\n", named(names, route.From), named(names, route.To), route.Distance)
+		fmt.Fprintf(built, "| %s | %s | %d |\n",
+			cell(named(names, route.From)), cell(named(names, route.To)), route.Distance)
 	}
 
 	built.WriteString("\n")

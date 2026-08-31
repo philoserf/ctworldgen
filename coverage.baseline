@@ -8,6 +8,6 @@ github.com/philoserf/ctworldgen/internal/audit 7
 github.com/philoserf/ctworldgen/internal/cmd/ratchet 31
 github.com/philoserf/ctworldgen/internal/cmd/regenerate 105
 github.com/philoserf/ctworldgen/internal/fixture 5
-github.com/philoserf/ctworldgen/render 5
+github.com/philoserf/ctworldgen/render 4
 github.com/philoserf/ctworldgen/subsector 23
 github.com/philoserf/ctworldgen/tables 28

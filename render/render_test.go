@@ -13,6 +13,11 @@ import (
 	"github.com/philoserf/ctworldgen/tables"
 )
 
+// emptyWorldDigits is a world whose every characteristic threw zero,
+// which is what a record built by hand for a question about the listing
+// rather than about the dice carries.
+const emptyWorldDigits = "A0000000"
+
 func listing(t *testing.T, record *subsector.Subsector) string {
 	t.Helper()
 
@@ -268,7 +273,7 @@ func TestARefereesOwnNameStaysInOneCell(t *testing.T) {
 		NavalBase: false, ScoutBase: false,
 		Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
 		Government: 0, LawLevel: 0, TechIndex: 0,
-		Digits: "A0000000", Clamps: nil,
+		Digits: emptyWorldDigits, Clamps: nil,
 	})
 
 	var rows []string
@@ -285,6 +290,50 @@ func TestARefereesOwnNameStaysInOneCell(t *testing.T) {
 
 	if columns := strings.Count(rows[0], "|") - strings.Count(rows[0], `\|`); columns != 5 {
 		t.Errorf("the row divides into %d cells and the table has four columns: %s", columns-1, rows[0])
+	}
+
+	assertTheLaneTableStaysInThreeCells(t, record, hex)
+}
+
+// assertTheLaneTableStaysInThreeCells: the lane table carries the same
+// name in both of its ends, so it needs the same escape the roster does.
+//
+// It is asserted separately because the escape lives in a different place
+// from the roster's. named() does not escape -- it feeds the PDF booklet
+// too, which has no pipes to escape and drew a backslash the referee
+// never typed while named() did -- so the Markdown lane emitter applies
+// cell() itself, and this is what holds it there.
+func assertTheLaneTableStaysInThreeCells(t *testing.T, record *subsector.Subsector, from subsector.Hex) {
+	t.Helper()
+
+	other, err := subsector.NewHex(1, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	record.Worlds = append(record.Worlds, subsector.World{
+		Hex: other, Name: "Efate", Starport: subsector.StarportA,
+		NavalBase: false, ScoutBase: false,
+		Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
+		Government: 0, LawLevel: 0, TechIndex: 0,
+		Digits: emptyWorldDigits, Clamps: nil,
+	})
+	record.Routes = append(record.Routes, subsector.Route{From: from, To: other, Distance: 1})
+
+	var rows []string
+
+	for line := range strings.SplitSeq(section(t, listing(t, record), "Space lanes"), "\n") {
+		if strings.HasPrefix(line, "| 0101 ") {
+			rows = append(rows, line)
+		}
+	}
+
+	if len(rows) != 1 {
+		t.Fatalf("the lane from 0101 has %d rows, want 1: %q", len(rows), rows)
+	}
+
+	if columns := strings.Count(rows[0], "|") - strings.Count(rows[0], `\|`); columns != 4 {
+		t.Errorf("the row divides into %d cells and the table has three columns: %s", columns-1, rows[0])
 	}
 }
 
@@ -329,7 +378,7 @@ func annotated(t *testing.T) *subsector.Subsector {
 			NavalBase: false, ScoutBase: false,
 			Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
 			Government: 0, LawLevel: 0, TechIndex: 0,
-			Digits: "A0000000", Clamps: nil,
+			Digits: emptyWorldDigits, Clamps: nil,
 		})
 	}
 
