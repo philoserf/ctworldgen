@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/philoserf/ctworldgen/docs/subsector.schema.json",
+  "title": "Classic Traveller subsector record",
+  "description": "A subsector generated from Book 3 Worlds and Adventures pp. 1-12. This schema describes the record the engine writes at milestone 1: the world occurrence scan and starport types. It grows with each milestone that adds fields, all of it at schema_version 1, because pre-release growth invalidates no released record.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ruleset",
+    "engine_version",
+    "rng_algorithm",
+    "seed",
+    "errata",
+    "name",
+    "occurrence_dm",
+    "worlds"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "The shape of the record. Bumps when a constraint would invalidate a record the current engine writes.",
+      "type": "integer",
+      "const": 1
+    },
+    "ruleset": {
+      "description": "The held pages that govern.",
+      "type": "string",
+      "const": "ct-1977-book3-pp1-12"
+    },
+    "engine_version": {
+      "description": "Bumps for a rule change, a change to dice-stream consumption order, or a change to the RNG construction, and for nothing else.",
+      "type": "string",
+      "minLength": 1
+    },
+    "rng_algorithm": {
+      "type": "string",
+      "const": "go-math-rand-v2-pcg"
+    },
+    "seed": {
+      "description": "Fills both words of the PCG state, so this one field reproduces the stream.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "errata": {
+      "description": "The readings that actually governed this record, in document order. Each entry in ERRATA.md states its own stamping condition.",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^E[0-9]{3}$" },
+      "uniqueItems": true
+    },
+    "name": {
+      "type": "string"
+    },
+    "occurrence_dm": {
+      "description": "The referee's world occurrence DM, applied to the whole subsector (p. 1).",
+      "type": "integer",
+      "minimum": -1,
+      "maximum": 1
+    },
+    "worlds": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/world" }
+    }
+  },
+  "$defs": {
+    "world": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hex", "name", "starport"],
+      "properties": {
+        "hex": {
+          "description": "The four-digit column-and-row number the p. 3 grid prints, 0101 through 0810.",
+          "type": "string",
+          "pattern": "^0[1-8](0[1-9]|10)$"
+        },
+        "name": {
+          "description": "Always empty: p. 12 step 3 says to name each world and prints no table, so the hex identifies it.",
+          "type": "string"
+        },
+        "starport": {
+          "type": "string",
+          "enum": ["A", "B", "C", "D", "E", "X"]
+        }
+      }
+    }
+  }
+}

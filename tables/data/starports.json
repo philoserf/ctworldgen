@@ -1,0 +1,17 @@
+{
+  "table": "STARPORTS",
+  "page": 1,
+  "rows": [
+    { "die": 2, "type": "A" },
+    { "die": 3, "type": "A" },
+    { "die": 4, "type": "A" },
+    { "die": 5, "type": "B" },
+    { "die": 6, "type": "B" },
+    { "die": 7, "type": "C" },
+    { "die": 8, "type": "C" },
+    { "die": 9, "type": "D" },
+    { "die": 10, "type": "E" },
+    { "die": 11, "type": "E" },
+    { "die": 12, "type": "X" }
+  ]
+}

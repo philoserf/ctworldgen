@@ -14,8 +14,12 @@ shape, and the milestones all live there, and this file does not restate
 them. `docs/ERRATA.md` holds the recorded readings; `docs/COVERAGE.md`
 maps rules to implementation and tests.
 
-**Status: no code yet.** The repository holds its documents and nothing
-else. Milestone 0 of the PRD is complete; Milestone 1 has not begun.
+**Status: milestone 1 is complete.** The occurrence scan and starport
+types generate from a recorded seed; `docs/COVERAGE.md` is the live map of
+rule to code to test, and names what is data-only and what is not yet
+written. Milestone 2 is bases and space lanes -- both charts are already
+transcribed, validated and tested, so what is missing is the two passes
+that consume them and their place in the dice stream (E001, E003).
 
 ## The rule that matters most
 

@@ -1,0 +1,13 @@
+# Golden fixtures move only by regeneration, never by hand -- and a
+# formatter is "by hand" in effect. They are compared byte for byte, so
+# reformatting one breaks the gate with a diff that looks like the dice
+# stream moved when it has not.
+gen/testdata/
+
+# Written by `ctworldgen new`, and compared against the schema in the same
+# shape the engine emits.
+docs/examples/complete.json
+
+# Transcribed from the page and read by the loader; leave the shape alone
+# so a diff here is a transcription change and nothing else.
+tables/data/

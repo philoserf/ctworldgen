@@ -1,0 +1,43 @@
+{
+  "table": "STARPORTS",
+  "page": 5,
+  "comment": "description is the prose the chart prints; naval_base and scout_base are its throws, null where the chart prints none",
+  "rows": [
+    {
+      "type": "A",
+      "description": "Excellent quality installation. Refined fuel available. Annual maintenance overhaul available. Shipyard capable of both starship and non-starship construction present.",
+      "naval_base": 8,
+      "scout_base": 10
+    },
+    {
+      "type": "B",
+      "description": "Good quality installation. Refined fuel available. Annual maintenance overhaul available. Shipyard capable of constructing non-starships present.",
+      "naval_base": 8,
+      "scout_base": 9
+    },
+    {
+      "type": "C",
+      "description": "Routine quality installation. Only unrefined fuel available. Reasonable repair facilities are present.",
+      "naval_base": null,
+      "scout_base": 8
+    },
+    {
+      "type": "D",
+      "description": "Poor quality installation. Only unrefined fuel available. No repair or shipyard facilities present.",
+      "naval_base": null,
+      "scout_base": 7
+    },
+    {
+      "type": "E",
+      "description": "Frontier installation. Essentially a bare spot of bedrock with no fuel, facilities, or bases present.",
+      "naval_base": null,
+      "scout_base": null
+    },
+    {
+      "type": "X",
+      "description": "No starport. No provision is made for any starship landings.",
+      "naval_base": null,
+      "scout_base": null
+    }
+  ]
+}

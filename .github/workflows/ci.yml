@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          # Deliberately unpinned: the gate is meant to fail when the
+          # toolchain moves rather than drift behind it.
+          go-version: stable
+
+      # The official action installs the released binary. `go install` is
+      # not a supported install path for golangci-lint and can produce a
+      # build that behaves differently from the release -- which, on a gate
+      # that runs `default: all`, would mean CI and a developer's machine
+      # disagreeing about what the rules are.
+      #
+      # install-only, because CI runs exactly `task`, and `task lint` is
+      # what invokes golangci-lint. Letting the action run it too would put
+      # a second invocation in CI with different arguments and a different
+      # working directory -- the one thing the "CI runs exactly `task`"
+      # rule exists to prevent.
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+          install-only: true
+
+      # task and nilaway publish no action; `go install` is their supported
+      # path.
+      - name: Install the rest of the gate's tools
+        run: |
+          go install github.com/go-task/task/v3/cmd/task@latest
+          go install go.uber.org/nilaway/cmd/nilaway@latest
+
+      # CI runs exactly `task`. Never add a check here that the local gate
+      # does not run, and never add a tool to the gate without also
+      # installing it above.
+      - run: task

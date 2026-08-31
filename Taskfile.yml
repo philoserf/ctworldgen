@@ -1,0 +1,98 @@
+# The gate. CI runs exactly `task` -- never add a check to CI that this
+# does not run, and never add a tool to the gate without also installing it
+# there.
+#
+# The toolchain is deliberately unpinned. The gate is meant to fail when a
+# tool moves rather than drift behind it, so a red gate on code you did not
+# touch is the signal working. Answer the finding; do not pin a tool or add
+# a linter disable to silence it.
+version: "3"
+
+vars:
+  COVERAGE: coverage.out
+  BASELINE: coverage.baseline
+
+tasks:
+  default:
+    desc: The whole gate, in the order a failure is cheapest to read
+    cmds:
+      - task: tidy
+      - task: vet
+      - task: lint
+      - task: nilaway
+      - task: test
+      - task: ratchet
+
+  tidy:
+    desc: go.mod and go.sum are current
+    cmds:
+      - go mod tidy -diff
+
+  fix:
+    desc: Apply every autofix the enabled formatters and linters offer
+    # Not part of the gate: `lint` already reports everything this repairs,
+    # and a rule configured in two places is one place too many.
+    #
+    # This is `run --fix`, not `golangci-lint fmt`. fmt applies the
+    # formatters alone; several enabled linters -- wsl_v5, nlreturn, mnd's
+    # neighbours -- carry their own fixers, and running only the formatters
+    # leaves those half-applied. A tree fixed by hand with an ad-hoc
+    # invocation is how a half-migration gets committed.
+    cmds:
+      - golangci-lint run ./... --fix
+
+  vet:
+    cmds:
+      - go vet ./...
+
+  lint:
+    desc: golangci-lint, which also reports any formatting difference
+    cmds:
+      # First, because a malformed .golangci.yml otherwise surfaces as a
+      # runtime linter error rather than a config error -- an invalid
+      # setting value reads as "the linter is broken" and costs a round
+      # trip to place. `default: all` means the config carries real
+      # settings for a dozen linters, so this is the likeliest breakage.
+      - golangci-lint config verify
+      - golangci-lint run ./...
+
+  nilaway:
+    cmds:
+      - nilaway ./...
+
+  test:
+    desc: The suite, with the race detector, writing a coverage profile
+    cmds:
+      - go test -race -covermode=atomic -coverprofile={{.COVERAGE}} ./...
+
+  ratchet:
+    desc: Uncovered statements per package have not moved
+    # A failure here is usually not lost coverage. Blank lines split
+    # coverage blocks -- the same function, with two blank lines added,
+    # instruments as four blocks rather than three -- so any reflow by
+    # wsl_v5, and any extraction of a helper, moves these counts without
+    # changing what the tests reach. Read the named packages first: if the
+    # change was a reflow or a refactor, `task ratchet:update` is the
+    # answer. If it was neither, something stopped being covered.
+    deps: [test]
+    cmds:
+      - go run ./internal/cmd/ratchet -profile {{.COVERAGE}} -baseline {{.BASELINE}}
+
+  ratchet:update:
+    desc: Record the current uncovered-statement counts as the baseline
+    deps: [test]
+    cmds:
+      - go run ./internal/cmd/ratchet -profile {{.COVERAGE}} -baseline {{.BASELINE}} -update
+
+  regenerate:
+    desc: Rewrite the golden fixtures, then read the diff
+    cmds:
+      - go run ./internal/cmd/regenerate
+
+  build:
+    cmds:
+      - go build ./...
+
+  clean:
+    cmds:
+      - rm -f {{.COVERAGE}}

@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "ruleset": "ct-1977-book3-pp1-12",
+  "engine_version": "0",
+  "rng_algorithm": "go-math-rand-v2-pcg",
+  "seed": 0,
+  "errata": [
+    "E002"
+  ],
+  "name": "",
+  "occurrence_dm": 0,
+  "worlds": [
+    {
+      "hex": "0102",
+      "name": "",
+      "starport": "D"
+    },
+    {
+      "hex": "0107",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0109",
+      "name": "",
+      "starport": "E"
+    },
+    {
+      "hex": "0110",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0205",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0207",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0208",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0303",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0304",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0306",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0307",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0308",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0309",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0402",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0403",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0406",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0407",
+      "name": "",
+      "starport": "E"
+    },
+    {
+      "hex": "0408",
+      "name": "",
+      "starport": "E"
+    },
+    {
+      "hex": "0501",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0505",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0510",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0601",
+      "name": "",
+      "starport": "A"
+    },
+    {
+      "hex": "0604",
+      "name": "",
+      "starport": "A"
+    },
+    {
+      "hex": "0610",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0702",
+      "name": "",
+      "starport": "A"
+    },
+    {
+      "hex": "0703",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0708",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0709",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0710",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0803",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0804",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0807",
+      "name": "",
+      "starport": "E"
+    },
+    {
+      "hex": "0808",
+      "name": "",
+      "starport": "E"
+    },
+    {
+      "hex": "0810",
+      "name": "",
+      "starport": "C"
+    }
+  ]
+}

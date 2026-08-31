@@ -1,0 +1,151 @@
+{
+  "table": "TECHNOLOGICAL INDEX MATRIX",
+  "page": 9,
+  "comment": "null is the em-dash the page prints: no modifier. The Value column runs 0-9, A-E and X, so a generated value of 15 has no row at all and contributes nothing (ERRATA E004).",
+  "rows": [
+    {
+      "value": "0",
+      "starport": null,
+      "size": 2,
+      "atmosphere": 1,
+      "hydrographics": null,
+      "population": null,
+      "government": 1
+    },
+    {
+      "value": "1",
+      "starport": null,
+      "size": 2,
+      "atmosphere": 1,
+      "hydrographics": null,
+      "population": 1,
+      "government": null
+    },
+    {
+      "value": "2",
+      "starport": null,
+      "size": 1,
+      "atmosphere": 1,
+      "hydrographics": null,
+      "population": 1,
+      "government": null
+    },
+    {
+      "value": "3",
+      "starport": null,
+      "size": 1,
+      "atmosphere": 1,
+      "hydrographics": null,
+      "population": 1,
+      "government": null
+    },
+    {
+      "value": "4",
+      "starport": null,
+      "size": 1,
+      "atmosphere": null,
+      "hydrographics": null,
+      "population": 1,
+      "government": null
+    },
+    {
+      "value": "5",
+      "starport": null,
+      "size": null,
+      "atmosphere": null,
+      "hydrographics": null,
+      "population": 1,
+      "government": 1
+    },
+    {
+      "value": "6",
+      "starport": null,
+      "size": null,
+      "atmosphere": null,
+      "hydrographics": null,
+      "population": null,
+      "government": null
+    },
+    {
+      "value": "7",
+      "starport": null,
+      "size": null,
+      "atmosphere": null,
+      "hydrographics": null,
+      "population": null,
+      "government": null
+    },
+    {
+      "value": "8",
+      "starport": null,
+      "size": null,
+      "atmosphere": null,
+      "hydrographics": null,
+      "population": null,
+      "government": null
+    },
+    {
+      "value": "9",
+      "starport": null,
+      "size": null,
+      "atmosphere": null,
+      "hydrographics": 1,
+      "population": 2,
+      "government": null
+    },
+    {
+      "value": "A",
+      "starport": 6,
+      "size": null,
+      "atmosphere": 1,
+      "hydrographics": 2,
+      "population": 4,
+      "government": null
+    },
+    {
+      "value": "B",
+      "starport": 4,
+      "size": null,
+      "atmosphere": 1,
+      "hydrographics": null,
+      "population": null,
+      "government": null
+    },
+    {
+      "value": "C",
+      "starport": 2,
+      "size": null,
+      "atmosphere": 1,
+      "hydrographics": null,
+      "population": null,
+      "government": null
+    },
+    {
+      "value": "D",
+      "starport": null,
+      "size": null,
+      "atmosphere": 1,
+      "hydrographics": null,
+      "population": null,
+      "government": -2
+    },
+    {
+      "value": "E",
+      "starport": null,
+      "size": null,
+      "atmosphere": 1,
+      "hydrographics": null,
+      "population": null,
+      "government": null
+    },
+    {
+      "value": "X",
+      "starport": -4,
+      "size": null,
+      "atmosphere": null,
+      "hydrographics": null,
+      "population": null,
+      "government": null
+    }
+  ]
+}

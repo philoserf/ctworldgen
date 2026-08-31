@@ -1,0 +1,18 @@
+{
+  "table": "LAW LEVELS",
+  "page": 7,
+  "comment": "each law level includes all prohibitions and conditions of levels numbered lower than it (p. 7), which is written for levels above the last printed row",
+  "printed_max": 9,
+  "labels": [
+    "No laws affecting weapons possession or weapons ownership.",
+    "Certain weapons are prohibited, including specifically 1) body pistols which are undetectable by standard detectors, 2) explosive weapons such as bombs or grenades, and 3) poison gas.",
+    "Portable energy weapons, such as laser rifles or carbines are prohibited. Ship's gunnery is not affected.",
+    "Weapons of a strict military nature (such as machine guns or automatic rifles, though not submachine guns) are prohibited.",
+    "Light assault weapons (such as submachine guns) are prohibited.",
+    "Personal concealable firearms (such as pistols and revolvers) are prohibited.",
+    "Most firearms (all except shotguns) are prohibited. The carrying of any type of weapon openly is discouraged.",
+    "Shotguns are prohibited.",
+    "Long bladed weapons (all blade weapons except daggers) are strictly controlled. Open possession in public is prohibited. Ownership is, however, not restricted.",
+    "Possession of any weapon outside of one's home is prohibited."
+  ]
+}

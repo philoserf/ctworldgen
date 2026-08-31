@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "ruleset": "ct-1977-book3-pp1-12",
+  "engine_version": "0",
+  "rng_algorithm": "go-math-rand-v2-pcg",
+  "seed": 0,
+  "errata": ["E002"],
+  "name": "",
+  "occurrence_dm": -1,
+  "worlds": []
+}

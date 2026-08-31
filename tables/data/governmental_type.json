@@ -1,0 +1,21 @@
+{
+  "table": "GOVERNMENTAL TYPE",
+  "page": 6,
+  "printed_max": 13,
+  "labels": [
+    "No government structure. In many cases, family bonds will predominate.",
+    "Company/Corporation. Ruling functions are assumed by a company managerial elite, and most citizenry are company employees or dependents.",
+    "Participating Democracy. Ruling function decisions are reached by the advice and consent of the citizenry directly.",
+    "Self-Perpetuating Oligarchy. Ruling functions are performed by a restricted minority, with little or no input from the mass of citizenry.",
+    "Representative Democracy. Ruling functions are performed by elected representatives.",
+    "Feudal Technocracy. Ruling functions are performed by specific individuals for persons who agree to be ruled by them. Relationships are based on the performance of technical activities which are mutually beneficial.",
+    "Captive Government. Ruling functions are performed by an imposed leadership answerable to an outside group. A colony or conquered area.",
+    "Balkanization. No central ruling authority exists; rival governments compete for control. Law level refers to government nearest the starport.",
+    "Civil Service Bureaucracy. Ruling functions are performed by government agencies employing individuals selected for their expertise.",
+    "Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.",
+    "Charismatic Dictator. Ruling functions are performed by agencies directed by a single leader who enjoys the overwhelming confidence of the citizens.",
+    "Non-Charismatic Leader. A previous charismatic dictator has been replaced by a leader through normal channels.",
+    "Charismatic Oligarchy. Ruling functions are performed by a select group of members of an organization or class which enjoys the overwhelming confidence of the citizenry.",
+    "Religious Dictatorship. Ruling functions are performed by a religious organization without regard to the specific individual needs of the citizenry."
+  ]
+}

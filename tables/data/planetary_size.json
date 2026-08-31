@@ -1,0 +1,21 @@
+{
+  "table": "PLANETARY SIZE",
+  "page": 5,
+  "comment": "labels are indexed by value from 0. Rows B and C are unreachable by the printed 2D-2 formula; the table is transcribed as printed.",
+  "printed_max": 12,
+  "labels": [
+    "Asteroid/Planetoid Complex.",
+    "1000 miles diameter.",
+    "2000 miles diameter.",
+    "3000 miles diameter.",
+    "4000 miles diameter.",
+    "5000 miles diameter.",
+    "6000 miles diameter.",
+    "7000 miles diameter.",
+    "8000 miles diameter.",
+    "9000 miles diameter.",
+    "10000 miles diameter.",
+    "11000 miles diameter.",
+    "12000 miles diameter."
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "ruleset": "ct-1977-book3-pp1-12",
+  "engine_version": "0",
+  "rng_algorithm": "go-math-rand-v2-pcg",
+  "seed": 1,
+  "errata": [
+    "E002"
+  ],
+  "name": "Aramis",
+  "occurrence_dm": -1,
+  "worlds": [
+    {
+      "hex": "0101",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0103",
+      "name": "",
+      "starport": "D"
+    },
+    {
+      "hex": "0104",
+      "name": "",
+      "starport": "D"
+    },
+    {
+      "hex": "0106",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0107",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0202",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0206",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0303",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0306",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0307",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0401",
+      "name": "",
+      "starport": "A"
+    },
+    {
+      "hex": "0406",
+      "name": "",
+      "starport": "A"
+    },
+    {
+      "hex": "0505",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0506",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0509",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0602",
+      "name": "",
+      "starport": "E"
+    },
+    {
+      "hex": "0605",
+      "name": "",
+      "starport": "D"
+    },
+    {
+      "hex": "0607",
+      "name": "",
+      "starport": "C"
+    },
+    {
+      "hex": "0702",
+      "name": "",
+      "starport": "E"
+    },
+    {
+      "hex": "0706",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0801",
+      "name": "",
+      "starport": "B"
+    },
+    {
+      "hex": "0806",
+      "name": "",
+      "starport": "A"
+    },
+    {
+      "hex": "0807",
+      "name": "",
+      "starport": "E"
+    },
+    {
+      "hex": "0810",
+      "name": "",
+      "starport": "E"
+    }
+  ]
+}

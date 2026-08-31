@@ -1,0 +1,102 @@
+# The toolchain is deliberately unpinned: the gate is meant to fail when a
+# tool moves rather than drift behind it. A red gate on untouched code is
+# the signal working -- answer the finding, do not pin a tool or add a
+# disable to silence it.
+version: "2"
+
+linters:
+  default: all
+  disable:
+    # All three are deprecated, and each is replaced by a linter that is
+    # enabled and reports nothing: exhaustruct by exhaustruct_v5, wsl by
+    # wsl_v5, gomodguard by gomodguard_v2. They are named here only because
+    # `default: all` would otherwise switch the deprecated one on and warn
+    # about it -- so this is the whole disable list, and it disables no
+    # check that is not already being made.
+    #
+    # Everything else in this file's history has been measured and either
+    # fixed or configured. If a linter is added to this list, it needs the
+    # same: a count, and a reason that survives reading the findings.
+    - exhaustruct
+    - wsl
+    - gomodguard
+
+  settings:
+    depguard:
+      # depguard's own default is a deny-all "Main" list that flags this
+      # module's own imports, so the choice was never "on or off" -- it was
+      # "configured or meaningless".
+      #
+      # Note what is deliberately NOT here: rules against dice importing
+      # subsector, or subsector importing tables, and so on down the PRD's
+      # layering. Every one of those edges is an import cycle, which the
+      # compiler already refuses. A depguard rule for them would read as
+      # enforcement and enforce nothing. These two are the constraints that
+      # would otherwise compile.
+      rules:
+        engine-is-the-only-door:
+          files:
+            - "**/cmd/ctworldgen/*.go"
+          deny:
+            - pkg: github.com/philoserf/ctworldgen/tables
+              desc: the command drives the engine; the charts are gen's to consult
+            - pkg: github.com/philoserf/ctworldgen/dice
+              desc: the command drives the engine; the dice stream is gen's to consume
+        fixtures-are-test-support:
+          files:
+            - "**/dice/*.go"
+            - "**/subsector/*.go"
+            - "**/tables/*.go"
+            - "**/gen/*.go"
+            - "**/cmd/ctworldgen/*.go"
+            - "!$test"
+          deny:
+            - pkg: github.com/philoserf/ctworldgen/internal/fixture
+              desc: the golden roster is test support, not architecture
+            - pkg: github.com/philoserf/ctworldgen/internal/audit
+              desc: the repository audit is test support, not architecture
+    errcheck:
+      check-type-assertions: true
+    govet:
+      enable-all: true
+      disable:
+        # fieldalignment reorders struct fields for memory layout. The
+        # record's field order is the order the JSON prints in, and a test
+        # table's order is the order it reads in; neither is negotiable for
+        # a few bytes of padding.
+        - fieldalignment
+    tagliatelle:
+      case:
+        rules:
+          # The record is snake_case throughout.
+          json: snake
+    nolintlint:
+      # A //nolint is a disable one line wide, and carries the same burden
+      # of proof as an entry in the list above: it must name the linter it
+      # silences and say why. allow-unused false also deletes a suppression
+      # once it has stopped suppressing anything.
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
+
+    revive:
+      rules:
+        - name: exported
+          disabled: false
+    wsl_v5:
+      # Every check, not the default subset.
+      default: all
+
+# gofumpt rather than gofmt: it is a strict superset, so enabling it makes
+# gofmt redundant rather than contradictory. It ships inside golangci-lint,
+# so it costs the gate no separate install and moves when golangci-lint
+# moves. This is the single definition of "formatted" -- the Taskfile does
+# not run a formatter of its own, or the two could come to disagree.
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
