@@ -2,11 +2,13 @@ package gen_test
 
 import (
 	"bytes"
+	"math"
 	"os"
 	"path/filepath"
 	"slices"
 	"testing"
 
+	"github.com/philoserf/ctworldgen/dice"
 	"github.com/philoserf/ctworldgen/gen"
 	"github.com/philoserf/ctworldgen/internal/fixture"
 	"github.com/philoserf/ctworldgen/subsector"
@@ -173,6 +175,8 @@ func TestInvariantsOverManySeeds(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	certain := 0
+
 	for i := range 200 {
 		seed := uint64(i)
 		for _, dm := range []int{-1, 0, 1} {
@@ -182,7 +186,15 @@ func TestInvariantsOverManySeeds(t *testing.T) {
 			assertRecordCarriesItsInputs(t, record, seed, dm)
 			assertBasesFollowTheChart(t, record, seed)
 			assertLanesFollowTheTable(t, charts, record, seed)
+
+			certain += assertLanesTheTableMakesCertain(t, charts, record, seed)
 		}
+	}
+
+	// The certain-lane check is the only one of these that can pass by
+	// finding nothing to look at, so say how much it looked at.
+	if certain == 0 {
+		t.Error("no pair in the sweep sat on a cell stating 1, so the certain-lane direction proved nothing")
 	}
 }
 
@@ -393,4 +405,155 @@ func assertLaneHasACell(
 	if _, stated := charts.JumpRoutes.Target(fromPort, toPort, route.Distance); !stated {
 		t.Fatalf("seed %d: lane %s-%s sits at a cell the page prints an em-dash in", seed, route.From, route.To)
 	}
+}
+
+// certainTarget is the one-die target a throw cannot miss: every face of
+// one die is equal to or greater than 1, so a jump routes cell stating it
+// draws a lane without fail (p. 2).
+const certainTarget dice.Target = 1
+
+// assertLanesTheTableMakesCertain is R5 in the direction the other checks
+// cannot see. assertLanesFollowTheTable holds the lanes that exist to the
+// page, so it passes for a record with no lanes at all -- and a target
+// read backwards produces exactly that kind of record: every lane it
+// draws still sits at a stated cell, four parsecs or fewer, away from an
+// X. The cells stating 1 are the ones that settle it, because a lane
+// there is not a matter of the throw.
+//
+// It returns the number of certain pairs it examined, so that the sweep
+// can say the check had something to check.
+func assertLanesTheTableMakesCertain(
+	t *testing.T, charts *tables.Tables, record *subsector.Subsector, seed uint64,
+) int {
+	t.Helper()
+
+	drawn := map[string]bool{}
+	for _, route := range record.Routes {
+		drawn[route.From.String()+route.To.String()] = true
+	}
+
+	examined := 0
+
+	for i, first := range record.Worlds {
+		for _, second := range record.Worlds[i+1:] {
+			distance := first.Hex.Distance(second.Hex)
+
+			target, stated := charts.JumpRoutes.Target(first.Starport, second.Starport, distance)
+			if !stated || target != certainTarget {
+				continue
+			}
+
+			examined++
+
+			if !drawn[first.Hex.String()+second.Hex.String()] {
+				t.Fatalf("seed %d: no lane %s-%s, and the table states 1 for %s-%s at jump-%d, which one die always meets",
+					seed, first.Hex, second.Hex, first.Starport, second.Starport, distance)
+			}
+		}
+	}
+
+	return examined
+}
+
+// The two-dice throw the p. 5 base targets are read against (B1 p. 2).
+const (
+	faces           = 6
+	twoDiceOutcomes = faces * faces
+)
+
+// baseSweepSubsectors is enough subsectors for a base rate to settle. At
+// the +1 DM a subsector averages about fifty worlds, so even starport A --
+// six of the starports table's thirty-six throws -- lands some thousands
+// of times.
+const baseSweepSubsectors = 300
+
+// baseRateTolerance is how far an observed rate may sit from the one the
+// chart's throw predicts. The seeds are fixed, so this does not flake; it
+// is wide enough to absorb the sampling in a few thousand worlds and
+// narrower than the gap a misread target opens, which is twice the
+// target's own distance from an even chance -- a sixth at the narrowest.
+const baseRateTolerance = 0.10
+
+// TestBaseThrowsFollowTheChart is R4 in the direction assertBasesFollowTheChart
+// cannot see. That check holds a base to the starport it was thrown for,
+// so it passes whatever the throw decided -- a target read backwards puts
+// scout bases at A, where the chart asks 10+, far more often than at D,
+// where it asks 7+, and every base still sits at a starport the chart
+// prints a throw for. The rate is what tells the two apart.
+func TestBaseThrowsFollowTheChart(t *testing.T) {
+	t.Parallel()
+
+	charts, err := tables.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	engine := newEngine(t)
+
+	worlds := map[subsector.Starport]int{}
+	naval := map[subsector.Starport]int{}
+	scout := map[subsector.Starport]int{}
+
+	for i := range baseSweepSubsectors {
+		for _, world := range generate(t, engine, gen.Inputs{Seed: uint64(i), Name: "", OccurrenceDM: 1}).Worlds {
+			worlds[world.Starport]++
+
+			if world.NavalBase {
+				naval[world.Starport]++
+			}
+
+			if world.ScoutBase {
+				scout[world.Starport]++
+			}
+		}
+	}
+
+	for _, port := range subsector.Starports() {
+		if worlds[port] == 0 {
+			t.Errorf("no starport %s in %d subsectors, so its base throws were never sampled", port, baseSweepSubsectors)
+
+			continue
+		}
+
+		if target, printed := charts.StarportChart.NavalBase(port); printed {
+			assertRateFollowsTheThrow(t, "naval base", port, target, naval[port], worlds[port])
+		}
+
+		if target, printed := charts.StarportChart.ScoutBase(port); printed {
+			assertRateFollowsTheThrow(t, "scout base", port, target, scout[port], worlds[port])
+		}
+	}
+}
+
+// assertRateFollowsTheThrow holds an observed base rate to the frequency
+// the chart's own target predicts, counted over the thirty-six two-dice
+// outcomes rather than written down as a number.
+func assertRateFollowsTheThrow(
+	t *testing.T, what string, port subsector.Starport, target dice.Target, got, worlds int,
+) {
+	t.Helper()
+
+	want := float64(twoDiceOdds(target)) / float64(twoDiceOutcomes)
+
+	rate := float64(got) / float64(worlds)
+	if math.Abs(rate-want) > baseRateTolerance {
+		t.Errorf("%s at starport %s: %d of %d worlds, a rate of %.3f, and the chart's throw of %d+ predicts %.3f",
+			what, port, got, worlds, rate, int(target), want)
+	}
+}
+
+// twoDiceOdds counts the two-dice outcomes that meet a target, which is
+// the frequency the chart's throw states.
+func twoDiceOdds(target dice.Target) int {
+	met := 0
+
+	for first := 1; first <= faces; first++ {
+		for second := 1; second <= faces; second++ {
+			if target.Met(first + second) {
+				met++
+			}
+		}
+	}
+
+	return met
 }

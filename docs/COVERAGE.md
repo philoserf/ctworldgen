@@ -20,8 +20,8 @@ with a test named in it.
 | R1 Hex distance, even columns half a hex lower         | 3    | `subsector.Hex.cube`, `Hex.Distance`         | `TestDistanceAgainstPrintedGrid` -- measured by hand off the printed grid                              | done                    |
 | R2 World occurrence, one die at 4+, DM -1/0/+1         | 1    | `gen.occurrenceTarget`, `gen.scan`           | `TestOccurrenceDMChangesTheStream`, `TestRejectsDMsTheBookDoesNotOffer`, `TestInvariantsOverManySeeds` | done                    |
 | R3 Starport type, two dice against the starports table | 1    | `tables.Starports.Type`, `gen.Generate`      | `TestStarportsTable`, `TestStarportDistributionFollowsThePage`                                         | done                    |
-| R4 Naval and scout base throws | 5 | `tables.StarportChart.NavalBase`/`ScoutBase`, `gen.Engine.Generate` | `TestStarportChartBaseThrows`, `assertBasesFollowTheChart` | done |
-| R5 Space lanes, one die against the jump routes table | 2 | `tables.JumpRoutes.Target`, `tables.MaxJump`, `gen.Engine.lanes` | `TestJumpRoutesTable`, `TestJumpRoutesHasNoRowForX`, `assertLanesFollowTheTable` | done |
+| R4 Naval and scout base throws | 5 | `tables.StarportChart.NavalBase`/`ScoutBase`, `gen.Engine.Generate` | `TestStarportChartBaseThrows`, `TestBaseThrowsFollowTheChart`, `assertBasesFollowTheChart` | done |
+| R5 Space lanes, one die against the jump routes table | 2 | `tables.JumpRoutes.Target`, `tables.MaxJump`, `gen.Engine.lanes` | `TestJumpRoutesTable`, `TestJumpRoutesHasNoRowForX`, `assertLanesFollowTheTable`, `assertLanesTheTableMakesCertain` | done |
 
 ## World creation (pp. 4-9)
 

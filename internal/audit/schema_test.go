@@ -11,6 +11,7 @@ import (
 	"github.com/philoserf/ctworldgen/gen"
 	"github.com/philoserf/ctworldgen/internal/fixture"
 	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/tables"
 )
 
 func schema(t *testing.T, root string) *jsonschema.Schema {
@@ -149,34 +150,48 @@ func TestSchemaRejectsUnknownFields(t *testing.T) {
 
 	for _, bad := range []struct {
 		name   string
-		mutate func(record map[string]any, world map[string]any)
+		mutate func(record, world, route map[string]any)
 	}{
-		{"an unknown field at the top level", func(record, _ map[string]any) {
+		{"an unknown field at the top level", func(record, _, _ map[string]any) {
 			record["surprise"] = 1
 		}},
-		{"an unknown field on a world", func(_, world map[string]any) {
+		{"an unknown field on a world", func(_, world, _ map[string]any) {
 			world["surprise"] = 1
 		}},
-		{"a hex off the p. 3 grid", func(_, world map[string]any) {
+		{"a hex off the p. 3 grid", func(_, world, _ map[string]any) {
 			world["hex"] = "0900"
 		}},
-		{"a hex that is not four digits", func(_, world map[string]any) {
+		{"a hex that is not four digits", func(_, world, _ map[string]any) {
 			world["hex"] = "1-5"
 		}},
-		{"a starport the book does not print", func(_, world map[string]any) {
+		{"a starport the book does not print", func(_, world, _ map[string]any) {
 			world["starport"] = "Q"
 		}},
-		{"an occurrence DM the book does not offer", func(record, _ map[string]any) {
+		{"an occurrence DM the book does not offer", func(record, _, _ map[string]any) {
 			record["occurrence_dm"] = 2
 		}},
-		{"a ruleset that is not the held pages", func(record, _ map[string]any) {
+		{"a ruleset that is not the held pages", func(record, _, _ map[string]any) {
 			record["ruleset"] = "mongoose-2022"
 		}},
-		{"an unrecognised erratum identifier", func(record, _ map[string]any) {
+		{"an unrecognised erratum identifier", func(record, _, _ map[string]any) {
 			record["errata"] = []any{"E2"}
 		}},
-		{"a missing required field", func(record, _ map[string]any) {
+		{"a missing required field", func(record, _, _ map[string]any) {
 			delete(record, "seed")
+		}},
+		{"an unknown field on a route", func(_, _, route map[string]any) {
+			route["surprise"] = 1
+		}},
+		{"a lane reaching a hex off the p. 3 grid", func(_, _, route map[string]any) {
+			route["from"] = "0900"
+		}},
+		// int, not the Parsecs the table constant carries: the validator
+		// reads a Go value the way it reads a decoded document, and a named
+		// integer type is not a number to it -- it would reject a distance
+		// the schema allows, and this case would pass without the maximum
+		// it means to test.
+		{"a lane longer than the jump routes table states", func(_, _, route map[string]any) {
+			route["distance"] = int(tables.MaxJump) + 1
 		}},
 	} {
 		t.Run(bad.name, func(t *testing.T) {
@@ -184,17 +199,7 @@ func TestSchemaRejectsUnknownFields(t *testing.T) {
 
 			record := loadRecord(t, filepath.Join(repoRoot, "docs", "examples", "complete.json"))
 
-			worlds, isSlice := record["worlds"].([]any)
-			if !isSlice || len(worlds) == 0 {
-				t.Fatal("the complete example has no worlds to mutate")
-			}
-
-			world, isSlice := worlds[0].(map[string]any)
-			if !isSlice {
-				t.Fatal("the complete example's first world is not an object")
-			}
-
-			bad.mutate(record, world)
+			bad.mutate(record, firstObject(t, record, "worlds"), firstObject(t, record, "routes"))
 
 			err := compiled.Validate(any(record))
 			if err == nil {
@@ -219,11 +224,30 @@ func TestTheUnmutatedExampleStillValidates(t *testing.T) {
 		t.Fatalf("the complete example does not validate before mutation: %v", err)
 	}
 
-	for _, required := range []string{"seed", "ruleset", "occurrence_dm", "errata", "worlds"} {
+	for _, required := range []string{"seed", "ruleset", "occurrence_dm", "errata", "worlds", "routes"} {
 		if _, ok := record[required]; !ok {
 			t.Errorf("the complete example has no %q field for the mutations to target", required)
 		}
 	}
+}
+
+// firstObject returns the first entry of one of the record's arrays, which
+// is the object a mutation targets. A mutation aimed at an array that had
+// emptied would test nothing, so an empty one fails here.
+func firstObject(t *testing.T, record map[string]any, field string) map[string]any {
+	t.Helper()
+
+	entries, isSlice := record[field].([]any)
+	if !isSlice || len(entries) == 0 {
+		t.Fatalf("the complete example has no %s for a mutation to target", field)
+	}
+
+	object, isObject := entries[0].(map[string]any)
+	if !isObject {
+		t.Fatalf("the complete example's first %s entry is not an object", field)
+	}
+
+	return object
 }
 
 func loadRecord(t *testing.T, path string) map[string]any {
