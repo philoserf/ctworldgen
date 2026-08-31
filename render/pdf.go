@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/go-pdf/fpdf"
 	"golang.org/x/text/encoding"
@@ -108,6 +109,7 @@ func (r *Renderer) Booklet(out io.Writer, record *subsector.Subsector) error {
 		charts: r.charts,
 		record: record,
 		names:  namesByHex(record),
+		latin:  windows1252(),
 		y:      pageMargin,
 	}
 
@@ -152,6 +154,10 @@ func newPDF() *fpdf.Fpdf {
 // drawn with Helvetica carries single bytes, not UTF-8, so an em-dash
 // handed straight to fpdf is drawn as the three characters its UTF-8
 // spells.
+//
+// One is made per booklet and held on it. The encoding is stateless, and
+// every string drawn goes through it -- a sector draws its 1280 hex
+// numbers alone -- so building one for each was an allocation per stamp.
 func windows1252() *encoding.Encoder { return charmap.Windows1252.NewEncoder() }
 
 // encode writes a string in the alphabet the page can draw.
@@ -162,8 +168,8 @@ func windows1252() *encoding.Encoder { return charmap.Windows1252.NewEncoder() }
 // world, which is the one field with no alphabet the record can promise.
 // A character the encoding cannot carry is written as a question mark
 // rather than dropped, so a name stays the length and shape he gave it.
-func encode(text string) string {
-	written, err := windows1252().String(text)
+func (b *booklet) encode(text string) string {
+	written, err := b.latin.String(text)
 	if err == nil {
 		return written
 	}
@@ -171,7 +177,7 @@ func encode(text string) string {
 	var built strings.Builder
 
 	for _, char := range text {
-		one, oneErr := windows1252().String(string(char))
+		one, oneErr := b.latin.String(string(char))
 		if oneErr != nil {
 			built.WriteByte('?')
 
@@ -191,6 +197,7 @@ type booklet struct {
 	charts *tables.Tables
 	record *subsector.Subsector
 	names  map[subsector.Hex]string
+	latin  *encoding.Encoder
 	y      float64
 }
 
@@ -198,9 +205,9 @@ type booklet struct {
 // alphabet. Every string drawn goes through here: fpdf takes the bytes it
 // is given, so a single Text call that skipped this would be the one that
 // mojibakes.
-func (b *booklet) text(x, y float64, s string) { b.pdf.Text(x, y, encode(s)) }
+func (b *booklet) text(x, y float64, s string) { b.pdf.Text(x, y, b.encode(s)) }
 
-func (b *booklet) width(s string) float64 { return b.pdf.GetStringWidth(encode(s)) }
+func (b *booklet) width(s string) float64 { return b.pdf.GetStringWidth(b.encode(s)) }
 
 // split wraps a paragraph to a width. It measures the string as it was
 // written rather than as it is encoded, because fpdf indexes its widths
@@ -220,7 +227,7 @@ func (b *booklet) firstPage() {
 		name = untitled(b.record)
 	}
 
-	b.pdf.SetTitle(encode(name), false)
+	b.pdf.SetTitle(b.encode(name), false)
 	b.pdf.SetFont("Helvetica", "B", titleSize)
 	b.pdf.SetTextColor(inkBlack, inkBlack, inkBlack)
 	b.text(pageMargin, b.y+titleSize, name)
@@ -431,8 +438,16 @@ func (b *booklet) clip(value string, width float64) string {
 
 	const ellipsis = "…"
 
-	for len(value) > 0 {
-		value = value[:len(value)-1]
+	// A rune at a time, not a byte. Cutting inside a multi-byte character
+	// leaves invalid UTF-8, which encode reads as the replacement rune and
+	// draws as a question mark -- so trimming a name would silently
+	// destroy the character it stopped on, which is the one thing encode
+	// promises it will not do.
+	for value != "" {
+		_, last := utf8.DecodeLastRuneInString(value)
+
+		value = value[:len(value)-last]
+
 		if b.width(value+ellipsis) <= width {
 			return value + ellipsis
 		}
@@ -452,6 +467,26 @@ func (b *booklet) lanesSection() {
 		return
 	}
 
+	b.laneHead()
+
+	for _, route := range b.record.Routes {
+		// The head goes on every page the table reaches, as the roster's
+		// does. A subsector at DM +1 carries a hundred and fifty lanes and
+		// a sector carries hundreds, so a table without this prints pages
+		// of unlabelled columns.
+		if b.y+rosterLead > contentBottom {
+			b.newPage()
+			b.laneHead()
+		}
+
+		b.pdf.SetFont("Helvetica", "", rosterSize)
+		b.laneCells(named(b.names, route.From), named(b.names, route.To), fmt.Sprint(route.Distance))
+	}
+}
+
+// laneHead writes the lane table's column headings and the rule beneath
+// them, as rosterHead does for the roster.
+func (b *booklet) laneHead() {
 	b.pdf.SetFont("Helvetica", "B", rosterSize)
 	b.laneCells("From", "To", "Parsecs")
 
@@ -459,12 +494,6 @@ func (b *booklet) lanesSection() {
 	b.rule(pageMargin, contentRight)
 
 	b.y += blockGap / two
-
-	for _, route := range b.record.Routes {
-		b.ensure(rosterLead)
-		b.pdf.SetFont("Helvetica", "", rosterSize)
-		b.laneCells(named(b.names, route.From), named(b.names, route.To), fmt.Sprint(route.Distance))
-	}
 }
 
 // laneColumnWidth is what one end of a lane is written in: a hex and the

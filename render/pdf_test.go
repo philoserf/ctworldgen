@@ -660,11 +660,16 @@ func TestABookletHoldsARefereesOwnName(t *testing.T) {
 		accented    = "Régina"
 		unwriteable = "Regina Łąka"
 		overlong    = "Regina Aleph Beth Gimel Daleth He Waw Zayin Heth"
+		piped       = "North | South"
 	)
+
+	// Long enough to be trimmed, and every character of it two bytes
+	// wide, so the trim can only land inside one.
+	accentedAndOverlong := strings.Repeat("é", 60)
 
 	record := subsector.New(1, "Aramis", 0)
 
-	for index, name := range []string{accented, unwriteable, overlong} {
+	for index, name := range []string{accented, unwriteable, overlong, piped, accentedAndOverlong} {
 		record.Worlds = append(record.Worlds, world(t, hexOf(t, 1, index+1), name))
 	}
 
@@ -691,6 +696,105 @@ func TestABookletHoldsARefereesOwnName(t *testing.T) {
 	if !anyStampWith(written, "Regina Aleph") || !anyStampWith(written, "\x85") {
 		t.Error("the overlong name was not trimmed to its column")
 	}
+
+	// A pipe is Markdown's syntax and no document here has any. Escaping
+	// it stamped a backslash the referee never typed, and stamped it in
+	// the lane table and the detail heading only -- so the same booklet
+	// spelled one world two ways.
+	if anyStampWith(written, `\|`) {
+		t.Error("a name was drawn with Markdown's pipe escape in it")
+	}
+
+	if !anyStampWith(written, piped) {
+		t.Error("a name carrying a pipe did not reach the page as it was written")
+	}
+
+	assertTrimmingKeepsWholeCharacters(t, written)
+}
+
+// assertTrimmingKeepsWholeCharacters: a trim that cuts inside a
+// multi-byte character leaves invalid UTF-8, which encode reads as the
+// replacement rune and draws as a question mark. That would silently
+// destroy the character the trim stopped on, which is the one thing
+// encode promises it will not do.
+func assertTrimmingKeepsWholeCharacters(t *testing.T, written []stamp) {
+	t.Helper()
+
+	// Windows-1252 draws e-acute as the single byte 0xE9, so a run of
+	// them that survived the trim is a run of 0xE9 and nothing else.
+	trimmed := 0
+
+	for _, found := range written {
+		if !strings.HasPrefix(found.Text, "\xe9") {
+			continue
+		}
+
+		trimmed++
+
+		if strings.Contains(found.Text, "?") {
+			t.Errorf("a trim cut inside a character: %q", found.Text)
+		}
+
+		if !strings.HasSuffix(found.Text, "\x85") {
+			t.Errorf("the trimmed name does not end in an ellipsis: %q", found.Text)
+		}
+	}
+
+	// The roster cell and the map label, both trimmed to their own width.
+	const placesTheNameIsDrawn = 2
+
+	if trimmed != placesTheNameIsDrawn {
+		t.Errorf("the accented name was drawn %d times; want %d", trimmed, placesTheNameIsDrawn)
+	}
+}
+
+// TestTheLaneTableIsLabelledOnEveryPageItReaches: a subsector at DM +1
+// carries a hundred and fifty lanes and a sector carries hundreds, so the
+// table runs past one page. The roster beside it repeats its head; this
+// is the check that the lane table does too, rather than printing pages
+// of unlabelled columns.
+func TestTheLaneTableIsLabelledOnEveryPageItReaches(t *testing.T) {
+	t.Parallel()
+
+	record := generated(t, fixture.Golden{File: "dm-plus-one", Seed: 1, Name: "Aramis", OccurrenceDM: 1})
+
+	sheets := pages(t, drawn(t, record))
+	labelled := 0
+
+	for number, page := range sheets {
+		written := stamps(t, page)
+
+		if !carriesALaneRow(written) {
+			continue
+		}
+
+		if !anyStamp(written, "Parsecs") {
+			t.Errorf("page %d carries lane rows and no column heading", number+1)
+		}
+
+		labelled++
+	}
+
+	// The table has to have reached a second page, or this proves nothing.
+	const atLeast = 2
+
+	if labelled < atLeast {
+		t.Fatalf("the lane table reached %d pages; the check needs at least %d to mean anything", labelled, atLeast)
+	}
+}
+
+// carriesALaneRow reports whether a page has a row of the lane table on
+// it, which is a bare distance written in the table's third column.
+func carriesALaneRow(written []stamp) bool {
+	const parsecsColumn = 440.0
+
+	for _, found := range written {
+		if near(found.X, parsecsColumn) && found.Text != "Parsecs" {
+			return true
+		}
+	}
+
+	return false
 }
 
 // TestAnEmptyBookletSaysSo: a run whose eighty throws place no world
