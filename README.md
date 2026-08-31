@@ -49,8 +49,8 @@ carries no hyphen (`A867A698`, not `A867A69-8`).
 ## Development
 
 ```sh
-task              # the whole gate: tidy, fmt, vet, lint, nilaway, test -race, coverage ratchet
-task regenerate   # rewrite the golden fixtures, then read the diff
+task              # the whole gate: tidy, vet, lint (formatting included), nilaway, test -race, coverage ratchet
+task regenerate   # rewrite the golden fixtures and the complete example, then read the diff
 ```
 
 CI runs exactly `task`. The toolchain is deliberately unpinned: the gate is

@@ -37,7 +37,7 @@
       "const": "go-math-rand-v2-pcg"
     },
     "seed": {
-      "description": "Fills both words of the PCG state, so this one field reproduces the stream.",
+      "description": "Fills both words of the PCG state, so this one field reproduces the stream. A seed the engine drew is at most 2^53-1 so that a reader parsing JSON numbers as doubles cannot round it; an explicit --seed may be any uint64.",
       "type": "integer",
       "minimum": 0
     },

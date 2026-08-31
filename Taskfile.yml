@@ -62,6 +62,10 @@ tasks:
 
   test:
     desc: The suite, with the race detector, writing a coverage profile
+    # Once per invocation: `default` runs the suite and then `ratchet`,
+    # which depends on it. Without this the whole -race suite runs twice on
+    # every gate and every CI run, for one profile that does not change.
+    run: once
     cmds:
       - go test -race -covermode=atomic -coverprofile={{.COVERAGE}} ./...
 
@@ -85,7 +89,7 @@ tasks:
       - go run ./internal/cmd/ratchet -profile {{.COVERAGE}} -baseline {{.BASELINE}} -update
 
   regenerate:
-    desc: Rewrite the golden fixtures, then read the diff
+    desc: Rewrite the golden fixtures and the complete example, then read the diff
     cmds:
       - go run ./internal/cmd/regenerate
 

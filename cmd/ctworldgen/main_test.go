@@ -98,6 +98,29 @@ func TestASeedIsAlwaysRecorded(t *testing.T) {
 	}
 }
 
+// TestADrawnSeedSurvivesADoubleParser: a drawn seed is bounded to
+// 2^53-1, so a reader that parses JSON numbers as IEEE-754 doubles cannot
+// round it into a seed that reproduces a different subsector.
+func TestADrawnSeedSurvivesADoubleParser(t *testing.T) {
+	t.Parallel()
+
+	for range 50 {
+		out, _, err := exec(t, "new")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		seed := decode(t, out).Seed
+		if seed > 1<<53-1 {
+			t.Fatalf("drawn seed %d exceeds 2^53-1 and a double parser would round it", seed)
+		}
+
+		if float64(seed) != float64(seed)+0 || uint64(float64(seed)) != seed {
+			t.Fatalf("drawn seed %d does not survive a round trip through a float64", seed)
+		}
+	}
+}
+
 func TestRejectsAnOccurrenceDMTheBookDoesNotOffer(t *testing.T) {
 	t.Parallel()
 
@@ -214,6 +237,23 @@ func TestUsage(t *testing.T) {
 	_, _, err := exec(t, "new", "--nonesuch")
 	if err == nil {
 		t.Error("an unknown flag was accepted")
+	}
+}
+
+// TestHelpIsNotAFailure: -h is a request that the flag package has already
+// answered on stderr. Reporting it as an error too would print a failure
+// after the help text and exit non-zero on a command that did what was
+// asked of it.
+func TestHelpIsNotAFailure(t *testing.T) {
+	t.Parallel()
+
+	_, stderr, err := exec(t, "new", "-h")
+	if err != nil {
+		t.Errorf("new -h reported an error: %v", err)
+	}
+
+	if !strings.Contains(stderr, "occurrence-dm") {
+		t.Errorf("new -h printed no flag help:\n%s", stderr)
 	}
 }
 

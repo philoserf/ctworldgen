@@ -2,6 +2,8 @@ package subsector_test
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/philoserf/ctworldgen/subsector"
@@ -294,5 +296,48 @@ func TestStampKeepsDocumentOrderAndDoesNotRepeat(t *testing.T) {
 		if record.Errata[i] != id {
 			t.Fatalf("errata = %v, want %v", record.Errata, want)
 		}
+	}
+}
+
+// completeRecord is a complete record in the shape the engine writes, as text, so
+// that a field can be added to it that no Go type would let through.
+const completeRecord = `{
+  "schema_version": 1,
+  "ruleset": "ct-1977-book3-pp1-12",
+  "engine_version": "0",
+  "rng_algorithm": "go-math-rand-v2-pcg",
+  "seed": 1977,
+  "errata": ["E002"],
+  "name": "Aramis",
+  "occurrence_dm": -1,
+  "worlds": [{"hex": "0105", "name": "", "starport": "X"}]%s
+}`
+
+// TestDecodeRejectsUnknownFields is the Go half of the two obligations:
+// "additionalProperties": false at every level of subsector.schema.json,
+// and DisallowUnknownFields in Decode. A schema alone rejects nothing at
+// read time, so without this half a record from a newer schema is read
+// with the field it carries silently dropped.
+func TestDecodeRejectsUnknownFields(t *testing.T) {
+	t.Parallel()
+
+	decoded, err := subsector.Decode(strings.NewReader(fmt.Sprintf(completeRecord, "")))
+	if err != nil {
+		t.Fatalf("a record in the shape the engine writes did not decode: %v", err)
+	}
+
+	if decoded.Seed != 1977 || len(decoded.Worlds) != 1 || decoded.Worlds[0].Starport != subsector.StarportX {
+		t.Errorf("the record decoded to %+v", decoded)
+	}
+
+	_, err = subsector.Decode(strings.NewReader(fmt.Sprintf(completeRecord, `,
+  "surprise": 1`)))
+	if err == nil {
+		t.Error("a field the current schema does not define was accepted; it must fail loudly, not be dropped")
+	}
+
+	_, err = subsector.Decode(strings.NewReader(`{"schema_version":`))
+	if err == nil {
+		t.Error("a truncated record was accepted")
 	}
 }

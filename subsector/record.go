@@ -107,3 +107,19 @@ func Decode(r io.Reader) (*Subsector, error) {
 
 	return &record, nil
 }
+
+// Marshal renders a record as the JSON a golden holds: indented, with a
+// trailing newline, so that a fixture is readable and diffs line by line.
+//
+// It lives here, beside Decode, because the goldens are compared byte for
+// byte against what it writes: a second definition of this shape anywhere
+// would let a fixture and the command drift apart, and the diff would read
+// as a moved dice stream when the stream had not moved.
+func Marshal(s *Subsector) ([]byte, error) {
+	b, err := json.MarshalIndent(s, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("marshaling the record: %w", err)
+	}
+
+	return append(b, '\n'), nil
+}

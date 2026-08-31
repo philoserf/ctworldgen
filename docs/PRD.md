@@ -357,7 +357,11 @@ golden fixtures pin it.
   skip both draws.
 - **A seed is always recorded.** Without `--seed`, one is drawn from the
   OS entropy source and written into the record, so a run is reproducible
-  after the fact. That draw is the one exception to the seeded-stream
+  after the fact. A drawn seed is bounded to 2^53 − 1, the largest integer
+  an IEEE-754 double holds exactly: a reader that parses JSON numbers as
+  doubles would otherwise round it silently, and a rounded seed
+  reproduces a different subsector. An explicit `--seed` is not bounded —
+  it is the operator's own number, and the Go reader returns it exactly. That draw is the one exception to the seeded-stream
   rule, and it happens before the engine starts. `--seed 0` is therefore
   an explicit and distinct choice, not a request for a random one.
 - **Batch derivation.** Member _i_ of a batch is seeded with `base + i` as

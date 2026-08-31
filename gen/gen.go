@@ -45,16 +45,30 @@ func (in Inputs) Validate() error {
 	return nil
 }
 
-// Generate produces a subsector.
-func Generate(inputs Inputs) (*subsector.Subsector, error) {
-	err := inputs.Validate()
-	if err != nil {
-		return nil, err
-	}
+// Engine walks the procedure. It holds the charts of pp. 1-12, which are
+// read and validated once when the engine is built rather than once per
+// subsector -- the charts are the same charts for every seed.
+type Engine struct {
+	charts *tables.Tables
+}
 
+// New loads and validates the charts, and returns the engine that walks
+// them. A chart that does not describe its whole printed range fails here
+// rather than at the throw that needed it.
+func New() (*Engine, error) {
 	charts, err := tables.Load()
 	if err != nil {
 		return nil, fmt.Errorf("loading the Book 3 charts: %w", err)
+	}
+
+	return &Engine{charts: charts}, nil
+}
+
+// Generate produces a subsector.
+func (e *Engine) Generate(inputs Inputs) (*subsector.Subsector, error) {
+	err := inputs.Validate()
+	if err != nil {
+		return nil, err
 	}
 
 	record := subsector.New(inputs.Seed, inputs.Name, inputs.OccurrenceDM)
@@ -74,7 +88,7 @@ func Generate(inputs Inputs) (*subsector.Subsector, error) {
 	// starports table (pp. 1, 12).
 	record.Worlds = make([]subsector.World, 0, len(hexes))
 	for _, hex := range hexes {
-		port, err := charts.Starports.Type(stream.D2())
+		port, err := e.charts.Starports.Type(stream.D2())
 		if err != nil {
 			return nil, fmt.Errorf("starport for the world at %s: %w", hex, err)
 		}

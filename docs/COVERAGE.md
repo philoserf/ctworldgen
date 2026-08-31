@@ -44,7 +44,7 @@ with a test named in it.
 | Rule                                                          | Page   | Implementation                                             | Test                                                                                          | Status                    |
 | ------------------------------------------------------------- | ------ | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------- |
 | R17 Dice engine, one and two dice, cumulative DMs, N+ targets | B1 2-3 | `dice.Stream.Die`/`D2`, `dice.Sum`, `dice.Target`          | `TestDieIsOneDie`, `TestD2ConsumesTwoDiceInOrder`, `TestTargetIsNPlus`, `TestSumIsCumulative` | done                      |
-| R18 The subsector record and its provenance                   | --     | `subsector.Subsector`, `subsector.New`, `subsector.Decode` | `TestNewRecordCarriesItsProvenance`, `TestGoldensValidate`                                    | grows with each milestone |
+| R18 The subsector record and its provenance                   | --     | `subsector.Subsector`, `subsector.New`, `subsector.Decode`, `subsector.Marshal` | `TestNewRecordCarriesItsProvenance`, `TestGoldensValidate`, `TestDecodeRejectsUnknownFields`   | grows with each milestone |
 | R19 Batch                                                     | --     | --                                                         | --                                                                                            | not yet (milestone 4)     |
 | R20 The subsector listing                                     | 4      | --                                                         | --                                                                                            | not yet (milestone 4)     |
 
@@ -57,7 +57,8 @@ with a test named in it.
 | Consumption order is pinned                        | `gen.Generate`                                   | `TestGoldens`                                         |
 | A seed is always recorded                          | `cmd/ctworldgen.newCmd`                          | `TestASeedIsAlwaysRecorded`, `TestSeedZeroIsAChoice`  |
 | A record reproduces from its own seed and inputs   | --                                               | `TestRegenerationRoundTrip`                           |
-| Unknown fields are rejected on both sides          | `subsector.Decode`, `docs/subsector.schema.json` | `TestSchemaRejectsUnknownFields`                      |
+| The shipped example is a record the engine wrote   | `subsector.Marshal`, `internal/cmd/regenerate`   | `TestTheCompleteExampleIsAGeneratedRecord`            |
+| Unknown fields are rejected on both sides          | `subsector.Decode`, `docs/subsector.schema.json` | `TestDecodeRejectsUnknownFields`, `TestSchemaRejectsUnknownFields` |
 | Coverage does not drift                            | `internal/cmd/ratchet`                           | `TestCompareFailsInBothDirections`                    |
 
 ## Readings

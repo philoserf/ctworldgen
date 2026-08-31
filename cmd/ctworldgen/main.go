@@ -5,7 +5,6 @@ package main
 import (
 	"crypto/rand"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -21,6 +20,14 @@ import (
 // recordMode is the permission a written record gets: the referee's own
 // notebook page, not a world-readable one.
 const recordMode = 0o600
+
+// maxSafeSeed is 2^53 - 1, the largest integer an IEEE-754 double holds
+// exactly. A drawn seed is kept inside it because a record whose seed has
+// been rounded by a reader that parses JSON numbers as doubles reproduces
+// a different subsector -- the one corruption this record cannot afford,
+// and a silent one. An explicit --seed is deliberately not bounded: it is
+// the operator's own number, and Go reads it back exactly.
+const maxSafeSeed = 1<<53 - 1
 
 var (
 	errNoSubcommand      = errors.New("no subcommand")
@@ -77,6 +84,13 @@ func newCmd(args []string, stdout, stderr io.Writer) error {
 
 	err := flags.Parse(args)
 	if err != nil {
+		// -h is a request that flag has already answered on stderr, not a
+		// failure: reporting it again would print an error after the help
+		// and exit non-zero on a successful command.
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+
 		return fmt.Errorf("parsing flags: %w", err)
 	}
 
@@ -96,7 +110,12 @@ func newCmd(args []string, stdout, stderr io.Writer) error {
 		*seed = drawn
 	}
 
-	s, err := gen.Generate(gen.Inputs{Seed: *seed, Name: *name, OccurrenceDM: *occurrenceDM})
+	engine, err := gen.New()
+	if err != nil {
+		return fmt.Errorf("building the engine: %w", err)
+	}
+
+	s, err := engine.Generate(gen.Inputs{Seed: *seed, Name: *name, OccurrenceDM: *occurrenceDM})
 	if err != nil {
 		return fmt.Errorf("generating the subsector: %w", err)
 	}
@@ -124,13 +143,13 @@ func entropySeed() (uint64, error) {
 		return 0, fmt.Errorf("drawing a seed from OS entropy: %w", err)
 	}
 
-	return binary.BigEndian.Uint64(seedBytes[:]), nil
+	return binary.BigEndian.Uint64(seedBytes[:]) & maxSafeSeed, nil
 }
 
 func write(s *subsector.Subsector, path string, force bool, stdout io.Writer) error {
-	encoded, err := Marshal(s)
+	encoded, err := subsector.Marshal(s)
 	if err != nil {
-		return err
+		return fmt.Errorf("rendering the record: %w", err)
 	}
 
 	if path == "" {
@@ -169,17 +188,6 @@ func write(s *subsector.Subsector, path string, force bool, stdout io.Writer) er
 	}
 
 	return nil
-}
-
-// Marshal renders a record as the JSON a golden holds: indented, with a
-// trailing newline, so that a fixture is readable and diffs line by line.
-func Marshal(s *subsector.Subsector) ([]byte, error) {
-	b, err := json.MarshalIndent(s, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("marshaling the record: %w", err)
-	}
-
-	return append(b, '\n'), nil
 }
 
 func versionCmd(stdout io.Writer) error {

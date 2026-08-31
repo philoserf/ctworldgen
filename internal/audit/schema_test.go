@@ -8,7 +8,9 @@ import (
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 
+	"github.com/philoserf/ctworldgen/gen"
 	"github.com/philoserf/ctworldgen/internal/fixture"
+	"github.com/philoserf/ctworldgen/subsector"
 )
 
 func schema(t *testing.T, root string) *jsonschema.Schema {
@@ -93,6 +95,45 @@ func TestExamplesValidate(t *testing.T) {
 			t.Parallel()
 			validate(t, s, filepath.Join(repoRoot, "docs", "examples", name))
 		})
+	}
+}
+
+// TestTheCompleteExampleIsAGeneratedRecord pins the example shipped beside
+// the schema the way TestGoldens pins a golden. It is documentation, but it
+// is documentation `ctworldgen new` writes, and an example that had drifted
+// from what the engine produces would document a record shape that does not
+// exist. It moves only by `task regenerate`.
+func TestTheCompleteExampleIsAGeneratedRecord(t *testing.T) {
+	t.Parallel()
+
+	example := fixture.CompleteExample()
+
+	want, err := os.ReadFile(filepath.Join(root(t), fixture.CompleteExamplePath()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	engine, err := gen.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	in := gen.Inputs{Seed: example.Seed, Name: example.Name, OccurrenceDM: example.OccurrenceDM}
+
+	generated, err := engine.Generate(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := subsector.Marshal(generated)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(got) != string(want) {
+		t.Errorf("%s does not match what the engine writes for seed %d, %q and DM %+d.\n"+
+			"If this change was intended, run `task regenerate` and read the diff.",
+			fixture.CompleteExamplePath(), example.Seed, example.Name, example.OccurrenceDM)
 	}
 }
 

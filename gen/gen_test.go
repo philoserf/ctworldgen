@@ -2,7 +2,6 @@ package gen_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,10 +11,24 @@ import (
 	"github.com/philoserf/ctworldgen/subsector"
 )
 
-func generate(t *testing.T, in gen.Inputs) *subsector.Subsector {
+// newEngine builds the engine once per test. The charts are the same for
+// every seed, so loading them per subsector would re-parse and re-validate
+// ten embedded documents several hundred times across this suite.
+func newEngine(t *testing.T) *gen.Engine {
 	t.Helper()
 
-	s, err := gen.Generate(in)
+	engine, err := gen.New()
+	if err != nil {
+		t.Fatalf("building the engine: %v", err)
+	}
+
+	return engine
+}
+
+func generate(t *testing.T, engine *gen.Engine, in gen.Inputs) *subsector.Subsector {
+	t.Helper()
+
+	s, err := engine.Generate(in)
 	if err != nil {
 		t.Fatalf("generating %+v: %v", in, err)
 	}
@@ -26,12 +39,12 @@ func generate(t *testing.T, in gen.Inputs) *subsector.Subsector {
 func marshal(t *testing.T, s *subsector.Subsector) []byte {
 	t.Helper()
 
-	b, err := json.MarshalIndent(s, "", "  ")
+	b, err := subsector.Marshal(s)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	return append(b, '\n')
+	return b
 }
 
 func goldenPath(g fixture.Golden) string {
@@ -44,6 +57,8 @@ func goldenPath(g fixture.Golden) string {
 func TestGoldens(t *testing.T) {
 	t.Parallel()
 
+	engine := newEngine(t)
+
 	for _, golden := range fixture.Goldens() {
 		t.Run(golden.File, func(t *testing.T) {
 			t.Parallel()
@@ -53,7 +68,9 @@ func TestGoldens(t *testing.T) {
 				t.Fatalf("%v (run `task regenerate` to create it)", err)
 			}
 
-			got := marshal(t, generate(t, gen.Inputs{Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM}))
+			in := gen.Inputs{Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM}
+
+			got := marshal(t, generate(t, engine, in))
 			if string(got) != string(want) {
 				t.Errorf("%s does not match the golden.\n"+
 					"If this change was intended, run `task regenerate` and read the diff.", golden.File)
@@ -67,6 +84,8 @@ func TestGoldens(t *testing.T) {
 // inputs, read back out of the record itself.
 func TestRegenerationRoundTrip(t *testing.T) {
 	t.Parallel()
+
+	engine := newEngine(t)
 
 	for _, golden := range fixture.Goldens() {
 		t.Run(golden.File, func(t *testing.T) {
@@ -82,7 +101,7 @@ func TestRegenerationRoundTrip(t *testing.T) {
 				t.Fatalf("decoding %s: %v", golden.File, err)
 			}
 
-			again := generate(t, gen.Inputs{
+			again := generate(t, engine, gen.Inputs{
 				Seed:         recorded.Seed,
 				Name:         recorded.Name,
 				OccurrenceDM: recorded.OccurrenceDM,
@@ -98,10 +117,12 @@ func TestRegenerationRoundTrip(t *testing.T) {
 func TestSameSeedSameSubsector(t *testing.T) {
 	t.Parallel()
 
-	in := gen.Inputs{Seed: 12345, Name: "Aramis", OccurrenceDM: 0}
-	first := marshal(t, generate(t, in))
+	engine := newEngine(t)
 
-	second := marshal(t, generate(t, in))
+	in := gen.Inputs{Seed: 12345, Name: "Aramis", OccurrenceDM: 0}
+	first := marshal(t, generate(t, engine, in))
+
+	second := marshal(t, generate(t, engine, in))
 	if string(first) != string(second) {
 		t.Error("the same seed and inputs produced two different subsectors")
 	}
@@ -114,9 +135,11 @@ func TestSameSeedSameSubsector(t *testing.T) {
 func TestOccurrenceDMChangesTheStream(t *testing.T) {
 	t.Parallel()
 
+	engine := newEngine(t)
+
 	counts := map[int]int{}
 	for _, dm := range []int{-1, 0, 1} {
-		counts[dm] = len(generate(t, gen.Inputs{Seed: 7, Name: "", OccurrenceDM: dm}).Worlds)
+		counts[dm] = len(generate(t, engine, gen.Inputs{Seed: 7, Name: "", OccurrenceDM: dm}).Worlds)
 	}
 
 	if counts[-1] >= counts[0] || counts[0] >= counts[1] {
@@ -129,7 +152,7 @@ func TestRejectsDMsTheBookDoesNotOffer(t *testing.T) {
 	t.Parallel()
 
 	for _, dm := range []int{-2, 2, 7, -100} {
-		_, err := gen.Generate(gen.Inputs{Seed: 0, Name: "", OccurrenceDM: dm})
+		_, err := newEngine(t).Generate(gen.Inputs{Seed: 0, Name: "", OccurrenceDM: dm})
 		if err == nil {
 			t.Errorf("an occurrence DM of %d was accepted; p. 1 offers -1, 0 and +1", dm)
 		}
@@ -141,10 +164,12 @@ func TestRejectsDMsTheBookDoesNotOffer(t *testing.T) {
 func TestInvariantsOverManySeeds(t *testing.T) {
 	t.Parallel()
 
+	engine := newEngine(t)
+
 	for i := range 200 {
 		seed := uint64(i)
 		for _, dm := range []int{-1, 0, 1} {
-			s := generate(t, gen.Inputs{Seed: seed, Name: "", OccurrenceDM: dm})
+			s := generate(t, engine, gen.Inputs{Seed: seed, Name: "", OccurrenceDM: dm})
 
 			assertWorldsWellFormed(t, s, seed)
 			assertRecordCarriesItsInputs(t, s, seed, dm)
@@ -222,16 +247,21 @@ func assertRecordCarriesItsInputs(t *testing.T, record *subsector.Subsector, see
 }
 
 // TestStarportDistributionFollowsThePage checks the p. 1 distribution
-// shows up in bulk: A is the most likely type (3 of 36 throws each for
-// 2, 3 and 4) and X the least (1 of 36).
+// shows up in bulk. The table gives each type a span of the two-dice
+// range, so a type's frequency is the frequency of its throws, not the
+// count of them: C takes 7 and 8 and is the most likely at 11 of 36,
+// A takes 2, 3 and 4 for 6 of 36, D takes 9 alone for 4 of 36, and X
+// takes 12 alone for 1 of 36.
 func TestStarportDistributionFollowsThePage(t *testing.T) {
 	t.Parallel()
+
+	engine := newEngine(t)
 
 	counts := map[subsector.Starport]int{}
 
 	for i := range 300 {
 		seed := uint64(i)
-		for _, w := range generate(t, gen.Inputs{Seed: seed, Name: "", OccurrenceDM: 1}).Worlds {
+		for _, w := range generate(t, engine, gen.Inputs{Seed: seed, Name: "", OccurrenceDM: 1}).Worlds {
 			counts[w.Starport]++
 		}
 	}

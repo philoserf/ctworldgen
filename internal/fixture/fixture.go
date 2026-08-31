@@ -3,6 +3,8 @@
 // under the same name. It is test support, not architecture.
 package fixture
 
+import "path/filepath"
+
 // aramis is the subsector name the roster uses throughout.
 const aramis = "Aramis"
 
@@ -31,4 +33,20 @@ func Goldens() []Golden {
 		{File: "dm-plus-one", Seed: 1, Name: aramis, OccurrenceDM: 1},
 		{File: "seed-zero", Seed: 0, Name: "", OccurrenceDM: 0},
 	}
+}
+
+// CompleteExamplePath is the example record shipped beside the schema,
+// relative to the repository root.
+func CompleteExamplePath() string { return filepath.Join("docs", "examples", "complete.json") }
+
+// exampleSeed is the year of the (c) 1977 text the ruleset names, chosen
+// so the example's provenance is legible rather than arbitrary.
+const exampleSeed = 1977
+
+// CompleteExample is the inputs that produce that record. It is shipped as
+// documentation but written by the engine, so it is regenerated and pinned
+// exactly like a golden: an example that drifted from what `ctworldgen
+// new` writes would document a record shape the tool does not produce.
+func CompleteExample() Golden {
+	return Golden{File: "complete", Seed: exampleSeed, Name: aramis, OccurrenceDM: -1}
 }
