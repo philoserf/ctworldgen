@@ -79,6 +79,40 @@ it.
   and discarding a die there would shift every later world. So would
   reordering any step.
 
+## A test that cannot fail looks exactly like one that passes
+
+This bit four times across milestones 2 to 4, and never once showed up as
+a failing suite:
+
+- The base and lane throws could have their sense inverted and every
+  invariant still passed, because the checks only asked whether the lanes
+  and bases that exist are legal.
+- Five world-creation assertions were written, and the edit meant to call
+  them from the sweep silently matched nothing. They sat in the file,
+  defined and dead, and the suite went green.
+- A roster check searched the whole listing for each world's hex, which
+  the world's own detail page satisfies, so dropping half the roster
+  passed.
+- A label check had the same shape: another world carrying the same value
+  answered for the one under test.
+
+So the habit: **a new invariant is not done until a deliberate mutation
+has been shown to kill it.** Invert a target, drop a column from a sum,
+halve a loop -- then run the suite and read the failure. If it does not
+name the thing you broke, the check is not holding what you think.
+
+Two things make that harder here than elsewhere, and both have already
+disguised a dead check:
+
+- **Regenerate the goldens under the mutation.** `TestGoldens` compares
+  against fixtures the code under test wrote, so a mutation moves them and
+  the suite fails for the wrong reason. Run `task regenerate` first; if
+  only the goldens complain, the invariant proved nothing.
+- **Check that the mutation applies at all.** A mutation aimed at a hex
+  that is not a world in any fixture is a no-op, and reads as a surviving
+  mutant. Assert the edit changed the file, and prefer breaking something
+  every fixture exercises.
+
 ## Commands
 
 The Taskfile does not exist yet. When it does, `task` is the whole gate
