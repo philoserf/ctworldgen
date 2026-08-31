@@ -406,3 +406,220 @@ func TestTheListingSaysWhyTheTechnologicalIndexIsBare(t *testing.T) {
 		})
 	}
 }
+
+// hexPlace is where a hex's label was drawn on the map, in characters.
+type hexPlace struct{ line, char int }
+
+// mapBlock returns the fenced drawing alone, so the prose above it cannot
+// answer a question asked of the map.
+func mapBlock(t *testing.T, written string) string {
+	t.Helper()
+
+	_, after, found := strings.Cut(section(t, written, "The map"), "```text\n")
+	if !found {
+		t.Fatal("the map section has no drawing")
+	}
+
+	block, _, found := strings.Cut(after, "```")
+	if !found {
+		t.Fatal("the map's drawing is not closed")
+	}
+
+	return block
+}
+
+// mapPlaces reads back where every hex label was drawn.
+func mapPlaces(t *testing.T, block string) map[subsector.Hex]hexPlace {
+	t.Helper()
+
+	places := make(map[subsector.Hex]hexPlace)
+
+	for number, text := range strings.Split(block, "\n") {
+		for char := 0; char+4 <= len(text); char++ {
+			hex, err := subsector.ParseHex(text[char : char+4])
+			if err != nil {
+				continue
+			}
+
+			if where, drawn := places[hex]; drawn {
+				t.Fatalf("%s is drawn twice, at line %d and line %d", hex, where.line, number)
+			}
+
+			places[hex] = hexPlace{line: number, char: char}
+		}
+	}
+
+	return places
+}
+
+func hexOf(t *testing.T, col, row int) subsector.Hex {
+	t.Helper()
+
+	hex, err := subsector.NewHex(col, row)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return hex
+}
+
+// mapGeometry measures the drawing's slot and row off the drawing itself,
+// rather than taking the renderer's constants. A check fed the constants
+// the renderer drew with would agree with a map drawn upside down.
+func mapGeometry(t *testing.T, places map[subsector.Hex]hexPlace) (int, int) {
+	t.Helper()
+
+	// One slot across is two printed columns; one row down is two lines.
+	slot := places[hexOf(t, 3, 1)].char - places[hexOf(t, 1, 1)].char
+	step := places[hexOf(t, 1, 2)].line - places[hexOf(t, 1, 1)].line
+
+	if slot <= 0 || step <= 0 {
+		t.Fatalf("the map's slot is %d characters and its row %d lines; both run forwards", slot, step)
+	}
+
+	if slot%2 != 0 || step%2 != 0 {
+		t.Fatalf("the map's slot is %d characters and its row %d lines; a hex sits on the half of each", slot, step)
+	}
+
+	return slot, step
+}
+
+// drawnTouching returns the hexes the drawing puts against this one: half
+// a slot across and half a row down, or squarely one row above or below.
+func drawnTouching(places map[subsector.Hex]hexPlace, hex subsector.Hex, slot, step int) map[subsector.Hex]bool {
+	touching := make(map[subsector.Hex]bool)
+	from := places[hex]
+
+	for other, where := range places {
+		if other == hex {
+			continue
+		}
+
+		across, down := abs(where.char-from.char), abs(where.line-from.line)
+		if (across == slot/2 && down == step/2) || (across == 0 && down == step) {
+			touching[other] = true
+		}
+	}
+
+	return touching
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+
+	return n
+}
+
+// TestTheMapIsTheGridPrintedOnPageThree is the parity check the map needs,
+// and it is the trap Hex.Distance has: draw the even-numbered columns high
+// instead of low and every hex still lands in a tidy grid, the drawing
+// still looks like p. 3, and it is wrong by one for half the subsector.
+//
+// So the drawing is measured against Hex.Distance, which
+// TestDistanceAgainstPrintedGrid anchors to the printed page by hand. Two
+// hexes drawn touching must be one parsec apart, and two hexes one parsec
+// apart must be drawn touching. An inverted parity fails both ways: it
+// draws 0603 against 0502, which is two parsecs off, and pulls 0603 and
+// 0704 apart.
+//
+// It runs on a populated map as well as an empty one, and the empty one is
+// not enough on its own: a cell padded to the width of its bare hex rather
+// than to the width it drew shifts every later column of a row carrying a
+// starport letter, which an empty map cannot show. That mutation survived
+// the marking test outright, because the marking test reads a slot at the
+// position the label was found at and so cannot see a label in the wrong
+// place. Here it pulls hexes apart and the check fails.
+func TestTheMapIsTheGridPrintedOnPageThree(t *testing.T) {
+	t.Parallel()
+
+	// The empty record pins that all eighty hexes are drawn with no world
+	// on the map at all; the goldens carry the starport letters.
+	t.Run("empty", func(t *testing.T) {
+		t.Parallel()
+		assertTheMapIsThePrintedGrid(t, listing(t, subsector.New(1, "Aramis", 0)))
+	})
+
+	for _, golden := range fixture.Goldens() {
+		t.Run(golden.File, func(t *testing.T) {
+			t.Parallel()
+			assertTheMapIsThePrintedGrid(t, listing(t, generated(t, golden)))
+		})
+	}
+}
+
+// assertTheMapIsThePrintedGrid holds one drawing against Hex.Distance.
+func assertTheMapIsThePrintedGrid(t *testing.T, written string) {
+	t.Helper()
+
+	places := mapPlaces(t, mapBlock(t, written))
+
+	if len(places) != subsector.Columns*subsector.Rows {
+		t.Fatalf("the map draws %d hexes and the p. 3 grid prints %d",
+			len(places), subsector.Columns*subsector.Rows)
+	}
+
+	slot, step := mapGeometry(t, places)
+
+	for hex := range places {
+		touching := drawnTouching(places, hex, slot, step)
+
+		for other := range touching {
+			if apart := hex.Distance(other); apart != 1 {
+				t.Errorf("the map draws %s touching %s, and the p. 3 grid puts them %d parsecs apart",
+					hex, other, apart)
+			}
+		}
+
+		for other := range places {
+			if hex.Distance(other) == 1 && !touching[other] {
+				t.Errorf("%s and %s are one parsec apart on the p. 3 grid and the map draws them apart",
+					hex, other)
+			}
+		}
+	}
+}
+
+// TestTheMapMarksWhatPageOneSaysToMark: a world's hex carries the letter
+// of its starport (p. 1 step 2) and a hex with no world is left blank
+// (p. 1 step 1). Each hex's own slot is checked, so another world's letter
+// cannot answer for it.
+func TestTheMapMarksWhatPageOneSaysToMark(t *testing.T) {
+	t.Parallel()
+
+	for _, golden := range fixture.Goldens() {
+		t.Run(golden.File, func(t *testing.T) {
+			t.Parallel()
+
+			record := generated(t, golden)
+			block := mapBlock(t, listing(t, record))
+			lines := strings.Split(block, "\n")
+			places := mapPlaces(t, block)
+			slot, _ := mapGeometry(t, places)
+
+			marked := make(map[subsector.Hex]subsector.Starport, len(record.Worlds))
+			for _, world := range record.Worlds {
+				marked[world.Hex] = world.Starport
+			}
+
+			for hex, where := range places {
+				want := hex.String()
+				if starport, ok := marked[hex]; ok {
+					want += " " + starport.String()
+				}
+
+				if got := drawnSlot(lines[where.line], where.char, slot); got != want {
+					t.Errorf("the map draws %s as %q, want %q", hex, got, want)
+				}
+			}
+		})
+	}
+}
+
+// drawnSlot returns one hex's slot of a map line, its padding removed. The
+// last slot on a line is short, that padding having been trimmed when the
+// line was written.
+func drawnSlot(line string, char, slot int) string {
+	return strings.TrimSpace(line[char:min(char+slot, len(line))])
+}

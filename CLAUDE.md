@@ -81,8 +81,8 @@ it.
 
 ## A test that cannot fail looks exactly like one that passes
 
-This bit four times across milestones 2 to 4, and never once showed up as
-a failing suite:
+This has bitten five times now, and never once showed up as a failing
+suite:
 
 - The base and lane throws could have their sense inverted and every
   invariant still passed, because the checks only asked whether the lanes
@@ -95,13 +95,19 @@ a failing suite:
   passed.
 - A label check had the same shape: another world carrying the same value
   answered for the one under test.
+- The map's parity check ran on a record with **no worlds**, where every
+  cell is the same width, so a bug that shifts a row only where a starport
+  letter is drawn could not be expressed by the fixture at all. Its
+  companion check read each cell at the position it found the label at, so
+  it held content and never placement. Between them the two looked
+  complete.
 
 So the habit: **a new invariant is not done until a deliberate mutation
 has been shown to kill it.** Invert a target, drop a column from a sum,
 halve a loop -- then run the suite and read the failure. If it does not
 name the thing you broke, the check is not holding what you think.
 
-Two things make that harder here than elsewhere, and both have already
+Three things make that harder here than elsewhere, and each has already
 disguised a dead check:
 
 - **Regenerate the goldens under the mutation.** `TestGoldens` compares
@@ -112,6 +118,15 @@ disguised a dead check:
   that is not a world in any fixture is a no-op, and reads as a surviving
   mutant. Assert the edit changed the file, and prefer breaking something
   every fixture exercises.
+- **The fixture has to be able to express the bug.** The mutation can
+  apply and the assertion can be live, and the check is still blind if the
+  record it was handed has no instance of the thing that breaks: a
+  world-less map cannot show a mis-drawn world. Run a new invariant over
+  the populated goldens, not only over the hand-built minimum. And when a
+  mutation dies on some fixtures and survives on others, find out why
+  before trusting the ones that died -- the map's first version was caught
+  on three fixtures by luck, because their probe hex happened to carry a
+  letter, and survived outright on the fourth.
 
 ## Commands
 

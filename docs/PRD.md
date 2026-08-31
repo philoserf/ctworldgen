@@ -104,8 +104,13 @@ listing from it.
 - **The referee's latitude that the book leaves as prose.** His own
   starports table, "perhaps as many as one for each subsector" (p. 1); an
   occurrence DM applied "on broad areas within a subsector" rather than to
-  the whole of it (p. 1) — the subsector-wide DM is supported and the
-  per-area one is not; worlds "imposed … deliberately (rather than
+  the whole of it (p. 1) — the page offers both in one sentence and this
+  tool supports only the subsector-wide one, which is a decision and not an
+  oversight: an area is a region the referee draws, and the book gives no
+  way to state one. The throw would not move — the scan makes eighty
+  throws whatever the DM, and a DM changes the target rather than the
+  consumption — so what is missing is a way to say where an area is, not
+  the arithmetic; worlds "imposed … deliberately (rather than
   randomly) generated" (p. 8); the separate government of each territory
   on a balkanized world (p. 8); and the alternate world forms — rosettes,
   ringworlds, sphereworlds — which p. 8 states are "not included in the
@@ -126,8 +131,10 @@ listing from it.
   all of that back; it is not a missing feature but an absent one.
 - **A record verifier.** No `verify` and no `replay` subcommand. See
   "Verification lives in the suite".
-- **Graphical hex maps.** The record carries hexes and routes; drawing
-  them is a downstream concern.
+- **Graphical hex maps.** SVG, PNG, a drawing program's format: the record
+  carries hexes and routes and drawing them is a downstream concern. The
+  *text* map the listing carries (R20) is not that — it is the p. 3 grid
+  set in characters, and it marks what p. 1 says to mark and nothing more.
 
 ## The domain
 
@@ -333,11 +340,29 @@ member's seed derived from the base seed and its index and recorded in its
 own record. Sixteen is the suggested count because a sector is sixteen
 subsectors, but no sector-level structure is implied or recorded.
 
-**R20 — The subsector listing.** Markdown: the world roster with hexes,
-names, and strings of digits; the space lanes; and a page of detail per
-world with the labels its Book 3 tables give (R16) — "at least one (and
+**R20 — The subsector listing.** Markdown: the map, the world roster with
+hexes, names, and strings of digits; the space lanes; and a page of detail
+per world with the labels its Book 3 tables give (R16) — "at least one (and
 preferably several) pages in a central notebook maintained by the referee"
 (p. 4), which is what this stands in for.
+
+The map is the p. 3 sub-sector hex grid set in characters, and it comes
+first because it is the artifact a referee runs from. Its parity is the
+page's: the odd-numbered columns high, the even-numbered half a hex below
+them. It marks what p. 1 says to mark and nothing it does not — the letter
+of the starport on a world's hex ("mark the world with the letter indicated
+on the starports table"), and a hex with no world left blank ("otherwise,
+leave the hex blank"). Bases are on the roster and not on the map, because
+the page does not put them there. P. 2 asks for "a line connecting the two
+worlds on the map" and the map draws none; the lane table carries them, and
+drawing lines in characters is what would cost the map its legibility.
+
+The drawing's geometry is held against `Hex.Distance`, which
+`TestDistanceAgainstPrintedGrid` anchors to the printed page by hand: hexes
+drawn touching are one parsec apart, and hexes one parsec apart are drawn
+touching. This is the same parity trap the distance function has, and it
+has the same property — inverted, it draws a tidy grid that is wrong for
+half the subsector.
 
 A name is the referee's own (p. 12 step 3), and it reaches every place his
 hex appears: the roster, the world's own detail heading, and both columns

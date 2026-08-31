@@ -42,6 +42,7 @@ func (r *Renderer) Subsector(out io.Writer, record *subsector.Subsector) error {
 	names := namesByHex(record)
 
 	r.heading(&built, record)
+	r.grid(&built, record)
 	r.roster(&built, record)
 	r.lanes(&built, names, record)
 	r.details(&built, names, record)
@@ -63,6 +64,80 @@ func (r *Renderer) heading(built *strings.Builder, record *subsector.Subsector) 
 	fmt.Fprintf(built, "# %s\n\n", name)
 	fmt.Fprintf(built, "%d worlds, %d space lanes. Generated from seed %d at occurrence DM %s.\n\n",
 		len(record.Worlds), len(record.Routes), record.Seed, occurrenceDM(record.OccurrenceDM))
+}
+
+// The map is drawn as p. 3 prints the grid: a hex is one slot wide, the
+// odd-numbered columns sit on their row's first line, and the
+// even-numbered ones are pushed half a slot right and half a row down.
+// Getting that parity backwards draws a map that disagrees with
+// Hex.Distance for half the grid and looks entirely reasonable.
+const (
+	mapSlot     = 10 // characters one hex occupies on a map line
+	mapHalfSlot = mapSlot / 2
+)
+
+// mapNote says what the map shows and, as much to the point, what it does
+// not: p. 2 asks for "a line connecting the two worlds on the map" and
+// this one draws none.
+const mapNote = "The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the " +
+	"even-numbered ones half a hex below them, which is how the page prints it. " +
+	"A world carries the letter of its starport -- p. 1 marks the hex with the " +
+	"letter the starports table gives -- and a hex with no world is left blank, " +
+	"which is what p. 1 says to leave it. P. 2 also asks for a line drawn between the " +
+	"worlds a space lane joins; this map draws none, and the lane table below " +
+	"carries them instead.\n\n"
+
+// grid draws the subsector map. It marks what p. 1 says to mark and
+// nothing else, so it is a render of the record like every other section.
+func (r *Renderer) grid(built *strings.Builder, record *subsector.Subsector) {
+	built.WriteString("## The map\n\n")
+	built.WriteString(mapNote)
+	built.WriteString("```text\n")
+
+	marked := make(map[subsector.Hex]subsector.Starport, len(record.Worlds))
+	for _, world := range record.Worlds {
+		marked[world.Hex] = world.Starport
+	}
+
+	for row := 1; row <= subsector.Rows; row++ {
+		// Odd columns first, then the even ones half a slot right: one
+		// printed row of the grid is two lines of the map.
+		built.WriteString(gridLine(marked, row, 1))
+		built.WriteString(gridLine(marked, row, 0))
+	}
+
+	built.WriteString("```\n\n")
+}
+
+// gridLine draws the columns of one parity across a single row. parity is
+// the remainder that selects them: 1 for the high columns, 0 for the low.
+func gridLine(marked map[subsector.Hex]subsector.Starport, row, parity int) string {
+	var line strings.Builder
+
+	if parity == 0 {
+		line.WriteString(strings.Repeat(" ", mapHalfSlot))
+	}
+
+	for col := 1; col <= subsector.Columns; col++ {
+		if col%2 != parity {
+			continue
+		}
+
+		hex := subsector.Hex{Col: col, Row: row}
+
+		cell := hex.String() + " "
+		if starport, ok := marked[hex]; ok {
+			cell += starport.String()
+		}
+
+		// max: a Starport the schema would have rejected prints as
+		// "Starport(0)", which is wider than a slot. The rest of the
+		// listing degrades on such a record rather than stopping, so the
+		// map does too -- a negative count here would panic.
+		line.WriteString(cell + strings.Repeat(" ", max(mapSlot-len(cell), 0)))
+	}
+
+	return strings.TrimRight(line.String(), " ") + "\n"
 }
 
 // roster is the world roster: hexes, names, and strings of digits.

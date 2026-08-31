@@ -2,6 +2,33 @@
 
 34 worlds, 65 space lanes. Generated from seed 0 at occurrence DM 0.
 
+## The map
+
+The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-numbered ones half a hex below them, which is how the page prints it. A world carries the letter of its starport -- p. 1 marks the hex with the letter the starports table gives -- and a hex with no world is left blank, which is what p. 1 says to leave it. P. 2 also asks for a line drawn between the worlds a space lane joins; this map draws none, and the lane table below carries them instead.
+
+```text
+0101      0301      0501 E    0701
+     0201      0401      0601 E    0801
+0102 D    0302      0502      0702 B
+     0202      0402 B    0602      0802
+0103      0303 E    0503      0703 C
+     0203      0403 E    0603      0803 C
+0104      0304 E    0504      0704
+     0204      0404      0604 B    0804 C
+0105      0305      0505 E    0705
+     0205 B    0405      0605      0805
+0106      0306 B    0506      0706
+     0206      0406 C    0606      0806
+0107 E    0307 A    0507      0707
+     0207 B    0407 B    0607      0807 B
+0108      0308 A    0508      0708 A
+     0208 B    0408 B    0608      0808 E
+0109 C    0309 C    0509      0709 C
+     0209      0409      0609      0809
+0110 C    0310      0510 B    0710 C
+     0210      0410      0610 C    0810 E
+```
+
 ## Worlds
 
 | Hex | Name | Digits | Bases |

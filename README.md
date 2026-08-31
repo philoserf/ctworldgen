@@ -11,8 +11,9 @@ All four milestones are complete. The engine walks the whole of Book 3
 pp. 1-12 -- the eighty-hex occurrence scan, starport types, naval and
 scout bases, commercial space lanes, and the eight characteristics of
 every world -- all from a recorded seed. `render` turns a record into the
-Markdown listing a referee can run from, and `batch` produces a sector's
-worth of subsectors at a time.
+Markdown listing a referee can run from, opening with a text map of the
+p. 3 hex grid, and `batch` produces a sector's worth of subsectors at a
+time.
 
 `docs/COVERAGE.md` is the current map of rule to code to test.
 
