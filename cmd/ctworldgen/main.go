@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/json"
@@ -46,6 +47,16 @@ var (
 	errTakesNoArguments     = errors.New("this subcommand takes no arguments (flags precede any filename)")
 	errCountTooSmall        = errors.New("--count must be at least 1")
 	errRenderWantsOneRecord = errors.New("render takes exactly one record to read (flags precede it)")
+	errNotAFormat           = errors.New("--format is markdown or pdf and nothing else")
+	errPDFWantsAFile        = errors.New("--format pdf writes a binary and needs -o")
+)
+
+// The two things render writes. The Markdown listing is the default
+// because it is what the tool has always written and what a terminal can
+// read.
+const (
+	formatMarkdown = "markdown"
+	formatPDF      = "pdf"
 )
 
 const usage = `ctworldgen generates Classic Traveller subsectors from Book 3 pp. 1-12.
@@ -54,7 +65,7 @@ usage:
   ctworldgen new   [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
   ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
   ctworldgen batch --count N [--seed N] [--name X] [--occurrence-dm N] [-o dir|file.jsonl] [--force]
-  ctworldgen render [-o file] [--force] subsector.json
+  ctworldgen render [--format markdown|pdf] [-o file] [--force] subsector.json
   ctworldgen version
 `
 
@@ -506,6 +517,7 @@ func renderCmd(args []string, stdout, stderr io.Writer) error {
 
 	out := flags.String("o", "", "write to this file instead of stdout")
 	force := flags.Bool("force", false, "overwrite an existing output file")
+	format := flags.String("format", formatMarkdown, "markdown listing or pdf booklet")
 
 	err := flags.Parse(args)
 	if err != nil {
@@ -518,6 +530,11 @@ func renderCmd(args []string, stdout, stderr io.Writer) error {
 
 	if flags.NArg() != 1 {
 		return errRenderWantsOneRecord
+	}
+
+	err = holdFormat(*format, *out)
+	if err != nil {
+		return err
 	}
 
 	file, err := os.Open(flags.Arg(0))
@@ -537,14 +554,53 @@ func renderCmd(args []string, stdout, stderr io.Writer) error {
 		return fmt.Errorf("building the renderer: %w", err)
 	}
 
-	var built strings.Builder
-
-	err = renderer.Subsector(&built, record)
-	if err != nil {
-		return fmt.Errorf("rendering %s: %w", flags.Arg(0), err)
+	if *format == formatPDF {
+		return writeBooklet(renderer, record, flags.Arg(0), *out, *force)
 	}
 
-	if *out == "" {
+	return writeListing(renderer, record, flags.Arg(0), *out, *force, stdout)
+}
+
+// holdFormat refuses a format the tool does not write, and a booklet with
+// nowhere to put it.
+func holdFormat(format, out string) error {
+	if format != formatMarkdown && format != formatPDF {
+		return fmt.Errorf("%w: %s", errNotAFormat, format)
+	}
+
+	// A booklet is a binary, and a terminal is not where one goes.
+	if format == formatPDF && out == "" {
+		return errPDFWantsAFile
+	}
+
+	return nil
+}
+
+// writeBooklet writes the printable pages. It is built whole before
+// anything is written, so a render that fails leaves no half a file.
+func writeBooklet(renderer *render.Renderer, record *subsector.Subsector, from, out string, force bool) error {
+	var booklet bytes.Buffer
+
+	err := renderer.Booklet(&booklet, record)
+	if err != nil {
+		return fmt.Errorf("rendering %s: %w", from, err)
+	}
+
+	return writeFile(out, booklet.Bytes(), force)
+}
+
+// writeListing writes the Markdown, to stdout where no file was named.
+func writeListing(
+	renderer *render.Renderer, record *subsector.Subsector, from, out string, force bool, stdout io.Writer,
+) error {
+	var built strings.Builder
+
+	err := renderer.Subsector(&built, record)
+	if err != nil {
+		return fmt.Errorf("rendering %s: %w", from, err)
+	}
+
+	if out == "" {
 		_, writeErr := io.WriteString(stdout, built.String())
 		if writeErr != nil {
 			return fmt.Errorf("writing the listing: %w", writeErr)
@@ -553,5 +609,5 @@ func renderCmd(args []string, stdout, stderr io.Writer) error {
 		return nil
 	}
 
-	return writeFile(*out, []byte(built.String()), *force)
+	return writeFile(out, []byte(built.String()), force)
 }

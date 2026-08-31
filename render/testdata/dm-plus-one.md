@@ -4,7 +4,7 @@
 
 ## The map
 
-The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-numbered ones half a hex below them, which is how the page prints it. A world carries the letter of its starport -- p. 1 marks the hex with the letter the starports table gives -- and a hex with no world is left blank, which is what p. 1 says to leave it. P. 2 also asks for a line drawn between the worlds a space lane joins; this map draws none, and the lane table below carries them instead.
+The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-numbered ones half a hex below them, which is how the page prints it. A world carries the letter of its starport -- p. 1 marks the hex with the letter the starports table gives -- and a hex with no world is left blank, which is what p. 1 says to leave it. P. 2 also asks for a line drawn between the worlds a space lane joins; a monospace grid has nowhere to put one, so this map draws none and the lane table below carries them instead. `render --format pdf` draws them.
 
 ```text
 0101 B    0301      0501 A    0701

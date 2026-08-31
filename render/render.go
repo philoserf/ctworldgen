@@ -114,8 +114,9 @@ const mapNoteTail = " The odd-numbered columns sit high and the " +
 	"A world carries the letter of its starport -- p. 1 marks the hex with the " +
 	"letter the starports table gives -- and a hex with no world is left blank, " +
 	"which is what p. 1 says to leave it. P. 2 also asks for a line drawn between the " +
-	"worlds a space lane joins; this map draws none, and the lane table below " +
-	"carries them instead.\n\n"
+	"worlds a space lane joins; a monospace grid has nowhere to put one, so this map " +
+	"draws none and the lane table below carries them instead. " +
+	"`render --format pdf` draws them.\n\n"
 
 // grid draws the subsector map. It marks what p. 1 says to mark and
 // nothing else, so it is a render of the record like every other section.
