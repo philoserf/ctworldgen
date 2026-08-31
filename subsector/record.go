@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"slices"
+	"strings"
 
 	"github.com/philoserf/ctworldgen/dice"
 )
@@ -64,6 +65,47 @@ type World struct {
 	// through D, and neither at E or X.
 	NavalBase bool `json:"naval_base"`
 	ScoutBase bool `json:"scout_base"`
+
+	// The six characteristics thrown for on pp. 4-8, then the
+	// technological index of p. 9, in the order the p. 4 Planetary
+	// Characteristics box lists them.
+	//
+	// These stay int. A range in a type would be a rules claim, and a
+	// rules claim belongs on a page with a cite: R14 floors every one of
+	// them at 0 because the notation has no character for a negative
+	// number, and caps only the technological index, because p. 9 prints
+	// a range for that value rather than a table that happens to end.
+	Size          int `json:"size"`
+	Atmosphere    int `json:"atmosphere"`
+	Hydrographics int `json:"hydrographics"`
+	Population    int `json:"population"`
+	Government    int `json:"government"`
+	LawLevel      int `json:"law_level"`
+	TechIndex     int `json:"tech_index"`
+
+	// Digits is the string of digits of p. 4: eight characters, the
+	// starport type and then the seven above, with nothing between them
+	// (ERRATA E005). It is derived from the values beside it and stored
+	// because it is what a referee reads.
+	Digits string `json:"digits"`
+
+	// Clamps records a floor or the cap that actually bound, and is absent
+	// where nothing did, which is most worlds. The raw value is the one
+	// thing here that cannot be recomputed from a value, which is why it
+	// is kept.
+	Clamps []Clamp `json:"clamps,omitempty"`
+}
+
+// Clamp is a floor or the cap that bound a generated value (R14, ERRATA
+// E004). Both are called clamps because they are the one mechanism.
+//
+// A clamped value is the value: it is what the record carries and what
+// every later step consumes, so government feeds law level already
+// floored. Raw is used for nothing but the record.
+type Clamp struct {
+	Characteristic Characteristic `json:"characteristic"`
+	Raw            int            `json:"raw"`
+	Value          int            `json:"value"`
 }
 
 // Route is a commercial space lane between two worlds (p. 2).
@@ -142,4 +184,32 @@ func Marshal(s *Subsector) ([]byte, error) {
 	}
 
 	return append(b, '\n'), nil
+}
+
+// DigitString returns the string of digits of Book 3 p. 4: the starport
+// followed by the seven characteristics, in the order the p. 4 Planetary
+// Characteristics box lists them, with nothing between them.
+//
+// Eight characters. The familiar hyphen before the technological index --
+// A867A69-8 -- is not in the held text and is not added here (ERRATA
+// E005). Every characteristic is stored numerically beside this, so the
+// format loses nothing.
+func (w World) DigitString() (string, error) {
+	var built strings.Builder
+
+	built.WriteString(w.Starport.String())
+
+	for _, value := range []int{
+		w.Size, w.Atmosphere, w.Hydrographics,
+		w.Population, w.Government, w.LawLevel, w.TechIndex,
+	} {
+		digit, err := NewDigit(value)
+		if err != nil {
+			return "", fmt.Errorf("the world at %s: %w", w.Hex, err)
+		}
+
+		built.WriteString(digit.String())
+	}
+
+	return built.String(), nil
 }

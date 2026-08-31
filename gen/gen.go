@@ -11,6 +11,7 @@ package gen
 import (
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/philoserf/ctworldgen/dice"
 	"github.com/philoserf/ctworldgen/subsector"
@@ -25,6 +26,16 @@ const occurrenceTarget dice.Target = 4
 
 // worldsInAPair is the point at which ERRATA E003 has something to govern.
 const worldsInAPair = 2
+
+// The automatic DMs the world creation throws carry: "a two dice throw,
+// minus an automatic DM of -2" for size and population, and "an automatic
+// DM of -7" for the four centred on another characteristic (pp. 4, 8, 12).
+// The -4 is R8's own, applied when the atmosphere is 0, 1 or above 9.
+const (
+	automaticMinusTwo   = 2
+	automaticMinusSeven = 7
+	dryAtmosphereDM     = 4
+)
 
 // ErrOccurrenceDM is the referee's world occurrence DM, which p. 1 offers
 // as +1, 0 or -1 and nothing else.
@@ -91,6 +102,143 @@ func (e *Engine) Generate(inputs Inputs) (*subsector.Subsector, error) {
 	// starports table (pp. 1, 12). The base throws follow immediately,
 	// naval then scout, because a base is a property of the starport and
 	// the starport chart is where the throw is printed (ERRATA E001).
+	err = e.starports(stream, record, hexes)
+	if err != nil {
+		return nil, err
+	}
+
+	// 1.C. Determine space lanes; check all possible jump routes
+	// (pp. 2, 12).
+	record.Routes = e.lanes(stream, record.Worlds)
+
+	// A pair is the thing the reading governs, so it takes two worlds to
+	// have governed anything.
+	if len(record.Worlds) >= worldsInAPair {
+		record.Stamp("E003")
+	}
+
+	// 2. Generate specific worlds.
+	err = e.createWorlds(stream, record)
+	if err != nil {
+		return nil, err
+	}
+
+	return record, nil
+}
+
+// createWorlds is pass 2: each world finished before the next is begun
+// (p. 12, ERRATA E002).
+func (e *Engine) createWorlds(stream *dice.Stream, record *subsector.Subsector) error {
+	for index := range record.Worlds {
+		err := e.detail(stream, &record.Worlds[index])
+		if err != nil {
+			return err
+		}
+
+		if len(record.Worlds[index].Clamps) > 0 {
+			record.Stamp("E004")
+		}
+	}
+
+	if len(record.Worlds) > 0 {
+		record.Stamp("E005")
+	}
+
+	return nil
+}
+
+// maxTechIndex is the one cap the book prints for a value rather than a
+// table that happens to end: "Technological index may vary from zero to
+// 18" (p. 9). It binds -- the matrix's DMs reach +14, which with a die of
+// 6 gives 20 (ERRATA E004).
+const maxTechIndex = 18
+
+// uncapped is the high bound for every characteristic but the
+// technological index. Nothing is capped because a table stops describing
+// it: a value no table names is a gap in the descriptive table, and p. 8's
+// remedy for one is the referee's own description rather than a clamp.
+const uncapped = math.MaxInt
+
+// detail is pass 2: the six characteristics of pp. 4-8 and then the
+// technological index of p. 9, in the order the p. 12 checklist lists them
+// at 2.B through 2.H.
+func (e *Engine) detail(stream *dice.Stream, world *subsector.World) error {
+	// 2.B. Planetary size. 2D-2 (pp. 4, 12).
+	world.Size = clamp(world, subsector.Size, stream.D2()-automaticMinusTwo, uncapped)
+
+	// 2.C. Planetary atmosphere. 2D-7 + planetary size. A planet of size
+	// zero automatically has an atmosphere of zero, and no die is thrown:
+	// rolling and dropping one would shift every later world (R13).
+	if world.Size > 0 {
+		world.Atmosphere = clamp(world, subsector.Atmosphere, stream.D2()-automaticMinusSeven+world.Size, uncapped)
+	}
+
+	// 2.D. Hydrographic percentage. 2D-7 + planetary size, with a further
+	// DM of -4 if the atmosphere is 0, 1, or greater than 9. A size of 0 or
+	// 1 gives an automatic 0, and again no die is thrown (R13).
+	if world.Size > 1 {
+		raw := stream.D2() - automaticMinusSeven + world.Size
+		if world.Atmosphere <= 1 || world.Atmosphere > 9 {
+			raw -= dryAtmosphereDM
+		}
+
+		world.Hydrographics = clamp(world, subsector.Hydrographics, raw, uncapped)
+	}
+
+	// 2.E. Population. 2D-2, an exponent of 10 (pp. 8, 12).
+	world.Population = clamp(world, subsector.Population, stream.D2()-automaticMinusTwo, uncapped)
+
+	// 2.F. Planetary government. 2D-7 + the population digit (pp. 8, 12).
+	world.Government = clamp(world, subsector.Government, stream.D2()-automaticMinusSeven+world.Population, uncapped)
+
+	// 2.G. Law level. 2D-7 + the government type (pp. 8, 12). Government
+	// feeds this already floored: a clamped value is the value.
+	world.LawLevel = clamp(world, subsector.LawLevel, stream.D2()-automaticMinusSeven+world.Government, uncapped)
+
+	// 2.H. Technological index. One die, modified by the sum of the DMs the
+	// matrix gives for the starport, size, atmosphere, hydrographics,
+	// population and government (p. 9).
+	matrix := e.charts.TechIndexMatrix
+	modifier := dice.Sum(
+		matrix.StarportDM(world.Starport),
+		matrix.DM(tables.ColSize, world.Size),
+		matrix.DM(tables.ColAtmosphere, world.Atmosphere),
+		matrix.DM(tables.ColHydrographics, world.Hydrographics),
+		matrix.DM(tables.ColPopulation, world.Population),
+		matrix.DM(tables.ColGovernment, world.Government),
+	)
+
+	world.TechIndex = clamp(world, subsector.TechIndex, stream.Die()+modifier, maxTechIndex)
+
+	digits, err := world.DigitString()
+	if err != nil {
+		return fmt.Errorf("the string of digits: %w", err)
+	}
+
+	world.Digits = digits
+
+	return nil
+}
+
+// clamp holds a generated value inside what the notation and the page
+// allow, and records on the world when it bound.
+//
+// The floor at 0 is forced rather than chosen: R15 requires one character
+// per characteristic, and neither Book 1 p. 8's hexadecimal nor Book 3
+// p. 2's letters has a character for a negative number (ERRATA E004).
+func clamp(world *subsector.World, which subsector.Characteristic, raw, high int) int {
+	value := min(max(raw, 0), high)
+
+	if value != raw {
+		world.Clamps = append(world.Clamps, subsector.Clamp{Characteristic: which, Raw: raw, Value: value})
+	}
+
+	return value
+}
+
+// starports is pass 1.B: a starport type for every world found, each
+// followed at once by its base throws, naval then scout (ERRATA E001).
+func (e *Engine) starports(stream *dice.Stream, record *subsector.Subsector, hexes []subsector.Hex) error {
 	record.Worlds = make([]subsector.World, 0, len(hexes))
 
 	basesThrown := false
@@ -98,10 +246,16 @@ func (e *Engine) Generate(inputs Inputs) (*subsector.Subsector, error) {
 	for _, hex := range hexes {
 		port, err := e.charts.Starports.Type(stream.D2())
 		if err != nil {
-			return nil, fmt.Errorf("starport for the world at %s: %w", hex, err)
+			return fmt.Errorf("starport for the world at %s: %w", hex, err)
 		}
 
-		world := subsector.World{Hex: hex, Name: "", Starport: port, NavalBase: false, ScoutBase: false}
+		world := subsector.World{
+			Hex: hex, Name: "", Starport: port,
+			NavalBase: false, ScoutBase: false,
+			Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
+			Government: 0, LawLevel: 0, TechIndex: 0,
+			Digits: "", Clamps: nil,
+		}
 
 		if target, printed := e.charts.StarportChart.NavalBase(port); printed {
 			world.NavalBase = target.Met(stream.D2())
@@ -120,17 +274,7 @@ func (e *Engine) Generate(inputs Inputs) (*subsector.Subsector, error) {
 		record.Stamp("E001")
 	}
 
-	// 1.C. Determine space lanes; check all possible jump routes
-	// (pp. 2, 12).
-	record.Routes = e.lanes(stream, record.Worlds)
-
-	// A pair is the thing the reading governs, so it takes two worlds to
-	// have governed anything.
-	if len(record.Worlds) >= worldsInAPair {
-		record.Stamp("E003")
-	}
-
-	return record, nil
+	return nil
 }
 
 // lanes is pass 1.C: every pair of worlds, once, in ascending hex number

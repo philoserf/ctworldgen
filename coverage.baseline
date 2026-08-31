@@ -3,10 +3,10 @@
 # lost coverage, and losing them is coverage the baseline should record.
 github.com/philoserf/ctworldgen/cmd/ctworldgen 20
 github.com/philoserf/ctworldgen/dice 0
-github.com/philoserf/ctworldgen/gen 4
+github.com/philoserf/ctworldgen/gen 8
 github.com/philoserf/ctworldgen/internal/audit 7
 github.com/philoserf/ctworldgen/internal/cmd/ratchet 31
 github.com/philoserf/ctworldgen/internal/cmd/regenerate 50
 github.com/philoserf/ctworldgen/internal/fixture 3
-github.com/philoserf/ctworldgen/subsector 9
+github.com/philoserf/ctworldgen/subsector 23
 github.com/philoserf/ctworldgen/tables 28

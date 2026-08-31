@@ -14,12 +14,14 @@ shape, and the milestones all live there, and this file does not restate
 them. `docs/ERRATA.md` holds the recorded readings; `docs/COVERAGE.md`
 maps rules to implementation and tests.
 
-**Status: milestone 1 is complete.** The occurrence scan and starport
-types generate from a recorded seed; `docs/COVERAGE.md` is the live map of
-rule to code to test, and names what is data-only and what is not yet
-written. Milestone 2 is bases and space lanes -- both charts are already
-transcribed, validated and tested, so what is missing is the two passes
-that consume them and their place in the dice stream (E001, E003).
+**Status: milestone 3 is complete.** The engine walks the whole of
+pp. 1-12: star mapping, then the eight characteristics of every world,
+with the floors and the one cap, the recorded clamp data, and the string
+of digits. All five readings stamp the records they govern, and every rule
+of pp. 1-12 has a row marked done in `docs/COVERAGE.md`. Milestone 4 is
+the Markdown listing (R20) and `batch` (R19) -- the descriptive tables of
+pp. 5-7 are already transcribed and validated, and nothing renders them
+yet.
 
 ## The rule that matters most
 

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/philoserf/ctworldgen/docs/subsector.schema.json",
   "title": "Classic Traveller subsector record",
-  "description": "A subsector generated from Book 3 Worlds and Adventures pp. 1-12. This schema describes the record the engine writes at milestone 2: the world occurrence scan, starport types, naval and scout bases, and space lanes. It grows with each milestone that adds fields, all of it at schema_version 1, because pre-release growth invalidates no released record.",
+  "description": "A subsector generated from Book 3 Worlds and Adventures pp. 1-12. This schema describes the record the engine writes at milestone 3: the world occurrence scan, starport types, naval and scout bases, space lanes, and the eight characteristics of every world. It grows with each milestone that adds fields, all of it at schema_version 1, because pre-release growth invalidates no released record.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -71,7 +71,7 @@
     "world": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["hex", "name", "starport", "naval_base", "scout_base"],
+      "required": ["hex", "name", "starport", "naval_base", "scout_base", "size", "atmosphere", "hydrographics", "population", "government", "law_level", "tech_index", "digits"],
       "properties": {
         "hex": {
           "description": "The four-digit column-and-row number the p. 3 grid prints, 0101 through 0810.",
@@ -93,7 +93,74 @@
         "scout_base": {
           "description": "The p. 5 chart prints a scout base throw at starports A through D; elsewhere this is false without a throw having been made.",
           "type": "boolean"
+        },
+        "size": {
+          "description": "2D-2 (pp. 4, 12). Zero is an asteroid/planetoid complex.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "atmosphere": {
+          "description": "2D-7 + size; automatically 0 at size 0, with no die thrown (R13). Nothing caps it at the p. 5 table's last row: a value no table names is a gap in the table, not a bound on the throw (ERRATA E004).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "hydrographics": {
+          "description": "2D-7 + size, with a further DM of -4 if the atmosphere is 0, 1, or greater than 9; automatically 0 at size 0 or 1, with no die thrown (R13).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "population": {
+          "description": "2D-2, an exponent of 10 (pp. 8, 12).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "government": {
+          "description": "2D-7 + population (pp. 8, 12).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "law_level": {
+          "description": "2D-7 + government (pp. 8, 12). Government feeds this already floored.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "tech_index": {
+          "description": "One die plus the sum of the p. 9 matrix DMs. The one value the book prints a range for rather than a table that happens to end: zero to 18 (p. 9).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        },
+        "digits": {
+          "description": "The string of digits of p. 4: the starport type and the seven characteristics, eight characters, nothing between them. The familiar hyphen is not in the held text (ERRATA E005). The alphabet is Book 1 p. 8's hexadecimal extended by Book 3 p. 2's letters, omitting O and I.",
+          "type": "string",
+          "pattern": "^[ABCDEX][0-9A-HJ-NP-Z]{7}$"
+        },
+        "clamps": {
+          "description": "The floor or the cap that actually bound, absent where nothing did. Raw is the one thing here that cannot be recomputed from a value.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/clamp" }
         }
+      }
+    },
+    "clamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["characteristic", "raw", "value"],
+      "properties": {
+        "characteristic": {
+          "description": "Starport is not among them: it is a table lookup and never arithmetic, so it can never be clamped.",
+          "type": "string",
+          "enum": ["size", "atmosphere", "hydrographics", "population", "government", "law_level", "tech_index"]
+        },
+        "raw": { "type": "integer" },
+        "value": { "type": "integer", "minimum": 0 }
       }
     },
     "route": {

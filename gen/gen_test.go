@@ -188,6 +188,14 @@ func TestInvariantsOverManySeeds(t *testing.T) {
 			assertLanesFollowTheTable(t, charts, record, seed)
 
 			certain += assertLanesTheTableMakesCertain(t, charts, record, seed)
+
+			for _, world := range record.Worlds {
+				assertAutomaticZeros(t, world, seed)
+				assertWithinFormula(t, world, seed)
+				assertTechIndexIsTheMatrix(t, charts, world, seed)
+				assertDigitsSpellTheWorld(t, world, seed)
+				assertClampsAreHonest(t, world, seed)
+			}
 		}
 	}
 
@@ -258,6 +266,18 @@ func onTheGrid(h subsector.Hex) bool {
 func assertRecordCarriesItsInputs(t *testing.T, record *subsector.Subsector, seed uint64, occurrenceDM int) {
 	t.Helper()
 
+	assertErrataStamped(t, record, seed)
+
+	if record.Seed != seed || record.OccurrenceDM != occurrenceDM {
+		t.Fatalf("seed %d, DM %+d: record carries seed %d, DM %+d", seed, occurrenceDM, record.Seed, record.OccurrenceDM)
+	}
+}
+
+// assertErrataStamped: each entry of ERRATA.md states the condition under
+// which a record stamps it, and those statements are the specification.
+func assertErrataStamped(t *testing.T, record *subsector.Subsector, seed uint64) {
+	t.Helper()
+
 	// E002 governs every record. E001 is stamped where any base throw was
 	// made, which is any world whose starport the p. 5 chart prints a
 	// throw for. E003 is stamped once there are two worlds, the point at
@@ -276,14 +296,24 @@ func assertRecordCarriesItsInputs(t *testing.T, record *subsector.Subsector, see
 		want = append(want, "E003")
 	}
 
+	// E004 is stamped where a floor or the cap actually bound a value.
+	for _, world := range record.Worlds {
+		if len(world.Clamps) > 0 {
+			want = append(want, "E004")
+
+			break
+		}
+	}
+
+	// E005 governs the string of digits, and there is one per world.
+	if len(record.Worlds) > 0 {
+		want = append(want, "E005")
+	}
+
 	slices.Sort(want)
 
 	if !slices.Equal(record.Errata, want) {
 		t.Fatalf("seed %d: errata = %v, want %v", seed, record.Errata, want)
-	}
-
-	if record.Seed != seed || record.OccurrenceDM != occurrenceDM {
-		t.Fatalf("seed %d, DM %+d: record carries seed %d, DM %+d", seed, occurrenceDM, record.Seed, record.OccurrenceDM)
 	}
 }
 
@@ -557,3 +587,240 @@ func twoDiceOdds(target dice.Target) int {
 
 	return met
 }
+
+// assertAutomaticZeros is R13, the two throws the book does not make. A
+// size-0 world's atmosphere and a size-0-or-1 world's hydrographics are
+// automatic, so they are zero -- and nothing clamped them, because there
+// was no throw to clamp. A clamp on one is proof a die was thrown that
+// should not have been.
+func assertAutomaticZeros(t *testing.T, world subsector.World, seed uint64) {
+	t.Helper()
+
+	if world.Size == 0 && world.Atmosphere != 0 {
+		t.Fatalf("seed %d: %s is size 0 with atmosphere %d; p. 4 makes it 0", seed, world.Hex, world.Atmosphere)
+	}
+
+	if world.Size <= 1 && world.Hydrographics != 0 {
+		t.Fatalf("seed %d: %s is size %d with hydrographics %d; p. 4 makes it 0",
+			seed, world.Hex, world.Size, world.Hydrographics)
+	}
+
+	for _, clamp := range world.Clamps {
+		automatic := (world.Size == 0 && clamp.Characteristic == subsector.Atmosphere) ||
+			(world.Size <= 1 && clamp.Characteristic == subsector.Hydrographics)
+		if automatic {
+			t.Fatalf("seed %d: %s records a %s clamp, so a die was thrown for a value p. 4 makes automatic",
+				seed, world.Hex, clamp.Characteristic)
+		}
+	}
+}
+
+// assertWithinFormula: 2D-2 spans 0 to 10, and 2D-7+X spans X-5 to X+5,
+// floored at 0 (R6-R11, R14). The hydrographics DM is not a maybe -- the
+// page applies it exactly when the atmosphere is 0, 1 or greater than 9 --
+// so its span is exact too.
+func assertWithinFormula(t *testing.T, world subsector.World, seed uint64) {
+	t.Helper()
+
+	inRange(t, seed, world, "size", world.Size, 0, 10)
+	inRange(t, seed, world, "population", world.Population, 0, 10)
+
+	if world.Size > 0 {
+		inRange(t, seed, world, "atmosphere", world.Atmosphere, max(world.Size-5, 0), world.Size+5)
+	}
+
+	if world.Size > 1 {
+		low, high := world.Size-5, world.Size+5
+		if world.Atmosphere <= 1 || world.Atmosphere > 9 {
+			low, high = low-4, high-4
+		}
+
+		inRange(t, seed, world, "hydrographics", world.Hydrographics, max(low, 0), high)
+	}
+
+	inRange(t, seed, world, "government", world.Government, max(world.Population-5, 0), world.Population+5)
+	inRange(t, seed, world, "law level", world.LawLevel, max(world.Government-5, 0), world.Government+5)
+}
+
+func inRange(t *testing.T, seed uint64, world subsector.World, name string, value, low, high int) {
+	t.Helper()
+
+	if value < low || value > high {
+		t.Fatalf("seed %d: %s has %s %d, and the formula allows %d to %d", seed, world.Hex, name, value, low, high)
+	}
+}
+
+// assertTechIndexIsTheMatrix recomputes the DM total from the p. 9 matrix
+// and asserts the recorded index is one a single die could have produced.
+// This is exact: six outcomes, and the record must be one of them.
+func assertTechIndexIsTheMatrix(t *testing.T, charts *tables.Tables, world subsector.World, seed uint64) {
+	t.Helper()
+
+	matrix := charts.TechIndexMatrix
+	modifier := matrix.StarportDM(world.Starport) +
+		matrix.DM(tables.ColSize, world.Size) +
+		matrix.DM(tables.ColAtmosphere, world.Atmosphere) +
+		matrix.DM(tables.ColHydrographics, world.Hydrographics) +
+		matrix.DM(tables.ColPopulation, world.Population) +
+		matrix.DM(tables.ColGovernment, world.Government)
+
+	reachable := map[int]bool{}
+	for die := 1; die <= 6; die++ {
+		reachable[min(max(die+modifier, 0), 18)] = true
+	}
+
+	if !reachable[world.TechIndex] {
+		t.Fatalf("seed %d: %s has technological index %d, and the matrix total of %+d puts it in %v",
+			seed, world.Hex, world.TechIndex, modifier, reachable)
+	}
+}
+
+// assertDigitsSpellTheWorld decodes the string of digits rather than
+// re-encoding it, so it cannot agree with the writer by sharing its code.
+// Eight characters, starport first, nothing between them (ERRATA E005).
+func assertDigitsSpellTheWorld(t *testing.T, world subsector.World, seed uint64) {
+	t.Helper()
+
+	const digitsInTheString = 8
+
+	if len(world.Digits) != digitsInTheString {
+		t.Fatalf("seed %d: %s has the string %q, and p. 4 wants eight characters", seed, world.Hex, world.Digits)
+	}
+
+	if world.Digits[:1] != world.Starport.String() {
+		t.Fatalf("seed %d: %s spells starport %q and carries %s", seed, world.Hex, world.Digits[:1], world.Starport)
+	}
+
+	values := []int{
+		world.Size, world.Atmosphere, world.Hydrographics,
+		world.Population, world.Government, world.LawLevel, world.TechIndex,
+	}
+
+	for position, value := range values {
+		digit, err := subsector.ParseDigit(world.Digits[position+1 : position+2])
+		if err != nil {
+			t.Fatalf("seed %d: %s spells %q: %v", seed, world.Hex, world.Digits, err)
+		}
+
+		if digit.Value() != value {
+			t.Fatalf("seed %d: %s spells %q, whose character %d reads %d and the record carries %d",
+				seed, world.Hex, world.Digits, position+1, digit.Value(), value)
+		}
+	}
+}
+
+// assertClampsAreHonest: a clamp is recorded only where one bound, its
+// kept value is the one the world carries, and only the technological
+// index is ever capped from above (R14, ERRATA E004).
+func assertClampsAreHonest(t *testing.T, world subsector.World, seed uint64) {
+	t.Helper()
+
+	carried := map[subsector.Characteristic]int{
+		subsector.Size: world.Size, subsector.Atmosphere: world.Atmosphere,
+		subsector.Hydrographics: world.Hydrographics, subsector.Population: world.Population,
+		subsector.Government: world.Government, subsector.LawLevel: world.LawLevel,
+		subsector.TechIndex: world.TechIndex,
+	}
+
+	for _, clamp := range world.Clamps {
+		if clamp.Raw == clamp.Value {
+			t.Fatalf("seed %d: %s records a %s clamp that did not bind", seed, world.Hex, clamp.Characteristic)
+		}
+
+		if clamp.Raw > clamp.Value && clamp.Characteristic != subsector.TechIndex {
+			t.Fatalf("seed %d: %s caps %s at %d; only the technological index has a printed cap",
+				seed, world.Hex, clamp.Characteristic, clamp.Value)
+		}
+
+		if clamp.Raw < clamp.Value && clamp.Value != 0 {
+			t.Fatalf("seed %d: %s floors %s to %d rather than 0", seed, world.Hex, clamp.Characteristic, clamp.Value)
+		}
+
+		if got, ok := carried[clamp.Characteristic]; !ok || got != clamp.Value {
+			t.Fatalf("seed %d: %s clamps %s to %d and carries %d",
+				seed, world.Hex, clamp.Characteristic, clamp.Value, got)
+		}
+	}
+}
+
+// TestTheClampsThatBindAreTheOnesR14Names is the empirical half of ERRATA
+// E004. The reading says which characteristics can fall below zero and
+// that the technological index cap, though rare, is reachable; this walks
+// enough subsectors to show both, on fixed seeds so it cannot flake.
+//
+// Size and population are 2D-2 and have a floor of 0 already, so a clamp
+// on either would mean the arithmetic had changed.
+func TestTheClampsThatBindAreTheOnesR14Names(t *testing.T) {
+	t.Parallel()
+
+	engine := newEngine(t)
+	floors := map[subsector.Characteristic]int{}
+	caps := map[subsector.Characteristic]int{}
+	highest := 0
+
+	for index := range 3000 {
+		record := generate(t, engine, gen.Inputs{Seed: uint64(index), Name: "", OccurrenceDM: 1})
+		for _, world := range record.Worlds {
+			highest = max(highest, world.TechIndex)
+
+			for _, clamp := range world.Clamps {
+				if clamp.Raw < clamp.Value {
+					floors[clamp.Characteristic]++
+				} else {
+					caps[clamp.Characteristic]++
+				}
+			}
+		}
+	}
+
+	assertFloorsMatchE004(t, floors, caps)
+	assertOnlyTheIndexIsCapped(t, caps, highest)
+}
+
+// assertFloorsMatchE004: "Atmosphere, hydrographics, government, law level
+// and the technological index can all go negative; planetary size and
+// population cannot.".
+func assertFloorsMatchE004(t *testing.T, floors, caps map[subsector.Characteristic]int) {
+	t.Helper()
+
+	for _, characteristic := range []subsector.Characteristic{
+		subsector.Atmosphere, subsector.Hydrographics,
+		subsector.Government, subsector.LawLevel, subsector.TechIndex,
+	} {
+		if floors[characteristic] == 0 {
+			t.Errorf("%s never floored, and E004 says it can fall below zero", characteristic)
+		}
+	}
+
+	for _, characteristic := range []subsector.Characteristic{subsector.Size, subsector.Population} {
+		if floors[characteristic] != 0 || caps[characteristic] != 0 {
+			t.Errorf("%s was clamped, and 2D-2 has a floor of 0 already", characteristic)
+		}
+	}
+}
+
+// assertOnlyTheIndexIsCapped: the cap is rare -- an asteroid belt with a
+// first class starport and ten billion inhabitants -- and still reachable.
+func assertOnlyTheIndexIsCapped(t *testing.T, caps map[subsector.Characteristic]int, highest int) {
+	t.Helper()
+
+	if caps[subsector.TechIndex] == 0 {
+		t.Error("the technological index cap never bound, and E004 says it is reachable")
+	}
+
+	for characteristic, count := range caps {
+		if characteristic != subsector.TechIndex {
+			t.Errorf("%s was capped %d times; p. 9 prints a range for the technological index alone",
+				characteristic, count)
+		}
+	}
+
+	if highest != maxTechIndexUnderTest {
+		t.Errorf("the highest technological index in the sweep is %d, and p. 9 caps it at %d",
+			highest, maxTechIndexUnderTest)
+	}
+}
+
+// maxTechIndexUnderTest is p. 9's printed cap, retyped here rather than
+// read from the engine so the two must agree.
+const maxTechIndexUnderTest = 18

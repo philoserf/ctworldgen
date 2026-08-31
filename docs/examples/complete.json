@@ -7,7 +7,9 @@
   "errata": [
     "E001",
     "E002",
-    "E003"
+    "E003",
+    "E004",
+    "E005"
   ],
   "name": "Aramis",
   "occurrence_dm": -1,
@@ -17,189 +19,478 @@
       "name": "",
       "starport": "X",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 9,
+      "atmosphere": 10,
+      "hydrographics": 2,
+      "population": 5,
+      "government": 0,
+      "law_level": 0,
+      "tech_index": 1,
+      "digits": "X9A25001"
     },
     {
       "hex": "0106",
       "name": "",
       "starport": "E",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 5,
+      "atmosphere": 3,
+      "hydrographics": 6,
+      "population": 5,
+      "government": 0,
+      "law_level": 0,
+      "tech_index": 6,
+      "digits": "E5365006",
+      "clamps": [
+        {
+          "characteristic": "law_level",
+          "raw": -2,
+          "value": 0
+        }
+      ]
     },
     {
       "hex": "0107",
       "name": "",
       "starport": "B",
       "naval_base": true,
-      "scout_base": false
+      "scout_base": false,
+      "size": 5,
+      "atmosphere": 8,
+      "hydrographics": 7,
+      "population": 0,
+      "government": 0,
+      "law_level": 2,
+      "tech_index": 7,
+      "digits": "B5870027"
     },
     {
       "hex": "0206",
       "name": "",
       "starport": "A",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 8,
+      "atmosphere": 8,
+      "hydrographics": 5,
+      "population": 2,
+      "government": 0,
+      "law_level": 0,
+      "tech_index": 10,
+      "digits": "A885200A",
+      "clamps": [
+        {
+          "characteristic": "government",
+          "raw": -1,
+          "value": 0
+        }
+      ]
     },
     {
       "hex": "0208",
       "name": "",
       "starport": "E",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 6,
+      "atmosphere": 5,
+      "hydrographics": 5,
+      "population": 7,
+      "government": 8,
+      "law_level": 5,
+      "tech_index": 3,
+      "digits": "E6557853"
     },
     {
       "hex": "0209",
       "name": "",
       "starport": "B",
       "naval_base": true,
-      "scout_base": true
+      "scout_base": true,
+      "size": 6,
+      "atmosphere": 1,
+      "hydrographics": 3,
+      "population": 5,
+      "government": 2,
+      "law_level": 3,
+      "tech_index": 9,
+      "digits": "B6135239"
     },
     {
       "hex": "0210",
       "name": "",
       "starport": "B",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 2,
+      "atmosphere": 0,
+      "hydrographics": 1,
+      "population": 7,
+      "government": 3,
+      "law_level": 2,
+      "tech_index": 7,
+      "digits": "B2017327",
+      "clamps": [
+        {
+          "characteristic": "atmosphere",
+          "raw": -1,
+          "value": 0
+        }
+      ]
     },
     {
       "hex": "0301",
       "name": "",
       "starport": "C",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 5,
+      "atmosphere": 2,
+      "hydrographics": 3,
+      "population": 5,
+      "government": 4,
+      "law_level": 4,
+      "tech_index": 7,
+      "digits": "C5235447"
     },
     {
       "hex": "0306",
       "name": "",
       "starport": "A",
       "naval_base": false,
-      "scout_base": true
+      "scout_base": true,
+      "size": 3,
+      "atmosphere": 0,
+      "hydrographics": 0,
+      "population": 3,
+      "government": 2,
+      "law_level": 0,
+      "tech_index": 15,
+      "digits": "A300320F",
+      "clamps": [
+        {
+          "characteristic": "hydrographics",
+          "raw": -6,
+          "value": 0
+        },
+        {
+          "characteristic": "law_level",
+          "raw": -2,
+          "value": 0
+        }
+      ]
     },
     {
       "hex": "0309",
       "name": "",
       "starport": "B",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 6,
+      "atmosphere": 1,
+      "hydrographics": 6,
+      "population": 9,
+      "government": 13,
+      "law_level": 17,
+      "tech_index": 8,
+      "digits": "B6169DH8"
     },
     {
       "hex": "0401",
       "name": "",
       "starport": "A",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 6,
+      "atmosphere": 9,
+      "hydrographics": 5,
+      "population": 9,
+      "government": 10,
+      "law_level": 14,
+      "tech_index": 9,
+      "digits": "A6959AE9"
     },
     {
       "hex": "0402",
       "name": "",
       "starport": "B",
       "naval_base": false,
-      "scout_base": true
+      "scout_base": true,
+      "size": 1,
+      "atmosphere": 0,
+      "hydrographics": 0,
+      "population": 5,
+      "government": 8,
+      "law_level": 9,
+      "tech_index": 14,
+      "digits": "B100589E"
     },
     {
       "hex": "0403",
       "name": "",
       "starport": "C",
       "naval_base": false,
-      "scout_base": true
+      "scout_base": true,
+      "size": 1,
+      "atmosphere": 0,
+      "hydrographics": 0,
+      "population": 6,
+      "government": 6,
+      "law_level": 5,
+      "tech_index": 8,
+      "digits": "C1006658"
     },
     {
       "hex": "0405",
       "name": "",
       "starport": "E",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 2,
+      "atmosphere": 2,
+      "hydrographics": 5,
+      "population": 2,
+      "government": 3,
+      "law_level": 0,
+      "tech_index": 9,
+      "digits": "E2252309"
     },
     {
       "hex": "0407",
       "name": "",
       "starport": "A",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 4,
+      "atmosphere": 4,
+      "hydrographics": 5,
+      "population": 3,
+      "government": 4,
+      "law_level": 3,
+      "tech_index": 13,
+      "digits": "A445343D"
     },
     {
       "hex": "0409",
       "name": "",
       "starport": "E",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 9,
+      "atmosphere": 9,
+      "hydrographics": 8,
+      "population": 1,
+      "government": 2,
+      "law_level": 3,
+      "tech_index": 2,
+      "digits": "E9981232"
     },
     {
       "hex": "0503",
       "name": "",
       "starport": "E",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 4,
+      "atmosphere": 8,
+      "hydrographics": 4,
+      "population": 9,
+      "government": 7,
+      "law_level": 6,
+      "tech_index": 9,
+      "digits": "E4849769"
     },
     {
       "hex": "0506",
       "name": "",
       "starport": "B",
       "naval_base": false,
-      "scout_base": true
+      "scout_base": true,
+      "size": 4,
+      "atmosphere": 2,
+      "hydrographics": 8,
+      "population": 5,
+      "government": 8,
+      "law_level": 9,
+      "tech_index": 10,
+      "digits": "B428589A"
     },
     {
       "hex": "0509",
       "name": "",
       "starport": "C",
       "naval_base": false,
-      "scout_base": true
+      "scout_base": true,
+      "size": 3,
+      "atmosphere": 7,
+      "hydrographics": 0,
+      "population": 8,
+      "government": 7,
+      "law_level": 5,
+      "tech_index": 4,
+      "digits": "C3708754",
+      "clamps": [
+        {
+          "characteristic": "hydrographics",
+          "raw": -1,
+          "value": 0
+        }
+      ]
     },
     {
       "hex": "0602",
       "name": "",
       "starport": "E",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 0,
+      "atmosphere": 0,
+      "hydrographics": 0,
+      "population": 8,
+      "government": 3,
+      "law_level": 0,
+      "tech_index": 9,
+      "digits": "E0008309"
     },
     {
       "hex": "0608",
       "name": "",
       "starport": "A",
       "naval_base": true,
-      "scout_base": false
+      "scout_base": false,
+      "size": 2,
+      "atmosphere": 0,
+      "hydrographics": 0,
+      "population": 5,
+      "government": 7,
+      "law_level": 5,
+      "tech_index": 11,
+      "digits": "A200575B",
+      "clamps": [
+        {
+          "characteristic": "atmosphere",
+          "raw": -3,
+          "value": 0
+        },
+        {
+          "characteristic": "hydrographics",
+          "raw": -3,
+          "value": 0
+        }
+      ]
     },
     {
       "hex": "0702",
       "name": "",
       "starport": "A",
       "naval_base": true,
-      "scout_base": false
+      "scout_base": false,
+      "size": 5,
+      "atmosphere": 3,
+      "hydrographics": 5,
+      "population": 9,
+      "government": 4,
+      "law_level": 6,
+      "tech_index": 11,
+      "digits": "A535946B"
     },
     {
       "hex": "0703",
       "name": "",
       "starport": "B",
       "naval_base": false,
-      "scout_base": true
+      "scout_base": true,
+      "size": 1,
+      "atmosphere": 0,
+      "hydrographics": 0,
+      "population": 2,
+      "government": 2,
+      "law_level": 6,
+      "tech_index": 14,
+      "digits": "B100226E"
     },
     {
       "hex": "0704",
       "name": "",
       "starport": "C",
       "naval_base": false,
-      "scout_base": true
+      "scout_base": true,
+      "size": 1,
+      "atmosphere": 0,
+      "hydrographics": 0,
+      "population": 5,
+      "government": 3,
+      "law_level": 4,
+      "tech_index": 9,
+      "digits": "C1005349",
+      "clamps": [
+        {
+          "characteristic": "atmosphere",
+          "raw": -1,
+          "value": 0
+        }
+      ]
     },
     {
       "hex": "0710",
       "name": "",
       "starport": "C",
       "naval_base": false,
-      "scout_base": true
+      "scout_base": true,
+      "size": 8,
+      "atmosphere": 8,
+      "hydrographics": 7,
+      "population": 3,
+      "government": 0,
+      "law_level": 0,
+      "tech_index": 5,
+      "digits": "C8873005",
+      "clamps": [
+        {
+          "characteristic": "law_level",
+          "raw": -2,
+          "value": 0
+        }
+      ]
     },
     {
       "hex": "0807",
       "name": "",
       "starport": "E",
       "naval_base": false,
-      "scout_base": false
+      "scout_base": false,
+      "size": 9,
+      "atmosphere": 8,
+      "hydrographics": 7,
+      "population": 1,
+      "government": 0,
+      "law_level": 1,
+      "tech_index": 8,
+      "digits": "E9871018",
+      "clamps": [
+        {
+          "characteristic": "government",
+          "raw": -1,
+          "value": 0
+        }
+      ]
     },
     {
       "hex": "0810",
       "name": "",
       "starport": "C",
       "naval_base": false,
-      "scout_base": true
+      "scout_base": true,
+      "size": 5,
+      "atmosphere": 6,
+      "hydrographics": 6,
+      "population": 6,
+      "government": 2,
+      "law_level": 1,
+      "tech_index": 4,
+      "digits": "C5666214"
     }
   ],
   "routes": [

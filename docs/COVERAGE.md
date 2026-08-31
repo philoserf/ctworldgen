@@ -27,16 +27,16 @@ with a test named in it.
 
 | Rule                                                     | Page    | Implementation                                 | Test                                                               | Status                  |
 | -------------------------------------------------------- | ------- | ---------------------------------------------- | ------------------------------------------------------------------ | ----------------------- |
-| R6 Planetary size, 2D-2                                  | 4, 12   | --                                             | --                                                                 | not yet (milestone 3)   |
-| R7 Planetary atmosphere, 2D-7+size                       | 4, 12   | --                                             | --                                                                 | not yet (milestone 3)   |
-| R8 Hydrographic percentage, 2D-7+size, DM -4             | 4, 12   | --                                             | --                                                                 | not yet (milestone 3)   |
-| R9 Population, 2D-2                                      | 8, 12   | --                                             | --                                                                 | not yet (milestone 3)   |
-| R10 Planetary government, 2D-7+population                | 8, 12   | --                                             | --                                                                 | not yet (milestone 3)   |
-| R11 Law level, 2D-7+government                           | 8, 12   | --                                             | --                                                                 | not yet (milestone 3)   |
-| R12 Technological index, one die plus the matrix DMs     | 9       | `tables.TechIndexMatrix.DM`/`StarportDM`       | `TestTechnologicalIndexMatrix`, `TestMatrixMaximumBinds`           | data only (milestone 3) |
-| R13 The two throws not made                              | 4       | --                                             | --                                                                 | not yet (milestone 3)   |
-| R14 Floored at 0; the technological index capped at 18   | 4-9     | `subsector.Digit` has no negative character    | `TestDigitReaches20`, `TestValueWithNoMatrixRowContributesNothing` | partial (milestone 3)   |
-| R15 The string of digits, eight characters, no separator | 4, B1 8 | `subsector.Digit`, `subsector.Characteristics` | `TestDigitAlphabet`, `TestCharacteristicsAreTheSevenOfPage4`       | partial (milestone 3)   |
+| R6 Planetary size, 2D-2 | 4, 12 | `gen.Engine.detail` | `assertWithinFormula` | done |
+| R7 Planetary atmosphere, 2D-7+size | 4, 12 | `gen.Engine.detail` | `assertWithinFormula`, `assertAutomaticZeros` | done |
+| R8 Hydrographic percentage, 2D-7+size, DM -4 | 4, 12 | `gen.Engine.detail` | `assertWithinFormula`, `assertAutomaticZeros` | done |
+| R9 Population, 2D-2 | 8, 12 | `gen.Engine.detail` | `assertWithinFormula` | done |
+| R10 Planetary government, 2D-7+population | 8, 12 | `gen.Engine.detail` | `assertWithinFormula` | done |
+| R11 Law level, 2D-7+government | 8, 12 | `gen.Engine.detail` | `assertWithinFormula` | done |
+| R12 Technological index, one die plus the matrix DMs | 9 | `gen.Engine.detail`, `tables.TechIndexMatrix` | `TestTechnologicalIndexMatrix`, `assertTechIndexIsTheMatrix` | done |
+| R13 The two throws not made | 4 | `gen.Engine.detail` | `assertAutomaticZeros` | done |
+| R14 Floored at 0; the technological index capped at 18 | 4-9 | `gen.clamp`, `subsector.Clamp` | `assertClampsAreHonest`, `TestTheClampsThatBindAreTheOnesR14Names` | done |
+| R15 The string of digits, eight characters, no separator | 4, B1 8 | `subsector.World.DigitString` | `TestDigitAlphabet`, `assertDigitsSpellTheWorld` | done |
 | R16 The descriptive tables                               | 5-7     | `tables.Labels`, `tables.StarportChart.Row`    | `TestEveryPrintedValueHasALabel`, `TestStarportChartDescriptions`  | data only (milestone 4) |
 
 ## The tool
@@ -72,8 +72,8 @@ reading is stamped only once the engine implements the step it governs.
 | E001 | Where the base throws sit in the procedure | `gen/gen.go`, `tables/tables.go` | where any base throw was made, now |
 | E002    | The order of the passes, hexes and characteristics            | `gen/gen.go`, `subsector/hex.go`        | every record, now |
 | E003 | Which pairs are examined, when a die is thrown, in what order | `gen/gen.go`, `tables/tables.go` | records with two or more worlds, now |
-| E004    | Floored at 0, capped only at the technological index          | `tables/tables.go`                      | milestone 3       |
-| E005    | The string of digits: order, alphabet, no separator           | `subsector/digit.go`                    | milestone 3       |
+| E004 | Floored at 0, capped only at the technological index | `gen/gen.go`, `tables/tables.go` | where a floor or the cap actually bound, now |
+| E005 | The string of digits: order, alphabet, no separator | `subsector/record.go`, `subsector/digit.go` | records with at least one world, now |
 
 Both directions are checked by `internal/audit`: every `E00N` cited in the
 code or the documents resolves to a heading in `ERRATA.md`, and every

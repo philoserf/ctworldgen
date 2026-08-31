@@ -7,10 +7,11 @@ referee can run from.
 
 ## Status
 
-Milestone 1: the domain and its edges. The eighty-hex world occurrence
-scan and starport types generate, deterministically, from a recorded seed.
-Bases and space lanes are milestone 2; the eight characteristics of each
-world are milestone 3; the listing and `batch` are milestone 4.
+Milestone 3: the engine walks the whole of Book 3 pp. 1-12. The eighty-hex
+occurrence scan, starport types, naval and scout bases, commercial space
+lanes, and the eight characteristics of every world all generate
+deterministically from a recorded seed. The Markdown listing and `batch`
+are milestone 4.
 
 `docs/COVERAGE.md` is the current map of rule to code to test.
 
