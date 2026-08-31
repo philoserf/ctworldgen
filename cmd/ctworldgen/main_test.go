@@ -566,3 +566,68 @@ func TestSectorTakesNoArguments(t *testing.T) {
 		t.Fatal("sector accepted a positional argument")
 	}
 }
+
+// TestRenderWritesTheBooklet: --format pdf writes the printable booklet
+// rather than the Markdown listing, and it goes to a file. A terminal is
+// not where a binary goes, so the flag needs -o rather than defaulting to
+// stdout as the listing does.
+func TestRenderWritesTheBooklet(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	record := filepath.Join(dir, "subsector.json")
+
+	_, _, err := exec(t, "new", "--seed", "1977", "--name", aramis, "-o", record)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	booklet := filepath.Join(dir, "subsector.pdf")
+
+	_, _, err = exec(t, renderVerb, "--format", "pdf", "-o", booklet, record)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	written, err := os.ReadFile(booklet) //nolint:gosec // a path this test created
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.HasPrefix(written, []byte("%PDF-")) {
+		t.Errorf("the booklet does not open as a PDF: %q", written[:min(len(written), 8)])
+	}
+
+	if !bytes.Contains(written, []byte(aramis)) {
+		t.Error("the booklet does not carry the subsector's name")
+	}
+}
+
+// TestRenderRefusesAFormatItDoesNotWrite: the flag takes two values, and
+// an error that names them is what tells the operator which.
+func TestRenderRefusesAFormatItDoesNotWrite(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	record := filepath.Join(dir, "subsector.json")
+
+	_, _, err := exec(t, "new", "--seed", "1", "-o", record)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, err = exec(t, renderVerb, "--format", "postscript", "-o", filepath.Join(dir, "out"), record)
+	if err == nil {
+		t.Fatal("--format postscript was accepted")
+	}
+
+	if !strings.Contains(err.Error(), "markdown or pdf") {
+		t.Errorf("the error does not name the formats: %v", err)
+	}
+
+	// A booklet written to stdout would be a terminal full of binary.
+	_, _, err = exec(t, renderVerb, "--format", "pdf", record)
+	if err == nil {
+		t.Fatal("--format pdf without -o was accepted")
+	}
+}

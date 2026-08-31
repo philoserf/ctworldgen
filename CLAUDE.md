@@ -24,9 +24,10 @@ backlog items.
 [issue 1]: https://github.com/philoserf/ctworldgen/issues/1
 
 **Status.** The engine walks the whole of pp. 1-12; `render` writes the
-listing, which opens with a text map of the p. 3 grid; `batch` produces N
-independent subsectors; and `sector` lays sixteen of them on one 32x40
-grid and throws for the lanes at their seams (E006). A sector's members
+listing, which opens with a text map of the p. 3 grid, or a printable PDF
+booklet (`--format pdf`) with the grid drawn and p. 2's lane lines joined;
+`batch` produces N independent subsectors; and `sector` lays sixteen of
+them on one 32x40 grid and throws for the lanes at their seams (E006). A sector's members
 are unchanged -- member *i* of `sector --seed N` is the subsector `new
 --seed N+i` writes -- which is the property that keeps a sector
 trustworthy and is tested directly.
@@ -130,6 +131,15 @@ it.
   for half the map, which no record-against-record test can catch. The
   test that catches it measures against the printed p. 3 grid. Never
   change the conversion without re-measuring there.
+
+  The parity now lives in **three** places, and they must agree:
+  `subsector.Hex.cube`, the text map's `render.gridLine`, and the drawn
+  map's `render.mapFit.hexCenter`. Each has its own measurement against
+  the page, because each can be flipped without the other two noticing.
+  The drawn one is measured off the PDF it produced rather than off its
+  own constants -- a check fed those agrees with a map drawn upside down
+  -- and adjacency alone is symmetric under a flip, so the direction is
+  anchored by two further assertions.
 - **Dice-stream consumption order is load-bearing.** It fixes what a seed
   means. Two throws are deliberately _not_ made — a size-0 world's
   atmosphere and a size-0-or-1 world's hydrographics (p. 4) — and rolling

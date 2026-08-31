@@ -12,7 +12,8 @@ pp. 1-12 -- the eighty-hex occurrence scan, starport types, naval and
 scout bases, commercial space lanes, and the eight characteristics of
 every world -- all from a recorded seed. `render` turns a record into the
 Markdown listing a referee can run from, opening with a text map of the
-p. 3 hex grid, and `batch` produces a sector's worth of subsectors at a
+p. 3 hex grid, or into a printable PDF booklet with the grid drawn and the
+space lanes joined; `batch` produces a sector's worth of subsectors at a
 time.
 
 `docs/COVERAGE.md` is the current map of rule to code to test.
@@ -23,7 +24,7 @@ time.
 ctworldgen new   [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
 ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
 ctworldgen batch --count N [--seed N] [--name X] [--occurrence-dm N] [-o dir|file.jsonl] [--force]
-ctworldgen render [-o file] [--force] subsector.json
+ctworldgen render [--format markdown|pdf] [-o file] [--force] subsector.json
 ctworldgen version
 ```
 
@@ -39,6 +40,13 @@ Every member is unchanged: member _i_ of `sector --seed N` is exactly the
 subsector `new --seed N+i` writes, so the subsector you read is the
 subsector you get. The seams are one further reading (`ERRATA.md` E006),
 stamped on every sector record.
+
+`render` writes the Markdown listing by default. `--format pdf` writes the
+booklet instead: the map beside its roster on the first page, then the
+space lanes and a page of detail per world. It is the one output that
+draws p. 2's "line connecting the two worlds on the map", which a
+monospace grid has nowhere to put. A booklet is a binary, so `--format
+pdf` needs `-o`, and it reproduces byte for byte from the same record.
 
 `--occurrence-dm` takes -1, 0 or +1 and nothing else, and defaults to 0.
 Without `--seed`, a seed is drawn from OS entropy and written into the
