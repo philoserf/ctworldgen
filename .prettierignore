@@ -1,8 +1,11 @@
 # Golden fixtures move only by regeneration, never by hand -- and a
 # formatter is "by hand" in effect. They are compared byte for byte, so
 # reformatting one breaks the gate with a diff that looks like the dice
-# stream moved when it has not.
+# stream moved when it has not. Both trees, for the one reason: the
+# Markdown listings are goldens exactly as the JSON records are, and
+# prettier would repad every table in them.
 gen/testdata/
+render/testdata/
 
 # Written by `ctworldgen new`, and compared against the schema in the same
 # shape the engine emits.

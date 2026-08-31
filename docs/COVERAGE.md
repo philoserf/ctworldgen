@@ -44,7 +44,7 @@ with a test named in it.
 | Rule                                                          | Page   | Implementation                                             | Test                                                                                          | Status                    |
 | ------------------------------------------------------------- | ------ | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------- |
 | R17 Dice engine, one and two dice, cumulative DMs, N+ targets | B1 2-3 | `dice.Stream.Die`/`D2`, `dice.Sum`, `dice.Target`          | `TestDieIsOneDie`, `TestD2ConsumesTwoDiceInOrder`, `TestTargetIsNPlus`, `TestSumIsCumulative` | done                      |
-| R18 The subsector record and its provenance | -- | `subsector.Subsector`, `subsector.World`, `subsector.Route`, `subsector.New`, `subsector.Decode` | `TestNewRecordCarriesItsProvenance`, `TestGoldensValidate`, `TestDecodeRejectsUnknownFields` | grows with each milestone |
+| R18 The subsector record and its provenance | -- | `subsector.Subsector`, `subsector.World`, `subsector.Route`, `subsector.New`, `subsector.Decode` | `TestNewRecordCarriesItsProvenance`, `TestGoldensValidate`, `TestDecodeRejectsUnknownFields`, `TestDecodeRejectsMoreThanOneDocument` | grows with each milestone |
 | R19 Batch | -- | `cmd/ctworldgen.batchCmd`, `batch`, `memberName` | `TestBatchMemberZeroIsTheBaseSeed`, `TestBatchDerivesEachMemberFromTheBase`, `TestBatchNamesMembersForTheSubsector` | done |
 | R20 The subsector listing | 4 | `render.Renderer` | `TestListings`, `TestEveryWorldAndLaneReachesTheListing`, `TestLabelsComeFromTheTables`, `TestAnEmptySubsectorRenders` | done |
 

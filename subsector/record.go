@@ -2,6 +2,7 @@ package subsector
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"slices"
@@ -153,13 +154,17 @@ func (s *Subsector) Stamp(id string) {
 }
 
 // Decode reads a record, refusing any field the current schema does not
-// define.
+// define and anything after the record itself.
 //
 // Rejecting unknown fields is two obligations: "additionalProperties":
 // false at every level of subsector.schema.json, and DisallowUnknownFields
 // here. A schema alone rejects nothing at read time. Both are required, so
 // that a record from a newer schema fails loudly rather than silently
 // dropping data.
+//
+// A record is one document, and content after it is refused for the same
+// reason: a JSONL batch handed to a reader of records would otherwise
+// decode its first member and discard the rest in silence.
 func Decode(r io.Reader) (*Subsector, error) {
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
@@ -169,6 +174,11 @@ func Decode(r io.Reader) (*Subsector, error) {
 	err := dec.Decode(&record)
 	if err != nil {
 		return nil, fmt.Errorf("decoding the record: %w", err)
+	}
+
+	_, err = dec.Token()
+	if !errors.Is(err, io.EOF) {
+		return nil, ErrTrailingContent
 	}
 
 	return &record, nil

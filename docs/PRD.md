@@ -486,6 +486,9 @@ ctworldgen version
   and `subsector` where `--name` is empty or slugs to nothing. The index is
   zero-padded to at least two digits, and wider where the count needs it,
   so the files sort in the order they were generated.
+- `render` reads one record. A file carrying more than one document —
+  a JSONL batch — is refused, rather than listed as its first member
+  with the rest dropped in silence.
 - Existing files are never overwritten without `--force`.
 - Flags precede the filename (Go `flag` stops at the first non-flag
   argument).

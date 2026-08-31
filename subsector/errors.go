@@ -21,6 +21,9 @@ var (
 	// ErrNotAStarport is the starport types of Book 3 p. 4.
 	ErrNotAStarport = errors.New("not one of A B C D E X (Book 3 p. 4)")
 
+	// ErrTrailingContent is the record's own shape: one JSON document.
+	ErrTrailingContent = errors.New("more than one document in the record read; a record is one JSON document")
+
 	// ErrNotOneCharacter is the shape the record prints these in.
 	ErrNotOneCharacter = errors.New("not a single character")
 )

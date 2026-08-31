@@ -2,6 +2,7 @@ package subsector_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -339,5 +340,30 @@ func TestDecodeRejectsUnknownFields(t *testing.T) {
 	_, err = subsector.Decode(strings.NewReader(`{"schema_version":`))
 	if err == nil {
 		t.Error("a truncated record was accepted")
+	}
+}
+
+// TestDecodeRejectsMoreThanOneDocument: a record is one JSON document, so
+// a JSONL batch handed to a reader of records fails loudly rather than
+// decoding its first member and discarding the rest.
+func TestDecodeRejectsMoreThanOneDocument(t *testing.T) {
+	t.Parallel()
+
+	one := fmt.Sprintf(completeRecord, "")
+
+	_, err := subsector.Decode(strings.NewReader(one + "\n" + one))
+	if !errors.Is(err, subsector.ErrTrailingContent) {
+		t.Errorf("two records in one read gave %v; the second was dropped in silence", err)
+	}
+
+	_, err = subsector.Decode(strings.NewReader(one + "\nsurprise"))
+	if !errors.Is(err, subsector.ErrTrailingContent) {
+		t.Errorf("content after the record gave %v", err)
+	}
+
+	// Trailing whitespace is not content: Marshal writes a newline.
+	_, err = subsector.Decode(strings.NewReader(one + "\n"))
+	if err != nil {
+		t.Errorf("a record with the newline Marshal writes did not decode: %v", err)
 	}
 }

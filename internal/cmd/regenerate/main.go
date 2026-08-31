@@ -29,12 +29,19 @@ func main() {
 	}
 }
 
+// run rewrites both golden trees. Each fixture is generated once and
+// written twice -- the JSON record and the Markdown listing rendered from
+// that same record -- so the two trees cannot come to describe different
+// subsectors under the same name.
 func run() error {
-	dir := filepath.Join("gen", "testdata")
+	recordDir := filepath.Join("gen", "testdata")
+	listingDir := filepath.Join("render", "testdata")
 
-	err := os.MkdirAll(dir, dirMode)
-	if err != nil {
-		return fmt.Errorf("creating %s: %w", dir, err)
+	for _, dir := range []string{recordDir, listingDir} {
+		err := os.MkdirAll(dir, dirMode)
+		if err != nil {
+			return fmt.Errorf("creating %s: %w", dir, err)
+		}
 	}
 
 	engine, err := gen.New()
@@ -42,82 +49,61 @@ func run() error {
 		return fmt.Errorf("building the engine: %w", err)
 	}
 
-	for _, golden := range fixture.Goldens() {
-		record, genErr := engine.Generate(gen.Inputs{
-			Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
-		})
-		if genErr != nil {
-			return fmt.Errorf("%s: %w", golden.File, genErr)
-		}
-
-		encoded, marshalErr := subsector.Marshal(record)
-		if marshalErr != nil {
-			return fmt.Errorf("%s: %w", golden.File, marshalErr)
-		}
-
-		path := filepath.Join(dir, golden.File+".json")
-
-		err = os.WriteFile(path, encoded, fileMode)
-		if err != nil {
-			return fmt.Errorf("writing %s: %w", path, err)
-		}
-
-		_, _ = fmt.Fprintln(os.Stdout, "wrote", path, "--", len(record.Worlds), "worlds")
-	}
-
-	err = writeExample()
+	renderer, err := render.New()
 	if err != nil {
-		return err
+		return fmt.Errorf("building the renderer: %w", err)
 	}
 
-	return writeListings()
+	for _, golden := range fixture.Goldens() {
+		err = writeGolden(engine, renderer, golden, recordDir, listingDir)
+		if err != nil {
+			return err
+		}
+	}
+
+	return writeExample()
 }
 
-// writeListings rewrites the Markdown golden for every fixture. The two
-// golden trees are driven from the one roster, so they cannot come to
-// describe different subsectors under the same name.
-func writeListings() error {
-	dir := filepath.Join("render", "testdata")
-
-	err := os.MkdirAll(dir, dirMode)
+// writeGolden generates one fixture and writes both of its goldens.
+func writeGolden(
+	engine *gen.Engine, renderer *render.Renderer, golden fixture.Golden, recordDir, listingDir string,
+) error {
+	record, err := engine.Generate(gen.Inputs{
+		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+	})
 	if err != nil {
-		return fmt.Errorf("creating %s: %w", dir, err)
+		return fmt.Errorf("%s: %w", golden.File, err)
 	}
 
-	engine, err := gen.New()
+	encoded, err := subsector.Marshal(record)
 	if err != nil {
-		return fmt.Errorf("building the engine: %w", err)
+		return fmt.Errorf("%s: %w", golden.File, err)
 	}
 
-	renderer, rendererErr := render.New()
-	if rendererErr != nil {
-		return fmt.Errorf("building the renderer: %w", rendererErr)
+	recordPath := filepath.Join(recordDir, golden.File+".json")
+
+	err = os.WriteFile(recordPath, encoded, fileMode)
+	if err != nil {
+		return fmt.Errorf("writing %s: %w", recordPath, err)
 	}
 
-	for _, golden := range fixture.Goldens() {
-		record, genErr := engine.Generate(gen.Inputs{
-			Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
-		})
-		if genErr != nil {
-			return fmt.Errorf("%s: %w", golden.File, genErr)
-		}
+	_, _ = fmt.Fprintln(os.Stdout, "wrote", recordPath, "--", len(record.Worlds), "worlds")
 
-		var built strings.Builder
+	var built strings.Builder
 
-		renderErr := renderer.Subsector(&built, record)
-		if renderErr != nil {
-			return fmt.Errorf("%s: %w", golden.File, renderErr)
-		}
-
-		path := filepath.Join(dir, golden.File+".md")
-
-		writeErr := os.WriteFile(path, []byte(built.String()), fileMode)
-		if writeErr != nil {
-			return fmt.Errorf("writing %s: %w", path, writeErr)
-		}
-
-		_, _ = fmt.Fprintln(os.Stdout, "wrote", path)
+	err = renderer.Subsector(&built, record)
+	if err != nil {
+		return fmt.Errorf("%s: %w", golden.File, err)
 	}
+
+	listingPath := filepath.Join(listingDir, golden.File+".md")
+
+	err = os.WriteFile(listingPath, []byte(built.String()), fileMode)
+	if err != nil {
+		return fmt.Errorf("writing %s: %w", listingPath, err)
+	}
+
+	_, _ = fmt.Fprintln(os.Stdout, "wrote", listingPath)
 
 	return nil
 }

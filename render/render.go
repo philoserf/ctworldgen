@@ -76,7 +76,7 @@ func (r *Renderer) roster(built *strings.Builder, record *subsector.Subsector) {
 	built.WriteString("| Hex | Name | Digits | Bases |\n| --- | --- | --- | --- |\n")
 
 	for _, world := range record.Worlds {
-		fmt.Fprintf(built, "| %s | %s | %s | %s |\n", world.Hex, world.Name, world.Digits, bases(world))
+		fmt.Fprintf(built, "| %s | %s | %s | %s |\n", world.Hex, cell(world.Name), world.Digits, bases(world))
 	}
 
 	built.WriteString("\n")
@@ -90,6 +90,16 @@ func occurrenceDM(value int) string {
 	}
 
 	return fmt.Sprintf("%+d", value)
+}
+
+// cell writes a value into a Markdown table cell. A world's name is the
+// one field a referee writes in himself, so it is the one that can carry
+// a pipe or a line break, either of which would otherwise break the row
+// into columns the table does not have.
+func cell(value string) string {
+	replaced := strings.NewReplacer("|", `\|`, "\n", " ", "\r", " ")
+
+	return replaced.Replace(value)
 }
 
 // bases names the bases a world has, which p. 5 prints throws for at

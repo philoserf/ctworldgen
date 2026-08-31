@@ -343,7 +343,11 @@ func batch(count int, base uint64, name string, occurrenceDM int) ([]*subsector.
 		return nil, fmt.Errorf("building the engine: %w", err)
 	}
 
-	records := make([]*subsector.Subsector, 0, count)
+	// Deliberately not preallocated to count: the capacity would be sized
+	// straight from an operator's --count, and makeslice panics rather than
+	// erroring on an absurd one. Growing as members are generated bounds
+	// the allocation by the work actually done.
+	var records []*subsector.Subsector
 
 	for index := range count {
 		derived := base + uint64(index)

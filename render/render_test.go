@@ -140,6 +140,25 @@ func TestEveryWorldAndLaneReachesTheListing(t *testing.T) {
 	}
 }
 
+// detailPages splits the detail section into one page per world, keyed by
+// hex. A check on a world's own bullets must be made against that world's
+// page: searching the whole document lets another world carrying the same
+// value satisfy it, which is the mistake the roster check was written to
+// avoid.
+func detailPages(t *testing.T, written string) map[string]string {
+	t.Helper()
+
+	pages := make(map[string]string)
+
+	for _, page := range strings.Split(section(t, written, "The worlds in detail"), "\n### ")[1:] {
+		hex, _, _ := strings.Cut(page, " ")
+
+		pages[hex] = page
+	}
+
+	return pages
+}
+
 // TestLabelsComeFromTheTables: every description the listing prints for a
 // value in a table's printed range is that table's own label, and a value
 // beyond the range gets no description at all (R16).
@@ -155,9 +174,14 @@ func TestLabelsComeFromTheTables(t *testing.T) {
 
 	for _, golden := range fixture.Goldens() {
 		record := generated(t, golden)
-		written := listing(t, record)
+		pages := detailPages(t, listing(t, record))
 
 		for _, world := range record.Worlds {
+			page, ok := pages[world.Hex.String()]
+			if !ok {
+				t.Fatalf("%s: the listing has no detail page for the world at %s", golden.File, world.Hex)
+			}
+
 			for _, line := range []struct {
 				name   string
 				value  int
@@ -167,13 +191,13 @@ func TestLabelsComeFromTheTables(t *testing.T) {
 				{"Law level", world.LawLevel, charts.LawLevels},
 				{"Atmosphere", world.Atmosphere, charts.Atmosphere},
 			} {
-				written := written
 				label, printed := line.labels.Label(line.value)
 				bullet := "- **" + line.name + " " + digitOf(t, line.value) + ".**"
 
 				if printed {
-					if !strings.Contains(written, bullet+" "+label) {
-						t.Fatalf("%s: %s %d should carry the label %q", golden.File, line.name, line.value, label)
+					if !strings.Contains(page, bullet+" "+label+"\n") {
+						t.Fatalf("%s: %s at %s should carry the label %q for %d",
+							golden.File, line.name, world.Hex, label, line.value)
 					}
 
 					continue
@@ -181,9 +205,9 @@ func TestLabelsComeFromTheTables(t *testing.T) {
 
 				beyond++
 
-				if !strings.Contains(written, bullet+"\n") {
-					t.Fatalf("%s: %s %d is beyond the printed table and should carry the digit alone",
-						golden.File, line.name, line.value)
+				if !strings.Contains(page, bullet+"\n") {
+					t.Fatalf("%s: %s %d at %s is beyond the printed table and should carry the digit alone",
+						golden.File, line.name, line.value, world.Hex)
 				}
 			}
 		}
@@ -204,6 +228,45 @@ func digitOf(t *testing.T, value int) string {
 	}
 
 	return written.String()
+}
+
+// TestARefereesOwnNameStaysInOneCell: a world's name is the one field the
+// referee writes in himself (p. 12 step 3 prints no table for it), so the
+// roster escapes what would otherwise break its row into columns the
+// table does not have.
+func TestARefereesOwnNameStaysInOneCell(t *testing.T) {
+	t.Parallel()
+
+	hex, err := subsector.NewHex(1, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	record := subsector.New(1, "Aramis", 0)
+
+	record.Worlds = append(record.Worlds, subsector.World{
+		Hex: hex, Name: "Regina | the\nold capital", Starport: subsector.StarportA,
+		NavalBase: false, ScoutBase: false,
+		Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
+		Government: 0, LawLevel: 0, TechIndex: 0,
+		Digits: "A0000000", Clamps: nil,
+	})
+
+	var rows []string
+
+	for line := range strings.SplitSeq(section(t, listing(t, record), "Worlds"), "\n") {
+		if strings.HasPrefix(line, "| 0101 ") {
+			rows = append(rows, line)
+		}
+	}
+
+	if len(rows) != 1 {
+		t.Fatalf("the world at 0101 has %d roster rows, want 1: %q", len(rows), rows)
+	}
+
+	if columns := strings.Count(rows[0], "|") - strings.Count(rows[0], `\|`); columns != 5 {
+		t.Errorf("the row divides into %d cells and the table has four columns: %s", columns-1, rows[0])
+	}
 }
 
 // TestAnEmptySubsectorRenders: a run whose eighty throws place no world

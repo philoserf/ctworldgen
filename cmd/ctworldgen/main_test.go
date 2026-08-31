@@ -475,6 +475,25 @@ func TestRenderWantsExactlyOneRecord(t *testing.T) {
 	}
 }
 
+// TestRenderRefusesABatch: a record is one document. `batch` writes JSONL,
+// so handing its output to `render` is the easy mistake, and rendering the
+// first member while discarding the rest would be a silent one.
+func TestRenderRefusesABatch(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(t.TempDir(), "batch.jsonl")
+
+	_, _, err := exec(t, "batch", "--count", "3", "--seed", "1", "-o", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, renderErr := exec(t, renderVerb, path)
+	if renderErr == nil {
+		t.Error("render accepted a batch of three records and would have listed only the first")
+	}
+}
+
 // TestRenderRefusesARecordFromANewerSchema is the read-time half of the
 // two obligations: DisallowUnknownFields on the Go side, so a record the
 // current engine could not have written fails loudly.
