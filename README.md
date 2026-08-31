@@ -21,6 +21,7 @@ time.
 
 ```sh
 ctworldgen new   [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
+ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
 ctworldgen batch --count N [--seed N] [--name X] [--occurrence-dm N] [-o dir|file.jsonl] [--force]
 ctworldgen render [-o file] [--force] subsector.json
 ctworldgen version
@@ -30,6 +31,14 @@ ctworldgen version
 subsector, named for the subsector and its index -- `aramis-00.json`.
 Members are numbered from zero, so `batch --count 1 --seed N` produces
 exactly the subsector `new --seed N` produces.
+
+`sector` writes one record covering sixteen subsectors on a single 32x40
+grid, 0101 through 3240, and throws for the commercial lanes that cross
+between them -- the lanes sixteen independent subsectors can never have.
+Every member is unchanged: member _i_ of `sector --seed N` is exactly the
+subsector `new --seed N+i` writes, so the subsector you read is the
+subsector you get. The seams are one further reading (`ERRATA.md` E006),
+stamped on every sector record.
 
 `--occurrence-dm` takes -1, 0 or +1 and nothing else, and defaults to 0.
 Without `--seed`, a seed is drawn from OS entropy and written into the
@@ -67,12 +76,19 @@ their counts share members: `--seed 100 --count 16` and `--seed 110 --count
 
 ## The documents
 
-`docs/PRD.md` is the contract: the authority model, the requirements, the
-determinism rules, the record shape and the milestones. `docs/ERRATA.md`
-records every reading of an ambiguous or silent page, with its page cite
-and the condition under which a record stamps it. `docs/COVERAGE.md` maps
-the rules to the implementation. `docs/subsector.schema.json` is the
-record's schema, with a minimal and a complete example beside it.
+`docs/ERRATA.md` records every reading of an ambiguous or silent page,
+with its page cite and the condition under which a record stamps it.
+`docs/COVERAGE.md` maps the rules to the implementation.
+`docs/subsector.schema.json` is the record's schema, with a minimal and a
+complete example beside it. `CLAUDE.md` carries the authority model:
+which books and pages govern, and the font trap that makes a text
+extraction of any table unsafe.
+
+`docs/PRD.md` is historical — the contract through `v1.0.0-alpha.1`,
+kept for the reasoning behind the decisions rather than as a statement of
+what may be built. What the tool should do now comes from
+[issue 1](https://github.com/philoserf/ctworldgen/issues/1), the alpha
+report.
 
 Rules come only from the held PDFs of the FFE reprints. Training-data
 Traveller is mostly the 1981 revision and later editions, and the held page

@@ -1,6 +1,20 @@
 # PRD: Classic Traveller Subsector Generator (Go CLI)
 
-2026-08-30. Status: the contract for this repository, before any code.
+2026-08-30. **Status: historical.** This was the contract from before any
+code through `v1.0.0-alpha.1`, and it governs nothing now.
+
+Read it for *why* a thing is the way it is — the reasoning behind the
+record shape, the determinism rules, and the decisions is all here and is
+still the best account of them. Do not read it for whether a thing may be
+built. The alpha was played, and [issue 1] is the working specification
+now; several bullets under "Not in scope" below are open backlog items,
+and the whole scope fence is retired.
+
+The "Authority" section has moved into `CLAUDE.md`, which is where it
+lives now — it was never a contract term. `ERRATA.md` and `COVERAGE.md`
+are live documents and were never part of this one.
+
+[issue 1]: https://github.com/philoserf/ctworldgen/issues/1
 
 ## Problem
 
@@ -48,8 +62,8 @@ _Consolidated Errata_ PDF, and not the rest of Book 3.
   in every record it governed — never applied silently.
 - Printed page N is PDF page N+5 in Book 3, N+6 in Book 1.
 
-This section is the single statement of the authority model. `CLAUDE.md`
-points here rather than restating it, so the two cannot drift.
+_This section has moved to `CLAUDE.md` and is kept here only so the
+document reads whole. `CLAUDE.md` is the copy that governs._
 
 ### Read the tables off the page, never out of `pdftotext`
 

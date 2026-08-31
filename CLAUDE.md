@@ -8,17 +8,32 @@ with code in this repository.
 `ctworldgen`: a Go CLI that generates rules-accurate Classic Traveller
 subsectors from Book 3's Worlds chapter (pp. 1–12, © 1977 text).
 
-**Read `docs/PRD.md` before doing any work here.** It is the contract:
-the authority model, the requirements, the determinism rules, the record
-shape, and the milestones all live there, and this file does not restate
-them. `docs/ERRATA.md` holds the recorded readings; `docs/COVERAGE.md`
-maps rules to implementation and tests.
+**What this tool is for is what a referee needs at the table.** The
+alpha was played ([issue 1]) and its report is the working specification:
+what held up is what must not break, what it did not want is not to be
+built, and what it lacked is the backlog. `docs/ERRATA.md` holds the
+recorded readings; `docs/COVERAGE.md` maps rules to implementation and
+tests. Both are live.
 
-**Status: all four milestones are complete.** The engine walks the whole
-of pp. 1-12, `render` writes the subsector listing from a record, and
-`batch` produces N independent subsectors. Every rule of pp. 1-12 has a
-row marked done in `docs/COVERAGE.md`, and all five readings stamp the
-records they govern.
+`docs/PRD.md` is **historical**. It was the contract through
+`v1.0.0-alpha.1` and governs nothing now; read it for why a thing is the
+way it is, never for whether a thing may be built. Its scope fence in
+particular is retired — several of its "Not in scope" bullets are open
+backlog items.
+
+[issue 1]: https://github.com/philoserf/ctworldgen/issues/1
+
+**Status.** The engine walks the whole of pp. 1-12; `render` writes the
+listing, which opens with a text map of the p. 3 grid; `batch` produces N
+independent subsectors; and `sector` lays sixteen of them on one 32x40
+grid and throws for the lanes at their seams (E006). A sector's members
+are unchanged -- member *i* of `sector --seed N` is the subsector `new
+--seed N+i` writes -- which is the property that keeps a sector
+trustworthy and is tested directly.
+
+`docs/COVERAGE.md` is the live map of rule to code to test. The
+technological levels tables of pp. 10-11 are the one thing inside pp. 1-12
+that is not built (issue 1 #4).
 
 There are two golden trees now -- the JSON records in `gen/testdata` and
 the Markdown listings in `render/testdata` -- and both are driven from the
@@ -33,12 +48,54 @@ Rules come only from the held PDFs in `~/Documents/Traveller/Classic/`.
 Traveller is mostly the 1981 revision and later editions, and the held
 © 1977 page governs even where it differs.
 
-`docs/PRD.md`, "Authority", is the full statement: which books and pages
-are in authority, the printed-page-to-PDF offsets, and the `pdftotext`
-font trap that makes a text extraction of any table unsafe. Read it
-rather than working from this summary.
+This outlived the contract that first stated it, because it is not a
+contract term. It is what the alpha report singles out as the reason the
+output could be trusted at all: "The numbers are the page's numbers",
+"Error messages cite the page — this bought trust in the rest of the
+output before I had checked any of it", and "The errata loop works …
+this is the best thing in the alpha." Page accuracy is a user need. What
+retired with the PRD was its scope fence, not this.
 
-Three habits follow from it, and they are what an agent gets wrong:
+**What is in authority**, and nothing else is:
+
+- **Book 3 _Worlds and Adventures_ pp. 1-12**, the Worlds chapter. This
+  is the ruleset. (pp. 10-11 are reference for play rather than a step of
+  generation, and are not transcribed; that is a backlog item, not a
+  boundary.)
+- **Book 1 _Characters and Combat_ pp. 2-3** (the die roll conventions)
+  and **p. 8** (the hexadecimal digit notation), which Book 3 uses
+  without restating.
+
+Not Books 2 and 4+, not the supplements, the Starter Edition, The
+Traveller Book, JTAS, or the _Consolidated Errata_ PDF, and not the rest
+of Book 3. Where a later printing differs from the held © 1977 text, the
+held page governs — most visibly in the string of digits, which carries
+no hyphen (E005), and in a population-0 world receiving a technological
+index like any other (`ERRATA.md`, Noted discrepancies).
+
+**Printed page N is PDF page N+5 in Book 3, and N+6 in Book 1.**
+
+### The font trap
+
+The held PDFs' embedded font maps the em-dash to the glyph `4` and the
+minus sign to `3`. A text extraction therefore renders the jump routes
+table's empty cells as the digit 4 — `B-E 4 4 4 4` for `4 — — —` — and
+the size formula `2D − 2` as `2D32`. Both readings are wrong and both
+look like data.
+
+So every table is transcribed from a **visual** read of the page, and
+then transcribed a second time inside the table package's tests, so the
+two must agree. That second transcription is the check the font trap
+needs, and it is where a new numeric table belongs.
+
+The one exception is the descriptive **labels** of pp. 5-7 — "Feudal
+Technocracy", "Dense, tainted". Those are editorial abbreviations of the
+book's prose rather than transcriptions of it, so retyping them in a test
+compares an abbreviation against itself. They are checked by re-reading
+the page; the suite only asserts that every value in a printed range has
+a non-empty label.
+
+Three habits follow, and they are what an agent gets wrong:
 
 - **Read a table off the page, visually** — `Read` the PDF with a `pages`
   range and look at it. Never `pdftotext`, never `pdfplumber`, never a
@@ -130,7 +187,12 @@ disguised a dead check:
 
 ## Commands
 
-The Taskfile does not exist yet. When it does, `task` is the whole gate
-and CI runs exactly `task` — never add a check to CI that the local gate
-does not run, and never add a tool to the gate without also installing it
-there.
+`task` is the whole gate — tidy, vet, golangci-lint, NilAway, `go test
+-race`, and the coverage ratchet — and CI runs exactly `task`. Never add
+a check to CI that the local gate does not run, and never add a tool to
+the gate without also installing it there.
+
+`task regenerate` rewrites both golden trees, the sector's seam golden,
+and the shipped example, then you read the diff. `task ratchet:update`
+records a new uncovered-statement baseline, which is for deliberately
+unreachable code and test-support packages, not for skipping a test.

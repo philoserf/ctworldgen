@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -522,5 +523,46 @@ func TestRenderRefusesARecordFromANewerSchema(t *testing.T) {
 	_, _, renderErr := exec(t, renderVerb, path)
 	if renderErr == nil {
 		t.Error("render accepted a record carrying a field the schema does not define")
+	}
+}
+
+// TestSectorWritesOneRecordOnTheSectorGrid: the sector subcommand is the
+// same shape as new -- same flags, same seed rule -- and writes one
+// record covering sixteen subsectors (ERRATA E006).
+func TestSectorWritesOneRecordOnTheSectorGrid(t *testing.T) {
+	t.Parallel()
+
+	var out, errOut bytes.Buffer
+
+	err := run([]string{"sector", "--seed", "1", "--name", "Aramis"}, &out, &errOut)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	record, err := subsector.Decode(bytes.NewReader(out.Bytes()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if record.Grid != subsector.SectorGrid() {
+		t.Errorf("the record is on a %dx%d grid, want %dx%d",
+			record.Grid.Columns, record.Grid.Rows, subsector.SectorColumns, subsector.SectorRows)
+	}
+
+	if !slices.Contains(record.Errata, "E006") {
+		t.Errorf("a sector record does not stamp E006: %v", record.Errata)
+	}
+}
+
+// TestSectorTakesNoArguments: flags precede any filename, and sector
+// takes none at all.
+func TestSectorTakesNoArguments(t *testing.T) {
+	t.Parallel()
+
+	var out, errOut bytes.Buffer
+
+	err := run([]string{"sector", "somefile.json"}, &out, &errOut)
+	if err == nil {
+		t.Fatal("sector accepted a positional argument")
 	}
 }

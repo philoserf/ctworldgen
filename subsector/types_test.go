@@ -367,3 +367,102 @@ func TestDecodeRejectsMoreThanOneDocument(t *testing.T) {
 		t.Errorf("a record with the newline Marshal writes did not decode: %v", err)
 	}
 }
+
+// TestDecodeRejectsAHexOffTheRecordsGrid: a hex is four digits whether it
+// names a subsector or a sector, so 0910 parses. It is not on the p. 3
+// grid, and a record that says it is on the p. 3 grid is wrong about
+// itself.
+func TestDecodeRejectsAHexOffTheRecordsGrid(t *testing.T) {
+	t.Parallel()
+
+	record := `{"schema_version":1,"ruleset":"ct-1977-book3-pp1-12","engine_version":"1",` +
+		`"rng_algorithm":"go-math-rand-v2-pcg","seed":1,"errata":[],"name":"Aramis","occurrence_dm":0,` +
+		`"grid":{"columns":8,"rows":10},"worlds":[{"hex":"0910","name":"","starport":"A",` +
+		`"naval_base":false,"scout_base":false,"size":0,"atmosphere":0,"hydrographics":0,` +
+		`"population":0,"government":0,"law_level":0,"tech_index":0,"digits":"A0000000"}],"routes":[]}`
+
+	_, err := subsector.Decode(strings.NewReader(record))
+	if err == nil {
+		t.Fatal("Decode accepted a world at 0910 on a record whose grid is 8 columns of 10 rows")
+	}
+
+	if !strings.Contains(err.Error(), "0910") {
+		t.Errorf("the error does not name the hex that is off the grid: %v", err)
+	}
+}
+
+// recordWith builds a one-world record with whatever grid clause is given,
+// so a test can hand Decode a record that has no grid at all.
+func recordWith(gridClause, hex string) string {
+	return `{"schema_version":1,"ruleset":"ct-1977-book3-pp1-12","engine_version":"1",` +
+		`"rng_algorithm":"go-math-rand-v2-pcg","seed":1,"errata":[],"name":"Aramis","occurrence_dm":0,` +
+		gridClause + `"worlds":[{"hex":"` + hex + `","name":"","starport":"A",` +
+		`"naval_base":false,"scout_base":false,"size":0,"atmosphere":0,"hydrographics":0,` +
+		`"population":0,"government":0,"law_level":0,"tech_index":0,"digits":"A0000000"}],"routes":[]}`
+}
+
+// TestARecordWithNoGridIsASubsector: grids were added to the record when
+// sectors were (ERRATA E006), and every record written before that is a
+// subsector on the p. 3 grid. Those files still read, which is why the
+// schema leaves `grid` optional -- this is the half of that promise the
+// schema cannot keep on its own.
+func TestARecordWithNoGridIsASubsector(t *testing.T) {
+	t.Parallel()
+
+	record, err := subsector.Decode(strings.NewReader(recordWith("", "0810")))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if record.Grid != subsector.PageThreeGrid() {
+		t.Errorf("a record with no grid decoded onto a %dx%d grid, want the p. 3 grid",
+			record.Grid.Columns, record.Grid.Rows)
+	}
+}
+
+// TestDecodeRejectsAGridTheSchemaDoesNotName: the schema names two grids,
+// and rejecting a third is two obligations -- the schema, and Decode. A
+// schema alone rejects nothing at read time.
+func TestDecodeRejectsAGridTheSchemaDoesNotName(t *testing.T) {
+	t.Parallel()
+
+	for _, clause := range []string{
+		`"grid":{"columns":9,"rows":10},`,
+		`"grid":{"columns":8,"rows":11},`,
+		`"grid":{"columns":32,"rows":10},`,
+	} {
+		_, err := subsector.Decode(strings.NewReader(recordWith(clause, "0101")))
+		if err == nil {
+			t.Errorf("Decode accepted %s", clause)
+		}
+	}
+}
+
+// TestDecodeRejectsALaneEndOffTheRecordsGrid: a lane's two ends are hexes
+// of the record's grid like any other. Bounding Hex by the sector grid
+// made ParseHex accept 0910, so nothing but this refuses a p. 3 record
+// whose lane reaches one -- checking the worlds alone leaves the ends
+// unchecked entirely.
+func TestDecodeRejectsALaneEndOffTheRecordsGrid(t *testing.T) {
+	t.Parallel()
+
+	for _, lane := range []string{
+		`{"from":"0910","to":"0810","distance":1}`,
+		`{"from":"0810","to":"0910","distance":1}`,
+	} {
+		record := `{"schema_version":1,"ruleset":"ct-1977-book3-pp1-12","engine_version":"1",` +
+			`"rng_algorithm":"go-math-rand-v2-pcg","seed":1,"errata":[],"name":"Aramis","occurrence_dm":0,` +
+			`"grid":{"columns":8,"rows":10},"worlds":[],"routes":[` + lane + `]}`
+
+		_, err := subsector.Decode(strings.NewReader(record))
+		if err == nil {
+			t.Errorf("Decode accepted the lane %s on a record whose grid is 8 columns of 10 rows", lane)
+
+			continue
+		}
+
+		if !strings.Contains(err.Error(), "0910") {
+			t.Errorf("the error does not name the hex that is off the grid: %v", err)
+		}
+	}
+}

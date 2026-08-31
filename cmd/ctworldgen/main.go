@@ -52,6 +52,7 @@ const usage = `ctworldgen generates Classic Traveller subsectors from Book 3 pp.
 
 usage:
   ctworldgen new   [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
+  ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
   ctworldgen batch --count N [--seed N] [--name X] [--occurrence-dm N] [-o dir|file.jsonl] [--force]
   ctworldgen render [-o file] [--force] subsector.json
   ctworldgen version
@@ -75,6 +76,8 @@ func run(args []string, stdout, stderr io.Writer) error {
 	switch args[0] {
 	case "new":
 		return newCmd(args[1:], stdout, stderr)
+	case "sector":
+		return sectorCmd(args[1:], stdout, stderr)
 	case "batch":
 		return batchCmd(args[1:], stdout, stderr)
 	case "render":
@@ -88,13 +91,19 @@ func run(args []string, stdout, stderr io.Writer) error {
 	}
 }
 
-func newCmd(args []string, stdout, stderr io.Writer) error {
-	flags := flag.NewFlagSet("new", flag.ContinueOnError)
+// singleRecordCmd is `new` and `sector`. They take the same flags, draw a
+// seed the same way, and write one record; the only difference is which
+// pass of the engine fills it, so that is the only thing passed in.
+func singleRecordCmd(
+	subcommand, noun string, args []string, stdout, stderr io.Writer,
+	fill func(*gen.Engine, gen.Inputs) (*subsector.Subsector, error),
+) error {
+	flags := flag.NewFlagSet(subcommand, flag.ContinueOnError)
 	flags.SetOutput(stderr)
 
 	var (
 		seed         = flags.Uint64("seed", 0, "seed for the dice stream; drawn from OS entropy and recorded when absent")
-		name         = flags.String("name", "", "name of the subsector")
+		name         = flags.String("name", "", "name of the "+noun)
 		occurrenceDM = flags.Int("occurrence-dm", 0, "world occurrence DM: -1, 0 or +1 (Book 3 p. 1)")
 		out          = flags.String("o", "", "write to this file instead of stdout")
 		force        = flags.Bool("force", false, "overwrite an existing output file")
@@ -133,12 +142,29 @@ func newCmd(args []string, stdout, stderr io.Writer) error {
 		return fmt.Errorf("building the engine: %w", err)
 	}
 
-	s, err := engine.Generate(gen.Inputs{Seed: *seed, Name: *name, OccurrenceDM: *occurrenceDM})
+	record, err := fill(engine, gen.Inputs{Seed: *seed, Name: *name, OccurrenceDM: *occurrenceDM})
 	if err != nil {
-		return fmt.Errorf("generating the subsector: %w", err)
+		return fmt.Errorf("generating the %s: %w", noun, err)
 	}
 
-	return write(s, *out, *force, stdout)
+	return write(record, *out, *force, stdout)
+}
+
+// newCmd writes one subsector: the whole of Book 3 pp. 1-12 on the p. 3
+// grid.
+func newCmd(args []string, stdout, stderr io.Writer) error {
+	return singleRecordCmd("new", "subsector", args, stdout, stderr,
+		func(e *gen.Engine, in gen.Inputs) (*subsector.Subsector, error) { return e.Generate(in) })
+}
+
+// sectorCmd writes one record covering sixteen subsectors on one grid,
+// with the lanes at their seams thrown for (ERRATA E006). Every member is
+// the subsector `new --seed base+i` writes, so a sector is the sixteen
+// subsectors a referee could have generated one at a time, plus the lanes
+// that generating them one at a time could not find.
+func sectorCmd(args []string, stdout, stderr io.Writer) error {
+	return singleRecordCmd("sector", "sector", args, stdout, stderr,
+		func(e *gen.Engine, in gen.Inputs) (*subsector.Subsector, error) { return e.Sector(in) })
 }
 
 func isSet(fs *flag.FlagSet, name string) bool {

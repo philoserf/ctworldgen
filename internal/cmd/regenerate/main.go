@@ -5,6 +5,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -61,7 +62,43 @@ func run() error {
 		}
 	}
 
+	err = writeSeams(engine)
+	if err != nil {
+		return err
+	}
+
 	return writeExample()
+}
+
+// writeSeams pins the one stream a sector adds: the lane pass over pairs
+// that straddle two members (ERRATA E006). The members themselves are
+// pinned by being identical to the subsectors `new` writes, which is a
+// test rather than a fixture.
+func writeSeams(engine *gen.Engine) error {
+	golden := fixture.SectorGolden()
+
+	record, err := engine.Sector(gen.Inputs{
+		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+	})
+	if err != nil {
+		return fmt.Errorf("%s: %w", golden.File, err)
+	}
+
+	encoded, err := json.MarshalIndent(gen.CrossingRoutes(record), "", "  ")
+	if err != nil {
+		return fmt.Errorf("%s: %w", golden.File, err)
+	}
+
+	path := fixture.SeamsPath()
+
+	err = os.WriteFile(path, append(encoded, '\n'), fileMode)
+	if err != nil {
+		return fmt.Errorf("writing %s: %w", path, err)
+	}
+
+	_, _ = fmt.Fprintln(os.Stdout, "wrote", path, "--", len(gen.CrossingRoutes(record)), "lanes at the seams")
+
+	return nil
 }
 
 // writeGolden generates one fixture and writes both of its goldens.

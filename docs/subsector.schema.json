@@ -57,6 +57,24 @@
       "minimum": -1,
       "maximum": 1
     },
+    "grid": {
+      "description": "The hex grid the hexes below are numbered on: 8x10 for the p. 3 sub-sector grid, 32x40 for a sector of sixteen of them (ERRATA E006). A record written before grids were recorded has none, and is a sub-sector. The pair is what is named, not the two dimensions separately -- 8x40 and 32x10 are grids nothing prints and subsector.Decode refuses, so the oneOf below is what keeps the schema from accepting a record the reader rejects.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["columns", "rows"],
+      "properties": {
+        "columns": { "type": "integer", "enum": [8, 32] },
+        "rows": { "type": "integer", "enum": [10, 40] }
+      },
+      "oneOf": [
+        {
+          "properties": { "columns": { "const": 8 }, "rows": { "const": 10 } }
+        },
+        {
+          "properties": { "columns": { "const": 32 }, "rows": { "const": 40 } }
+        }
+      ]
+    },
     "worlds": {
       "type": "array",
       "items": { "$ref": "#/$defs/world" }
@@ -74,9 +92,9 @@
       "required": ["hex", "name", "starport", "naval_base", "scout_base", "size", "atmosphere", "hydrographics", "population", "government", "law_level", "tech_index", "digits"],
       "properties": {
         "hex": {
-          "description": "The four-digit column-and-row number the p. 3 grid prints, 0101 through 0810.",
+          "description": "The four-digit column-and-row number the p. 3 grid prints. 0101 through 0810 on a sub-sector grid; up to 3240 on a sector grid (ERRATA E006). The record's grid says which.",
           "type": "string",
-          "pattern": "^0[1-8](0[1-9]|10)$"
+          "pattern": "^(0[1-9]|[12][0-9]|3[0-2])(0[1-9]|[1-3][0-9]|40)$"
         },
         "name": {
           "description": "Always empty: p. 12 step 3 says to name each world and prints no table, so the hex identifies it.",
@@ -171,11 +189,11 @@
         "from": {
           "description": "The lower hex identifier of the pair. A lane is not directed; ordering the pair is what keeps one lane from being written two ways.",
           "type": "string",
-          "pattern": "^0[1-8](0[1-9]|10)$"
+          "pattern": "^(0[1-9]|[12][0-9]|3[0-2])(0[1-9]|[1-3][0-9]|40)$"
         },
         "to": {
           "type": "string",
-          "pattern": "^0[1-8](0[1-9]|10)$"
+          "pattern": "^(0[1-9]|[12][0-9]|3[0-2])(0[1-9]|[1-3][0-9]|40)$"
         },
         "distance": {
           "description": "The jump distance in parsecs. The jump routes table states a target only at 1 through 4, so no lane exists beyond four hexes.",

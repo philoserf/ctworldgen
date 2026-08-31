@@ -118,7 +118,7 @@ func TestEveryWorldAndLaneReachesTheListing(t *testing.T) {
 				}
 			}
 
-			if rows := strings.Count(roster, "\n| 0"); rows != len(record.Worlds) {
+			if rows := tableRows(roster); rows != len(record.Worlds) {
 				t.Errorf("the roster has %d rows and the subsector has %d worlds", rows, len(record.Worlds))
 			}
 
@@ -133,11 +133,27 @@ func TestEveryWorldAndLaneReachesTheListing(t *testing.T) {
 				}
 			}
 
-			if rows := strings.Count(lanes, "\n| 0"); rows != len(record.Routes) {
+			if rows := tableRows(lanes); rows != len(record.Routes) {
 				t.Errorf("the lanes table has %d rows and the subsector has %d lanes", rows, len(record.Routes))
 			}
 		})
 	}
+}
+
+// tableRows counts the body rows of a Markdown table: the lines that open
+// with a hex. Counting "\n| 0" instead worked only while every hex began
+// with a zero, and would have undercounted in silence on a sector grid,
+// where they run to 3240.
+func tableRows(section string) int {
+	rows := 0
+
+	for line := range strings.SplitSeq(section, "\n") {
+		if strings.HasPrefix(line, "| ") && len(line) > 2 && line[2] >= '0' && line[2] <= '9' {
+			rows++
+		}
+	}
+
+	return rows
 }
 
 // detailPages splits the detail section into one page per world, keyed by
@@ -370,9 +386,9 @@ func line(s string) string {
 	return first
 }
 
-// TestTheListingSaysWhyTheTechnologicalIndexIsBare: pp. 10-11 are out of
-// scope by PRD.md's declaration, so every world's technological index
-// prints its digit alone. That is 670 bare lines in a sector, and the
+// TestTheListingSaysWhyTheTechnologicalIndexIsBare: pp. 10-11 are not
+// transcribed, so every world's technological index prints its digit
+// alone. That is 670 bare lines in a sector, and the
 // listing says once why, rather than in every one of them or nowhere.
 func TestTheListingSaysWhyTheTechnologicalIndexIsBare(t *testing.T) {
 	t.Parallel()
@@ -538,26 +554,26 @@ func TestTheMapIsTheGridPrintedOnPageThree(t *testing.T) {
 	// on the map at all; the goldens carry the starport letters.
 	t.Run("empty", func(t *testing.T) {
 		t.Parallel()
-		assertTheMapIsThePrintedGrid(t, listing(t, subsector.New(1, "Aramis", 0)))
+		assertTheMapIsThePrintedGrid(t, listing(t, subsector.New(1, "Aramis", 0)), subsector.PageThreeGrid())
 	})
 
 	for _, golden := range fixture.Goldens() {
 		t.Run(golden.File, func(t *testing.T) {
 			t.Parallel()
-			assertTheMapIsThePrintedGrid(t, listing(t, generated(t, golden)))
+			assertTheMapIsThePrintedGrid(t, listing(t, generated(t, golden)), subsector.PageThreeGrid())
 		})
 	}
 }
 
 // assertTheMapIsThePrintedGrid holds one drawing against Hex.Distance.
-func assertTheMapIsThePrintedGrid(t *testing.T, written string) {
+func assertTheMapIsThePrintedGrid(t *testing.T, written string, grid subsector.Grid) {
 	t.Helper()
 
 	places := mapPlaces(t, mapBlock(t, written))
 
-	if len(places) != subsector.Columns*subsector.Rows {
-		t.Fatalf("the map draws %d hexes and the p. 3 grid prints %d",
-			len(places), subsector.Columns*subsector.Rows)
+	if len(places) != grid.Columns*grid.Rows {
+		t.Fatalf("the map draws %d hexes and a %dx%d grid has %d",
+			len(places), grid.Columns, grid.Rows, grid.Columns*grid.Rows)
 	}
 
 	slot, step := mapGeometry(t, places)
@@ -622,4 +638,83 @@ func TestTheMapMarksWhatPageOneSaysToMark(t *testing.T) {
 // line was written.
 func drawnSlot(line string, char, slot int) string {
 	return strings.TrimSpace(line[char:min(char+slot, len(line))])
+}
+
+// TestASectorRendersOnItsOwnGrid: the map is drawn from the record's
+// grid, not from the p. 3 constants, so a sector draws all 1,280 of its
+// hexes and the parity holds across the whole of it. Getting the band
+// offsets wrong would put a hex where Hex.Distance says another one
+// belongs, which is the same check the subsector map gets.
+func TestASectorRendersOnItsOwnGrid(t *testing.T) {
+	t.Parallel()
+
+	engine, err := gen.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	record, err := engine.Sector(gen.Inputs{Seed: 1, Name: "Aramis", OccurrenceDM: 0})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	written := listing(t, record)
+	assertTheMapIsThePrintedGrid(t, written, subsector.SectorGrid())
+
+	if rows := tableRows(section(t, written, "Worlds")); rows != len(record.Worlds) {
+		t.Errorf("the roster has %d rows and the sector has %d worlds", rows, len(record.Worlds))
+	}
+
+	if rows := tableRows(section(t, written, "Space lanes")); rows != len(record.Routes) {
+		t.Errorf("the lane table has %d rows and the sector has %d lanes", rows, len(record.Routes))
+	}
+}
+
+// TestTheListingSaysWhichGridItDrew: the listing is a render of the
+// record, and a record on the 32x40 grid is not a subsector. An unnamed
+// sector headed "# Subsector", or a map note calling sixteen grids "the
+// p. 3 sub-sector hex grid", reads perfectly well while misreporting its
+// own subject -- which is the only way this can go wrong.
+func TestTheListingSaysWhichGridItDrew(t *testing.T) {
+	t.Parallel()
+
+	engine, err := gen.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Unnamed, because the heading under test is the one a record with no
+	// referee's name of its own falls back to.
+	asSector, err := engine.Sector(gen.Inputs{Seed: 1, Name: "", OccurrenceDM: 0})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sectorListing := listing(t, asSector)
+
+	if !strings.HasPrefix(sectorListing, "# Sector\n") {
+		t.Errorf("an unnamed sector is headed %q", line(sectorListing))
+	}
+
+	if note := noteLine(t, sectorListing); !strings.Contains(note, "3240") {
+		t.Errorf("the map note of a sector does not say which grid was drawn: %q", note)
+	}
+
+	subsectorListing := listing(t, subsector.New(1, "", 0))
+
+	if !strings.HasPrefix(subsectorListing, "# Subsector\n") {
+		t.Errorf("an unnamed subsector is headed %q", line(subsectorListing))
+	}
+
+	if note := noteLine(t, subsectorListing); !strings.HasPrefix(note, "The p. 3 sub-sector hex grid.") {
+		t.Errorf("the map note of a subsector no longer names the p. 3 grid: %q", note)
+	}
+}
+
+// noteLine is the map section's prose: its first non-empty line, which is
+// the sentence naming the grid.
+func noteLine(t *testing.T, written string) string {
+	t.Helper()
+
+	return line(strings.TrimLeft(section(t, written, "The map"), "\n"))
 }

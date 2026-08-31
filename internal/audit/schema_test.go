@@ -148,17 +148,45 @@ func TestSchemaRejectsUnknownFields(t *testing.T) {
 	repoRoot := root(t)
 	compiled := schema(t, repoRoot)
 
-	for _, bad := range []struct {
-		name   string
-		mutate func(record, world, route map[string]any)
-	}{
+	for _, bad := range badRecords() {
+		t.Run(bad.name, func(t *testing.T) {
+			t.Parallel()
+
+			record := loadRecord(t, filepath.Join(repoRoot, "docs", "examples", "complete.json"))
+
+			bad.mutate(record, firstObject(t, record, "worlds"), firstObject(t, record, "routes"))
+
+			err := compiled.Validate(any(record))
+			if err == nil {
+				t.Errorf("the schema accepted %s", bad.name)
+			}
+		})
+	}
+}
+
+// badRecord is one mutation of the complete example that the schema must
+// refuse, named for what it does.
+type badRecord struct {
+	name   string
+	mutate func(record, world, route map[string]any)
+}
+
+// badRecords is the table. It sits outside the test so that the list can
+// grow without the test itself growing with it.
+func badRecords() []badRecord {
+	return []badRecord{
 		{"an unknown field at the top level", func(record, _, _ map[string]any) {
 			record["surprise"] = 1
 		}},
 		{"an unknown field on a world", func(_, world, _ map[string]any) {
 			world["surprise"] = 1
 		}},
-		{"a hex off the p. 3 grid", func(_, world, _ map[string]any) {
+		// Not "off the p. 3 grid": the pattern now spans the sector grid
+		// too, so 0910 is a well-formed identifier and it is
+		// subsector.Decode, not the schema, that refuses it on a p. 3
+		// record. What the pattern still refuses is a number the grid
+		// never prints at all.
+		{"a hex the grid numbering does not print", func(_, world, _ map[string]any) {
 			world["hex"] = "0900"
 		}},
 		{"a hex that is not four digits", func(_, world, _ map[string]any) {
@@ -182,8 +210,18 @@ func TestSchemaRejectsUnknownFields(t *testing.T) {
 		{"an unknown field on a route", func(_, _, route map[string]any) {
 			route["surprise"] = 1
 		}},
-		{"a lane reaching a hex off the p. 3 grid", func(_, _, route map[string]any) {
+		{"a lane reaching a hex the grid numbering does not print", func(_, _, route map[string]any) {
 			route["from"] = "0900"
+		}},
+		// The two dimensions are enumerated separately, so without the
+		// oneOf beside them the schema accepts a pair nothing prints --
+		// and subsector.Decode refuses it, which is the schema and the
+		// reader disagreeing about the same record.
+		{"a grid pair nothing prints", func(record, _, _ map[string]any) {
+			record["grid"] = map[string]any{"columns": 8, "rows": 40}
+		}},
+		{"the other grid pair nothing prints", func(record, _, _ map[string]any) {
+			record["grid"] = map[string]any{"columns": 32, "rows": 10}
 		}},
 		// int, not the Parsecs the table constant carries: the validator
 		// reads a Go value the way it reads a decoded document, and a named
@@ -193,19 +231,6 @@ func TestSchemaRejectsUnknownFields(t *testing.T) {
 		{"a lane longer than the jump routes table states", func(_, _, route map[string]any) {
 			route["distance"] = int(tables.MaxJump) + 1
 		}},
-	} {
-		t.Run(bad.name, func(t *testing.T) {
-			t.Parallel()
-
-			record := loadRecord(t, filepath.Join(repoRoot, "docs", "examples", "complete.json"))
-
-			bad.mutate(record, firstObject(t, record, "worlds"), firstObject(t, record, "routes"))
-
-			err := compiled.Validate(any(record))
-			if err == nil {
-				t.Errorf("the schema accepted %s", bad.name)
-			}
-		})
 	}
 }
 
@@ -269,4 +294,47 @@ func loadRecord(t *testing.T, path string) map[string]any {
 	}
 
 	return record
+}
+
+// TestASectorRecordValidates: the schema was widened for sector records
+// -- a 32x40 grid, and hexes running to 3240 -- and no golden is one, so
+// nothing else ever holds the widened schema against a record the engine
+// actually writes. A pattern or an enum that had been widened wrongly
+// would sit in the document unexercised.
+func TestASectorRecordValidates(t *testing.T) {
+	t.Parallel()
+
+	engine, err := gen.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	golden := fixture.SectorGolden()
+
+	record, err := engine.Sector(gen.Inputs{
+		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if record.Grid != subsector.SectorGrid() {
+		t.Fatalf("the record under test is on a %dx%d grid, so it is not the shape this test means to hold",
+			record.Grid.Columns, record.Grid.Rows)
+	}
+
+	encoded, err := subsector.Marshal(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	inst, err := jsonschema.UnmarshalJSON(bytes.NewReader(encoded))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = schema(t, root(t)).Validate(inst)
+	if err != nil {
+		t.Errorf("a sector record does not validate:\n%v", err)
+	}
 }

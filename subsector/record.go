@@ -49,8 +49,13 @@ type Subsector struct {
 	Errata        []string `json:"errata"`
 	Name          string   `json:"name"`
 	OccurrenceDM  int      `json:"occurrence_dm"`
-	Worlds        []World  `json:"worlds"`
-	Routes        []Route  `json:"routes"`
+
+	// Grid is what the hexes below are numbered on: the p. 3 sub-sector
+	// grid, or the sector grid of sixteen of them (ERRATA E006).
+	Grid Grid `json:"grid"`
+
+	Worlds []World `json:"worlds"`
+	Routes []Route `json:"routes"`
 }
 
 // World is one generated world.
@@ -135,6 +140,7 @@ func New(seed uint64, name string, occurrenceDM int) *Subsector {
 		Errata:        []string{},
 		Name:          name,
 		OccurrenceDM:  occurrenceDM,
+		Grid:          PageThreeGrid(),
 		Worlds:        []World{},
 		Routes:        []Route{},
 	}
@@ -174,6 +180,24 @@ func Decode(r io.Reader) (*Subsector, error) {
 	err := dec.Decode(&record)
 	if err != nil {
 		return nil, fmt.Errorf("decoding the record: %w", err)
+	}
+
+	// A record written before grids were recorded is a subsector, which is
+	// the only shape the tool wrote then. The reporter of issue 1 has
+	// sixteen such files; they still read.
+	if record.Grid.Zero() {
+		record.Grid = PageThreeGrid()
+	}
+
+	// The schema names these two grids and nothing else, and unknown-shape
+	// rejection is two obligations: the schema, and this.
+	if record.Grid != PageThreeGrid() && record.Grid != SectorGrid() {
+		return nil, fmt.Errorf("%w: %dx%d", ErrNotAGrid, record.Grid.Columns, record.Grid.Rows)
+	}
+
+	err = record.onItsOwnGrid()
+	if err != nil {
+		return nil, err
 	}
 
 	_, err = dec.Token()
@@ -226,4 +250,36 @@ func (w World) DigitString() (string, error) {
 	}
 
 	return built.String(), nil
+}
+
+// onItsOwnGrid holds every hex the record carries against the grid the
+// record says it is on. Hex bounds itself by the largest grid there is --
+// an identifier is four digits whether it names a subsector or a sector --
+// so 0910 parses, and this is the only thing that refuses it on a p. 3
+// record.
+//
+// The lanes are checked as well as the worlds. A lane's two ends are
+// hexes of the same grid, and a record reaching off its own grid is wrong
+// about itself whether the hex it names carries a world or not.
+func (s *Subsector) onItsOwnGrid() error {
+	for _, world := range s.Worlds {
+		err := s.Grid.hold(world.Hex)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, route := range s.Routes {
+		err := s.Grid.hold(route.From)
+		if err != nil {
+			return err
+		}
+
+		err = s.Grid.hold(route.To)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

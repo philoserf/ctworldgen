@@ -1,0 +1,1787 @@
+[
+  {
+    "from": "0120",
+    "to": "0121",
+    "distance": 1
+  },
+  {
+    "from": "0120",
+    "to": "0122",
+    "distance": 2
+  },
+  {
+    "from": "0120",
+    "to": "0123",
+    "distance": 3
+  },
+  {
+    "from": "0120",
+    "to": "0222",
+    "distance": 3
+  },
+  {
+    "from": "0121",
+    "to": "0219",
+    "distance": 2
+  },
+  {
+    "from": "0121",
+    "to": "0320",
+    "distance": 2
+  },
+  {
+    "from": "0122",
+    "to": "0219",
+    "distance": 3
+  },
+  {
+    "from": "0122",
+    "to": "0320",
+    "distance": 3
+  },
+  {
+    "from": "0122",
+    "to": "0419",
+    "distance": 4
+  },
+  {
+    "from": "0123",
+    "to": "0219",
+    "distance": 4
+  },
+  {
+    "from": "0130",
+    "to": "0131",
+    "distance": 1
+  },
+  {
+    "from": "0130",
+    "to": "0431",
+    "distance": 3
+  },
+  {
+    "from": "0131",
+    "to": "0230",
+    "distance": 1
+  },
+  {
+    "from": "0219",
+    "to": "0222",
+    "distance": 3
+  },
+  {
+    "from": "0219",
+    "to": "0323",
+    "distance": 4
+  },
+  {
+    "from": "0219",
+    "to": "0521",
+    "distance": 3
+  },
+  {
+    "from": "0222",
+    "to": "0320",
+    "distance": 3
+  },
+  {
+    "from": "0230",
+    "to": "0231",
+    "distance": 1
+  },
+  {
+    "from": "0230",
+    "to": "0431",
+    "distance": 2
+  },
+  {
+    "from": "0231",
+    "to": "0330",
+    "distance": 2
+  },
+  {
+    "from": "0309",
+    "to": "0311",
+    "distance": 2
+  },
+  {
+    "from": "0320",
+    "to": "0323",
+    "distance": 3
+  },
+  {
+    "from": "0320",
+    "to": "0521",
+    "distance": 2
+  },
+  {
+    "from": "0330",
+    "to": "0431",
+    "distance": 2
+  },
+  {
+    "from": "0409",
+    "to": "0413",
+    "distance": 4
+  },
+  {
+    "from": "0418",
+    "to": "0421",
+    "distance": 3
+  },
+  {
+    "from": "0420",
+    "to": "0421",
+    "distance": 1
+  },
+  {
+    "from": "0420",
+    "to": "0521",
+    "distance": 1
+  },
+  {
+    "from": "0421",
+    "to": "0520",
+    "distance": 2
+  },
+  {
+    "from": "0422",
+    "to": "0519",
+    "distance": 4
+  },
+  {
+    "from": "0431",
+    "to": "0630",
+    "distance": 2
+  },
+  {
+    "from": "0519",
+    "to": "0521",
+    "distance": 2
+  },
+  {
+    "from": "0520",
+    "to": "0521",
+    "distance": 1
+  },
+  {
+    "from": "0521",
+    "to": "0619",
+    "distance": 2
+  },
+  {
+    "from": "0601",
+    "to": "0902",
+    "distance": 3
+  },
+  {
+    "from": "0601",
+    "to": "1001",
+    "distance": 4
+  },
+  {
+    "from": "0602",
+    "to": "0902",
+    "distance": 3
+  },
+  {
+    "from": "0602",
+    "to": "1002",
+    "distance": 4
+  },
+  {
+    "from": "0613",
+    "to": "0710",
+    "distance": 4
+  },
+  {
+    "from": "0613",
+    "to": "0914",
+    "distance": 3
+  },
+  {
+    "from": "0615",
+    "to": "0914",
+    "distance": 3
+  },
+  {
+    "from": "0624",
+    "to": "0924",
+    "distance": 3
+  },
+  {
+    "from": "0624",
+    "to": "0925",
+    "distance": 3
+  },
+  {
+    "from": "0626",
+    "to": "0925",
+    "distance": 3
+  },
+  {
+    "from": "0626",
+    "to": "1025",
+    "distance": 4
+  },
+  {
+    "from": "0630",
+    "to": "0631",
+    "distance": 1
+  },
+  {
+    "from": "0630",
+    "to": "0733",
+    "distance": 3
+  },
+  {
+    "from": "0702",
+    "to": "0902",
+    "distance": 2
+  },
+  {
+    "from": "0702",
+    "to": "0903",
+    "distance": 2
+  },
+  {
+    "from": "0702",
+    "to": "1002",
+    "distance": 3
+  },
+  {
+    "from": "0704",
+    "to": "0903",
+    "distance": 2
+  },
+  {
+    "from": "0707",
+    "to": "0908",
+    "distance": 2
+  },
+  {
+    "from": "0707",
+    "to": "1008",
+    "distance": 3
+  },
+  {
+    "from": "0710",
+    "to": "0713",
+    "distance": 3
+  },
+  {
+    "from": "0710",
+    "to": "1008",
+    "distance": 3
+  },
+  {
+    "from": "0724",
+    "to": "0924",
+    "distance": 2
+  },
+  {
+    "from": "0724",
+    "to": "0925",
+    "distance": 2
+  },
+  {
+    "from": "0724",
+    "to": "1023",
+    "distance": 3
+  },
+  {
+    "from": "0726",
+    "to": "0925",
+    "distance": 2
+  },
+  {
+    "from": "0727",
+    "to": "0924",
+    "distance": 4
+  },
+  {
+    "from": "0733",
+    "to": "0830",
+    "distance": 3
+  },
+  {
+    "from": "0733",
+    "to": "0931",
+    "distance": 3
+  },
+  {
+    "from": "0733",
+    "to": "0935",
+    "distance": 3
+  },
+  {
+    "from": "0735",
+    "to": "0935",
+    "distance": 2
+  },
+  {
+    "from": "0737",
+    "to": "0938",
+    "distance": 2
+  },
+  {
+    "from": "0801",
+    "to": "0902",
+    "distance": 1
+  },
+  {
+    "from": "0801",
+    "to": "1001",
+    "distance": 2
+  },
+  {
+    "from": "0801",
+    "to": "1002",
+    "distance": 2
+  },
+  {
+    "from": "0801",
+    "to": "1202",
+    "distance": 4
+  },
+  {
+    "from": "0802",
+    "to": "0902",
+    "distance": 1
+  },
+  {
+    "from": "0802",
+    "to": "0903",
+    "distance": 1
+  },
+  {
+    "from": "0802",
+    "to": "1002",
+    "distance": 2
+  },
+  {
+    "from": "0802",
+    "to": "1201",
+    "distance": 4
+  },
+  {
+    "from": "0813",
+    "to": "0914",
+    "distance": 1
+  },
+  {
+    "from": "0816",
+    "to": "0916",
+    "distance": 1
+  },
+  {
+    "from": "0817",
+    "to": "1018",
+    "distance": 2
+  },
+  {
+    "from": "0818",
+    "to": "1018",
+    "distance": 2
+  },
+  {
+    "from": "0818",
+    "to": "1019",
+    "distance": 2
+  },
+  {
+    "from": "0818",
+    "to": "1120",
+    "distance": 3
+  },
+  {
+    "from": "0818",
+    "to": "1217",
+    "distance": 4
+  },
+  {
+    "from": "0826",
+    "to": "1025",
+    "distance": 2
+  },
+  {
+    "from": "0826",
+    "to": "1027",
+    "distance": 2
+  },
+  {
+    "from": "0827",
+    "to": "1025",
+    "distance": 3
+  },
+  {
+    "from": "0827",
+    "to": "1027",
+    "distance": 2
+  },
+  {
+    "from": "0829",
+    "to": "0929",
+    "distance": 1
+  },
+  {
+    "from": "0829",
+    "to": "0931",
+    "distance": 2
+  },
+  {
+    "from": "0829",
+    "to": "1027",
+    "distance": 3
+  },
+  {
+    "from": "0829",
+    "to": "1028",
+    "distance": 2
+  },
+  {
+    "from": "0829",
+    "to": "1030",
+    "distance": 2
+  },
+  {
+    "from": "0829",
+    "to": "1129",
+    "distance": 3
+  },
+  {
+    "from": "0829",
+    "to": "1227",
+    "distance": 4
+  },
+  {
+    "from": "0830",
+    "to": "0832",
+    "distance": 2
+  },
+  {
+    "from": "0830",
+    "to": "0931",
+    "distance": 1
+  },
+  {
+    "from": "0832",
+    "to": "0931",
+    "distance": 2
+  },
+  {
+    "from": "0835",
+    "to": "0935",
+    "distance": 1
+  },
+  {
+    "from": "0837",
+    "to": "0938",
+    "distance": 1
+  },
+  {
+    "from": "0838",
+    "to": "0938",
+    "distance": 1
+  },
+  {
+    "from": "0921",
+    "to": "1120",
+    "distance": 2
+  },
+  {
+    "from": "0931",
+    "to": "1030",
+    "distance": 1
+  },
+  {
+    "from": "0931",
+    "to": "1129",
+    "distance": 3
+  },
+  {
+    "from": "0931",
+    "to": "1230",
+    "distance": 3
+  },
+  {
+    "from": "1008",
+    "to": "1311",
+    "distance": 4
+  },
+  {
+    "from": "1110",
+    "to": "1111",
+    "distance": 1
+  },
+  {
+    "from": "1110",
+    "to": "1113",
+    "distance": 3
+  },
+  {
+    "from": "1110",
+    "to": "1211",
+    "distance": 2
+  },
+  {
+    "from": "1111",
+    "to": "1210",
+    "distance": 1
+  },
+  {
+    "from": "1120",
+    "to": "1321",
+    "distance": 2
+  },
+  {
+    "from": "1120",
+    "to": "1422",
+    "distance": 4
+  },
+  {
+    "from": "1120",
+    "to": "1521",
+    "distance": 4
+  },
+  {
+    "from": "1129",
+    "to": "1531",
+    "distance": 4
+  },
+  {
+    "from": "1207",
+    "to": "1211",
+    "distance": 4
+  },
+  {
+    "from": "1207",
+    "to": "1311",
+    "distance": 4
+  },
+  {
+    "from": "1208",
+    "to": "1311",
+    "distance": 3
+  },
+  {
+    "from": "1208",
+    "to": "1411",
+    "distance": 4
+  },
+  {
+    "from": "1209",
+    "to": "1211",
+    "distance": 2
+  },
+  {
+    "from": "1209",
+    "to": "1213",
+    "distance": 4
+  },
+  {
+    "from": "1209",
+    "to": "1311",
+    "distance": 2
+  },
+  {
+    "from": "1210",
+    "to": "1211",
+    "distance": 1
+  },
+  {
+    "from": "1210",
+    "to": "1311",
+    "distance": 1
+  },
+  {
+    "from": "1210",
+    "to": "1411",
+    "distance": 2
+  },
+  {
+    "from": "1211",
+    "to": "1610",
+    "distance": 4
+  },
+  {
+    "from": "1213",
+    "to": "1410",
+    "distance": 4
+  },
+  {
+    "from": "1219",
+    "to": "1321",
+    "distance": 2
+  },
+  {
+    "from": "1219",
+    "to": "1422",
+    "distance": 4
+  },
+  {
+    "from": "1220",
+    "to": "1321",
+    "distance": 1
+  },
+  {
+    "from": "1311",
+    "to": "1410",
+    "distance": 1
+  },
+  {
+    "from": "1311",
+    "to": "1508",
+    "distance": 4
+  },
+  {
+    "from": "1311",
+    "to": "1610",
+    "distance": 3
+  },
+  {
+    "from": "1321",
+    "to": "1420",
+    "distance": 1
+  },
+  {
+    "from": "1332",
+    "to": "1430",
+    "distance": 2
+  },
+  {
+    "from": "1334",
+    "to": "1430",
+    "distance": 4
+  },
+  {
+    "from": "1334",
+    "to": "1732",
+    "distance": 4
+  },
+  {
+    "from": "1410",
+    "to": "1411",
+    "distance": 1
+  },
+  {
+    "from": "1410",
+    "to": "1612",
+    "distance": 3
+  },
+  {
+    "from": "1411",
+    "to": "1508",
+    "distance": 4
+  },
+  {
+    "from": "1411",
+    "to": "1610",
+    "distance": 2
+  },
+  {
+    "from": "1416",
+    "to": "1717",
+    "distance": 3
+  },
+  {
+    "from": "1420",
+    "to": "1422",
+    "distance": 2
+  },
+  {
+    "from": "1420",
+    "to": "1521",
+    "distance": 1
+  },
+  {
+    "from": "1420",
+    "to": "1524",
+    "distance": 4
+  },
+  {
+    "from": "1420",
+    "to": "1721",
+    "distance": 3
+  },
+  {
+    "from": "1423",
+    "to": "1725",
+    "distance": 3
+  },
+  {
+    "from": "1425",
+    "to": "1725",
+    "distance": 3
+  },
+  {
+    "from": "1426",
+    "to": "1728",
+    "distance": 3
+  },
+  {
+    "from": "1429",
+    "to": "1531",
+    "distance": 2
+  },
+  {
+    "from": "1430",
+    "to": "1531",
+    "distance": 1
+  },
+  {
+    "from": "1430",
+    "to": "1732",
+    "distance": 3
+  },
+  {
+    "from": "1436",
+    "to": "1738",
+    "distance": 3
+  },
+  {
+    "from": "1438",
+    "to": "1738",
+    "distance": 3
+  },
+  {
+    "from": "1503",
+    "to": "1805",
+    "distance": 4
+  },
+  {
+    "from": "1506",
+    "to": "1705",
+    "distance": 2
+  },
+  {
+    "from": "1506",
+    "to": "1805",
+    "distance": 3
+  },
+  {
+    "from": "1506",
+    "to": "1806",
+    "distance": 3
+  },
+  {
+    "from": "1507",
+    "to": "1707",
+    "distance": 2
+  },
+  {
+    "from": "1508",
+    "to": "1709",
+    "distance": 2
+  },
+  {
+    "from": "1511",
+    "to": "1610",
+    "distance": 1
+  },
+  {
+    "from": "1516",
+    "to": "1713",
+    "distance": 4
+  },
+  {
+    "from": "1516",
+    "to": "1916",
+    "distance": 4
+  },
+  {
+    "from": "1518",
+    "to": "1521",
+    "distance": 3
+  },
+  {
+    "from": "1518",
+    "to": "1717",
+    "distance": 2
+  },
+  {
+    "from": "1518",
+    "to": "1815",
+    "distance": 4
+  },
+  {
+    "from": "1518",
+    "to": "1916",
+    "distance": 4
+  },
+  {
+    "from": "1520",
+    "to": "1521",
+    "distance": 1
+  },
+  {
+    "from": "1520",
+    "to": "1819",
+    "distance": 3
+  },
+  {
+    "from": "1521",
+    "to": "1720",
+    "distance": 2
+  },
+  {
+    "from": "1521",
+    "to": "1820",
+    "distance": 3
+  },
+  {
+    "from": "1524",
+    "to": "1725",
+    "distance": 2
+  },
+  {
+    "from": "1524",
+    "to": "1826",
+    "distance": 4
+  },
+  {
+    "from": "1524",
+    "to": "1926",
+    "distance": 4
+  },
+  {
+    "from": "1525",
+    "to": "1728",
+    "distance": 4
+  },
+  {
+    "from": "1525",
+    "to": "1826",
+    "distance": 3
+  },
+  {
+    "from": "1526",
+    "to": "1725",
+    "distance": 2
+  },
+  {
+    "from": "1527",
+    "to": "1725",
+    "distance": 3
+  },
+  {
+    "from": "1527",
+    "to": "1728",
+    "distance": 2
+  },
+  {
+    "from": "1528",
+    "to": "1725",
+    "distance": 4
+  },
+  {
+    "from": "1528",
+    "to": "1728",
+    "distance": 2
+  },
+  {
+    "from": "1528",
+    "to": "1826",
+    "distance": 3
+  },
+  {
+    "from": "1528",
+    "to": "1926",
+    "distance": 4
+  },
+  {
+    "from": "1528",
+    "to": "1928",
+    "distance": 4
+  },
+  {
+    "from": "1531",
+    "to": "1627",
+    "distance": 4
+  },
+  {
+    "from": "1531",
+    "to": "1629",
+    "distance": 2
+  },
+  {
+    "from": "1531",
+    "to": "1730",
+    "distance": 2
+  },
+  {
+    "from": "1536",
+    "to": "1834",
+    "distance": 3
+  },
+  {
+    "from": "1538",
+    "to": "1737",
+    "distance": 2
+  },
+  {
+    "from": "1605",
+    "to": "1705",
+    "distance": 1
+  },
+  {
+    "from": "1605",
+    "to": "1806",
+    "distance": 2
+  },
+  {
+    "from": "1605",
+    "to": "2004",
+    "distance": 4
+  },
+  {
+    "from": "1607",
+    "to": "1707",
+    "distance": 1
+  },
+  {
+    "from": "1607",
+    "to": "1806",
+    "distance": 2
+  },
+  {
+    "from": "1607",
+    "to": "1808",
+    "distance": 2
+  },
+  {
+    "from": "1607",
+    "to": "1908",
+    "distance": 3
+  },
+  {
+    "from": "1608",
+    "to": "1707",
+    "distance": 2
+  },
+  {
+    "from": "1610",
+    "to": "1612",
+    "distance": 2
+  },
+  {
+    "from": "1610",
+    "to": "1711",
+    "distance": 1
+  },
+  {
+    "from": "1610",
+    "to": "1912",
+    "distance": 3
+  },
+  {
+    "from": "1610",
+    "to": "2008",
+    "distance": 4
+  },
+  {
+    "from": "1612",
+    "to": "1713",
+    "distance": 1
+  },
+  {
+    "from": "1612",
+    "to": "1912",
+    "distance": 3
+  },
+  {
+    "from": "1613",
+    "to": "1713",
+    "distance": 1
+  },
+  {
+    "from": "1615",
+    "to": "1717",
+    "distance": 2
+  },
+  {
+    "from": "1616",
+    "to": "1717",
+    "distance": 1
+  },
+  {
+    "from": "1616",
+    "to": "1815",
+    "distance": 2
+  },
+  {
+    "from": "1616",
+    "to": "1817",
+    "distance": 2
+  },
+  {
+    "from": "1626",
+    "to": "1728",
+    "distance": 2
+  },
+  {
+    "from": "1626",
+    "to": "1928",
+    "distance": 3
+  },
+  {
+    "from": "1627",
+    "to": "1727",
+    "distance": 1
+  },
+  {
+    "from": "1627",
+    "to": "1728",
+    "distance": 1
+  },
+  {
+    "from": "1627",
+    "to": "1825",
+    "distance": 3
+  },
+  {
+    "from": "1627",
+    "to": "1826",
+    "distance": 2
+  },
+  {
+    "from": "1627",
+    "to": "2025",
+    "distance": 4
+  },
+  {
+    "from": "1628",
+    "to": "1728",
+    "distance": 1
+  },
+  {
+    "from": "1629",
+    "to": "1728",
+    "distance": 2
+  },
+  {
+    "from": "1629",
+    "to": "1730",
+    "distance": 1
+  },
+  {
+    "from": "1629",
+    "to": "1830",
+    "distance": 2
+  },
+  {
+    "from": "1629",
+    "to": "1831",
+    "distance": 3
+  },
+  {
+    "from": "1629",
+    "to": "2031",
+    "distance": 4
+  },
+  {
+    "from": "1631",
+    "to": "1732",
+    "distance": 1
+  },
+  {
+    "from": "1632",
+    "to": "1732",
+    "distance": 1
+  },
+  {
+    "from": "1633",
+    "to": "1732",
+    "distance": 2
+  },
+  {
+    "from": "1633",
+    "to": "1831",
+    "distance": 3
+  },
+  {
+    "from": "1635",
+    "to": "1737",
+    "distance": 2
+  },
+  {
+    "from": "1635",
+    "to": "1834",
+    "distance": 2
+  },
+  {
+    "from": "1635",
+    "to": "1836",
+    "distance": 2
+  },
+  {
+    "from": "1639",
+    "to": "1737",
+    "distance": 3
+  },
+  {
+    "from": "1639",
+    "to": "1738",
+    "distance": 2
+  },
+  {
+    "from": "1639",
+    "to": "1836",
+    "distance": 4
+  },
+  {
+    "from": "1711",
+    "to": "1810",
+    "distance": 1
+  },
+  {
+    "from": "1721",
+    "to": "1819",
+    "distance": 2
+  },
+  {
+    "from": "1721",
+    "to": "1820",
+    "distance": 1
+  },
+  {
+    "from": "1728",
+    "to": "1732",
+    "distance": 4
+  },
+  {
+    "from": "1730",
+    "to": "1731",
+    "distance": 1
+  },
+  {
+    "from": "1730",
+    "to": "1732",
+    "distance": 2
+  },
+  {
+    "from": "1730",
+    "to": "1831",
+    "distance": 2
+  },
+  {
+    "from": "1732",
+    "to": "1830",
+    "distance": 2
+  },
+  {
+    "from": "1810",
+    "to": "1811",
+    "distance": 1
+  },
+  {
+    "from": "1810",
+    "to": "1912",
+    "distance": 2
+  },
+  {
+    "from": "1819",
+    "to": "1821",
+    "distance": 2
+  },
+  {
+    "from": "1819",
+    "to": "1923",
+    "distance": 4
+  },
+  {
+    "from": "1820",
+    "to": "1821",
+    "distance": 1
+  },
+  {
+    "from": "1820",
+    "to": "1922",
+    "distance": 2
+  },
+  {
+    "from": "1820",
+    "to": "2121",
+    "distance": 3
+  },
+  {
+    "from": "1820",
+    "to": "2222",
+    "distance": 4
+  },
+  {
+    "from": "1830",
+    "to": "1831",
+    "distance": 1
+  },
+  {
+    "from": "1831",
+    "to": "2229",
+    "distance": 4
+  },
+  {
+    "from": "1831",
+    "to": "2230",
+    "distance": 4
+  },
+  {
+    "from": "1912",
+    "to": "2209",
+    "distance": 4
+  },
+  {
+    "from": "1920",
+    "to": "1923",
+    "distance": 3
+  },
+  {
+    "from": "1920",
+    "to": "2121",
+    "distance": 2
+  },
+  {
+    "from": "1923",
+    "to": "2120",
+    "distance": 4
+  },
+  {
+    "from": "1928",
+    "to": "2031",
+    "distance": 4
+  },
+  {
+    "from": "1932",
+    "to": "2230",
+    "distance": 3
+  },
+  {
+    "from": "2008",
+    "to": "2111",
+    "distance": 3
+  },
+  {
+    "from": "2011",
+    "to": "2209",
+    "distance": 3
+  },
+  {
+    "from": "2028",
+    "to": "2031",
+    "distance": 3
+  },
+  {
+    "from": "2031",
+    "to": "2228",
+    "distance": 4
+  },
+  {
+    "from": "2031",
+    "to": "2229",
+    "distance": 3
+  },
+  {
+    "from": "2103",
+    "to": "2502",
+    "distance": 4
+  },
+  {
+    "from": "2111",
+    "to": "2309",
+    "distance": 3
+  },
+  {
+    "from": "2120",
+    "to": "2121",
+    "distance": 1
+  },
+  {
+    "from": "2120",
+    "to": "2123",
+    "distance": 3
+  },
+  {
+    "from": "2120",
+    "to": "2421",
+    "distance": 3
+  },
+  {
+    "from": "2120",
+    "to": "2422",
+    "distance": 4
+  },
+  {
+    "from": "2121",
+    "to": "2220",
+    "distance": 1
+  },
+  {
+    "from": "2123",
+    "to": "2220",
+    "distance": 3
+  },
+  {
+    "from": "2125",
+    "to": "2523",
+    "distance": 4
+  },
+  {
+    "from": "2133",
+    "to": "2229",
+    "distance": 4
+  },
+  {
+    "from": "2133",
+    "to": "2230",
+    "distance": 3
+  },
+  {
+    "from": "2133",
+    "to": "2535",
+    "distance": 4
+  },
+  {
+    "from": "2201",
+    "to": "2501",
+    "distance": 3
+  },
+  {
+    "from": "2201",
+    "to": "2502",
+    "distance": 3
+  },
+  {
+    "from": "2201",
+    "to": "2602",
+    "distance": 4
+  },
+  {
+    "from": "2202",
+    "to": "2502",
+    "distance": 3
+  },
+  {
+    "from": "2220",
+    "to": "2324",
+    "distance": 4
+  },
+  {
+    "from": "2220",
+    "to": "2522",
+    "distance": 3
+  },
+  {
+    "from": "2223",
+    "to": "2523",
+    "distance": 3
+  },
+  {
+    "from": "2223",
+    "to": "2524",
+    "distance": 3
+  },
+  {
+    "from": "2223",
+    "to": "2525",
+    "distance": 3
+  },
+  {
+    "from": "2228",
+    "to": "2529",
+    "distance": 3
+  },
+  {
+    "from": "2230",
+    "to": "2232",
+    "distance": 2
+  },
+  {
+    "from": "2230",
+    "to": "2334",
+    "distance": 4
+  },
+  {
+    "from": "2230",
+    "to": "2529",
+    "distance": 3
+  },
+  {
+    "from": "2232",
+    "to": "2430",
+    "distance": 3
+  },
+  {
+    "from": "2232",
+    "to": "2535",
+    "distance": 4
+  },
+  {
+    "from": "2237",
+    "to": "2536",
+    "distance": 3
+  },
+  {
+    "from": "2237",
+    "to": "2538",
+    "distance": 3
+  },
+  {
+    "from": "2237",
+    "to": "2539",
+    "distance": 3
+  },
+  {
+    "from": "2238",
+    "to": "2537",
+    "distance": 3
+  },
+  {
+    "from": "2238",
+    "to": "2538",
+    "distance": 3
+  },
+  {
+    "from": "2238",
+    "to": "2539",
+    "distance": 3
+  },
+  {
+    "from": "2309",
+    "to": "2509",
+    "distance": 2
+  },
+  {
+    "from": "2309",
+    "to": "2510",
+    "distance": 2
+  },
+  {
+    "from": "2309",
+    "to": "2711",
+    "distance": 4
+  },
+  {
+    "from": "2314",
+    "to": "2514",
+    "distance": 2
+  },
+  {
+    "from": "2314",
+    "to": "2515",
+    "distance": 2
+  },
+  {
+    "from": "2314",
+    "to": "2516",
+    "distance": 3
+  },
+  {
+    "from": "2314",
+    "to": "2616",
+    "distance": 4
+  },
+  {
+    "from": "2324",
+    "to": "2523",
+    "distance": 2
+  },
+  {
+    "from": "2324",
+    "to": "2524",
+    "distance": 2
+  },
+  {
+    "from": "2327",
+    "to": "2524",
+    "distance": 4
+  },
+  {
+    "from": "2327",
+    "to": "2525",
+    "distance": 3
+  },
+  {
+    "from": "2327",
+    "to": "2628",
+    "distance": 3
+  },
+  {
+    "from": "2334",
+    "to": "2535",
+    "distance": 2
+  },
+  {
+    "from": "2334",
+    "to": "2633",
+    "distance": 3
+  },
+  {
+    "from": "2337",
+    "to": "2537",
+    "distance": 2
+  },
+  {
+    "from": "2337",
+    "to": "2538",
+    "distance": 2
+  },
+  {
+    "from": "2337",
+    "to": "2539",
+    "distance": 3
+  },
+  {
+    "from": "2403",
+    "to": "2502",
+    "distance": 2
+  },
+  {
+    "from": "2403",
+    "to": "2703",
+    "distance": 3
+  },
+  {
+    "from": "2408",
+    "to": "2509",
+    "distance": 1
+  },
+  {
+    "from": "2409",
+    "to": "2509",
+    "distance": 1
+  },
+  {
+    "from": "2409",
+    "to": "2510",
+    "distance": 1
+  },
+  {
+    "from": "2414",
+    "to": "2513",
+    "distance": 2
+  },
+  {
+    "from": "2414",
+    "to": "2514",
+    "distance": 1
+  },
+  {
+    "from": "2414",
+    "to": "2515",
+    "distance": 1
+  },
+  {
+    "from": "2414",
+    "to": "2516",
+    "distance": 2
+  },
+  {
+    "from": "2414",
+    "to": "2612",
+    "distance": 3
+  },
+  {
+    "from": "2414",
+    "to": "2717",
+    "distance": 4
+  },
+  {
+    "from": "2419",
+    "to": "2421",
+    "distance": 2
+  },
+  {
+    "from": "2419",
+    "to": "2520",
+    "distance": 1
+  },
+  {
+    "from": "2419",
+    "to": "2616",
+    "distance": 4
+  },
+  {
+    "from": "2419",
+    "to": "2717",
+    "distance": 4
+  },
+  {
+    "from": "2421",
+    "to": "2522",
+    "distance": 1
+  },
+  {
+    "from": "2421",
+    "to": "2524",
+    "distance": 3
+  },
+  {
+    "from": "2421",
+    "to": "2622",
+    "distance": 2
+  },
+  {
+    "from": "2421",
+    "to": "2720",
+    "distance": 3
+  },
+  {
+    "from": "2422",
+    "to": "2522",
+    "distance": 1
+  },
+  {
+    "from": "2422",
+    "to": "2523",
+    "distance": 1
+  },
+  {
+    "from": "2422",
+    "to": "2622",
+    "distance": 2
+  },
+  {
+    "from": "2424",
+    "to": "2523",
+    "distance": 2
+  },
+  {
+    "from": "2424",
+    "to": "2524",
+    "distance": 1
+  },
+  {
+    "from": "2424",
+    "to": "2525",
+    "distance": 1
+  },
+  {
+    "from": "2424",
+    "to": "2622",
+    "distance": 3
+  },
+  {
+    "from": "2433",
+    "to": "2533",
+    "distance": 1
+  },
+  {
+    "from": "2433",
+    "to": "2536",
+    "distance": 3
+  },
+  {
+    "from": "2436",
+    "to": "2535",
+    "distance": 2
+  },
+  {
+    "from": "2436",
+    "to": "2536",
+    "distance": 1
+  },
+  {
+    "from": "2436",
+    "to": "2537",
+    "distance": 1
+  },
+  {
+    "from": "2436",
+    "to": "2635",
+    "distance": 2
+  },
+  {
+    "from": "2436",
+    "to": "2636",
+    "distance": 2
+  },
+  {
+    "from": "2438",
+    "to": "2537",
+    "distance": 2
+  },
+  {
+    "from": "2438",
+    "to": "2538",
+    "distance": 1
+  },
+  {
+    "from": "2438",
+    "to": "2539",
+    "distance": 1
+  },
+  {
+    "from": "2438",
+    "to": "2737",
+    "distance": 3
+  },
+  {
+    "from": "2439",
+    "to": "2537",
+    "distance": 3
+  },
+  {
+    "from": "2439",
+    "to": "2538",
+    "distance": 2
+  },
+  {
+    "from": "2439",
+    "to": "2539",
+    "distance": 1
+  },
+  {
+    "from": "2510",
+    "to": "2711",
+    "distance": 2
+  },
+  {
+    "from": "2523",
+    "to": "2720",
+    "distance": 4
+  },
+  {
+    "from": "2720",
+    "to": "3022",
+    "distance": 4
+  },
+  {
+    "from": "2821",
+    "to": "2919",
+    "distance": 3
+  },
+  {
+    "from": "2829",
+    "to": "2831",
+    "distance": 2
+  },
+  {
+    "from": "2922",
+    "to": "3020",
+    "distance": 2
+  },
+  {
+    "from": "2930",
+    "to": "2931",
+    "distance": 1
+  },
+  {
+    "from": "3007",
+    "to": "3011",
+    "distance": 4
+  },
+  {
+    "from": "3009",
+    "to": "3011",
+    "distance": 2
+  },
+  {
+    "from": "3020",
+    "to": "3022",
+    "distance": 2
+  },
+  {
+    "from": "3130",
+    "to": "3231",
+    "distance": 2
+  }
+]

@@ -13,13 +13,59 @@ import (
 	"fmt"
 )
 
-// Grid dimensions, from the sub-sector hex grid printed on Book 3 p. 3:
-// eight columns of ten rows, numbered 0101 through 0810. One hex is one
-// parsec (p. 1).
+// The sub-sector hex grid printed on Book 3 p. 3: eight columns of ten
+// rows, numbered 0101 through 0810. One hex is one parsec (p. 1).
 const (
 	Columns = 8
 	Rows    = 10
 )
+
+// A sector is four sub-sectors by four laid on one grid, 0101 through
+// 3240. The book maps "in convenient segments, called subsectors" (p. 1)
+// and charts growth as "additional subsectors will have to be charted",
+// so it prints no sector grid; this is the shape issue 1 asked for, and
+// ERRATA E006 is the reading that assembles it.
+const (
+	SectorAcross  = 4
+	SectorColumns = Columns * SectorAcross
+	SectorRows    = Rows * SectorAcross
+)
+
+// Grid is the hex grid a record is drawn on. A record carries its own
+// because the renderer cannot infer one -- a subsector whose eighth
+// column drew no world is not a seven-column subsector.
+type Grid struct {
+	Columns int `json:"columns"`
+	Rows    int `json:"rows"`
+}
+
+// PageThreeGrid is the sub-sector grid p. 3 prints, which is what a
+// record is on unless it says otherwise.
+func PageThreeGrid() Grid { return Grid{Columns: Columns, Rows: Rows} }
+
+// SectorGrid is sixteen of those.
+func SectorGrid() Grid { return Grid{Columns: SectorColumns, Rows: SectorRows} }
+
+// Contains reports whether a hex is on this grid.
+func (g Grid) Contains(h Hex) bool {
+	return h.Col >= 1 && h.Col <= g.Columns && h.Row >= 1 && h.Row <= g.Rows
+}
+
+// Zero reports a grid no one set, which Decode reads as the p. 3 grid so
+// that a record written before grids were recorded still reads.
+func (g Grid) Zero() bool { return g.Columns == 0 && g.Rows == 0 }
+
+// hold returns the off-grid error for a hex this grid does not contain,
+// and nil for one it does. Every hex a record carries is checked through
+// here, because Hex bounds itself by the largest grid there is: 0910
+// parses, and only the record's own grid refuses it.
+func (g Grid) hold(h Hex) error {
+	if g.Contains(h) {
+		return nil
+	}
+
+	return fmt.Errorf("%w: hex %s, and the grid is %dx%d", ErrOffGrid, h, g.Columns, g.Rows)
+}
 
 // The shape of the four-digit grid number the p. 3 grid prints: two
 // decimal digits of column followed by two of row.
@@ -41,7 +87,7 @@ type Hex struct{ Col, Row int }
 func NewHex(col, row int) (Hex, error) {
 	h := Hex{Col: col, Row: row}
 	if !h.valid() {
-		return Hex{}, fmt.Errorf("%w: hex %d,%d, and the grid is %dx%d", ErrOffGrid, col, row, Columns, Rows)
+		return Hex{}, fmt.Errorf("%w: hex %d,%d, and the grid is %dx%d", ErrOffGrid, col, row, SectorColumns, SectorRows)
 	}
 
 	return h, nil
@@ -101,7 +147,7 @@ func abs(n int) int {
 // MarshalJSON writes the four-digit grid number as a string.
 func (h Hex) MarshalJSON() ([]byte, error) {
 	if !h.valid() {
-		return nil, fmt.Errorf("%w: hex %d,%d, and the grid is %dx%d", ErrOffGrid, h.Col, h.Row, Columns, Rows)
+		return nil, fmt.Errorf("%w: hex %d,%d, and the grid is %dx%d", ErrOffGrid, h.Col, h.Row, SectorColumns, SectorRows)
 	}
 
 	b, err := json.Marshal(h.String())
@@ -154,8 +200,11 @@ func (h Hex) cube() (int, int, int) {
 	return x, -x - z, z
 }
 
+// valid bounds a hex by the largest grid there is, because a hex is an
+// identifier and the identifier is four digits either way. Whether a hex
+// is on *this* record's grid is Grid.Contains, and the record checks it.
 func (h Hex) valid() bool {
-	return h.Col >= 1 && h.Col <= Columns && h.Row >= 1 && h.Row <= Rows
+	return h.Col >= 1 && h.Col <= SectorColumns && h.Row >= 1 && h.Row <= SectorRows
 }
 
 // Parsecs is a jump distance. One hex is one parsec (p. 1).

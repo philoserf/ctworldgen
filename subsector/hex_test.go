@@ -65,13 +65,43 @@ func TestDistanceAgainstPrintedGrid(t *testing.T) {
 	}
 }
 
+// TestNewHexRejectsOffGrid bounds the identifier, which is the largest
+// grid there is: a hex is four digits whether it names a subsector or a
+// sector, and 0000 or 3341 is not one. Whether a hex is on a particular
+// record's grid is Grid.Contains, checked below.
 func TestNewHexRejectsOffGrid(t *testing.T) {
 	t.Parallel()
 
-	for _, c := range []struct{ col, row int }{{0, 1}, {1, 0}, {9, 1}, {1, 11}, {-1, -1}} {
+	for _, c := range []struct{ col, row int }{{0, 1}, {1, 0}, {33, 1}, {1, 41}, {-1, -1}} {
 		_, err := subsector.NewHex(c.col, c.row)
 		if err == nil {
-			t.Errorf("NewHex(%d, %d) succeeded; the p. 3 grid is 8 columns of 10 rows", c.col, c.row)
+			t.Errorf("NewHex(%d, %d) succeeded; the sector grid is %d columns of %d rows",
+				c.col, c.row, subsector.SectorColumns, subsector.SectorRows)
+		}
+	}
+}
+
+// TestAGridHoldsOnlyItsOwnHexes: the p. 3 grid stops at 0810 even though
+// the identifier runs to 3240, so a subsector record carrying 0910 is a
+// record on the wrong grid and Decode says so.
+func TestAGridHoldsOnlyItsOwnHexes(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range []struct {
+		col, row int
+		onPage3  bool
+	}{{1, 1, true}, {8, 10, true}, {9, 1, false}, {1, 11, false}, {32, 40, false}} {
+		hex, err := subsector.NewHex(testCase.col, testCase.row)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if got := subsector.PageThreeGrid().Contains(hex); got != testCase.onPage3 {
+			t.Errorf("the p. 3 grid contains %s: %v, want %v", hex, got, testCase.onPage3)
+		}
+
+		if !subsector.SectorGrid().Contains(hex) {
+			t.Errorf("the sector grid does not contain %s, and every hex is on it", hex)
 		}
 	}
 }
@@ -88,7 +118,20 @@ func TestParseHex(t *testing.T) {
 		t.Errorf("ParseHex(0810) = %d,%d, want 8,10", hex.Col, hex.Row)
 	}
 
-	for _, bad := range []string{"", "101", "01011", "0900", "0111", "abcd", "01 1", "0000"} {
+	// 3240 is the last hex of the sector grid, and 0111 -- off the p. 3
+	// grid but on that one -- is a hex the identifier accepts and a
+	// subsector record does not carry (TestAGridHoldsOnlyItsOwnHexes).
+	corner, err := subsector.ParseHex("3240")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if corner.Col != subsector.SectorColumns || corner.Row != subsector.SectorRows {
+		t.Errorf("ParseHex(3240) = %d,%d, want %d,%d",
+			corner.Col, corner.Row, subsector.SectorColumns, subsector.SectorRows)
+	}
+
+	for _, bad := range []string{"", "101", "01011", "0900", "3341", "0141", "abcd", "01 1", "0000"} {
 		_, err := subsector.ParseHex(bad)
 		if err == nil {
 			t.Errorf("ParseHex(%q) succeeded", bad)

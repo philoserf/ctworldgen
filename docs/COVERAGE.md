@@ -6,11 +6,10 @@ pages unless marked B1. Printed page N is PDF page N+5 in Book 3, N+6 in
 Book 1.
 
 Status is one of **done**, **data only** (the chart is transcribed,
-validated and tested, but no step consumes it yet), **not yet**, with the
-milestone that will do it, or **out of scope**, with the declaration in
-`PRD.md` that puts it there. A page inside pp. 1-12 that this tool does
-not implement has a row saying so; the gap in the document is otherwise
-indistinguishable from an oversight.
+validated and tested, but no step consumes it yet), or **not built**, with
+the reason and where it sits in the backlog. A page inside pp. 1-12 that
+this tool does not implement has a row saying so; the gap in the document
+is otherwise indistinguishable from an oversight.
 
 This document is living. A rule is not implemented until it has a row here
 with a test named in it.
@@ -46,11 +45,12 @@ with a test named in it.
 ## Technological levels (pp. 10-11)
 
 These two pages carry no rule and so get no R-number, but they are inside
-pp. 1-12 and so get a row.
+pp. 1-12 and so get a row. They were declared out of scope by the
+retired PRD; issue 1 #4 reopened them, and they are now simply not built.
 
 | Pages                                      | Page  | Implementation                       | Test                                               | Status                                   |
 | ------------------------------------------ | ----- | ------------------------------------ | -------------------------------------------------- | ---------------------------------------- |
-| The technological levels tables, rows 0-18 | 10-11 | none; `render.techIndexNote` says so | `TestTheListingSaysWhyTheTechnologicalIndexIsBare` | out of scope -- `PRD.md`, "Not in scope" |
+| The technological levels tables, rows 0-18 | 10-11 | none; `render.techIndexNote` says so | `TestTheListingSaysWhyTheTechnologicalIndexIsBare` | not built -- issue 1 #4                  |
 
 Two tables, rows 0 through 18: Weapons (Personal, Armor, Special,
 Computers, Communication) on p. 10 and Transportation (Water, Land, Air,
@@ -72,9 +72,10 @@ the referee at the table, not by the tool.
 | Rule                                                          | Page   | Implementation                                                                                   | Test                                                                                                                                 | Status                    |
 | ------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
 | R17 Dice engine, one and two dice, cumulative DMs, N+ targets | B1 2-3 | `dice.Stream.Die`/`D2`, `dice.Sum`, `dice.Target`                                                | `TestDieIsOneDie`, `TestD2ConsumesTwoDiceInOrder`, `TestTargetIsNPlus`, `TestSumIsCumulative`                                        | done                      |
-| R18 The subsector record and its provenance                   | --     | `subsector.Subsector`, `subsector.World`, `subsector.Route`, `subsector.New`, `subsector.Decode` | `TestNewRecordCarriesItsProvenance`, `TestGoldensValidate`, `TestDecodeRejectsUnknownFields`, `TestDecodeRejectsMoreThanOneDocument` | grows with each milestone |
+| R18 The subsector record and its provenance                   | --     | `subsector.Subsector`, `subsector.World`, `subsector.Route`, `subsector.New`, `subsector.Decode` | `TestNewRecordCarriesItsProvenance`, `TestGoldensValidate`, `TestDecodeRejectsUnknownFields`, `TestDecodeRejectsMoreThanOneDocument`, `TestDecodeRejectsAHexOffTheRecordsGrid`, `TestDecodeRejectsALaneEndOffTheRecordsGrid` | done                      |
 | R19 Batch                                                     | --     | `cmd/ctworldgen.batchCmd`, `batch`, `memberName`                                                 | `TestBatchMemberZeroIsTheBaseSeed`, `TestBatchDerivesEachMemberFromTheBase`, `TestBatchNamesMembersForTheSubsector`                  | done                      |
 | R20 The subsector listing                                     | 4      | `render.Renderer`                                                                                | `TestListings`, `TestEveryWorldAndLaneReachesTheListing`, `TestLabelsComeFromTheTables`, `TestARefereesNameReachesEveryPlaceTheHexAppears`, `TestAnEmptySubsectorRenders`               | done                      |
+| R21 Sector: sixteen subsectors on one grid, lanes at the seams | 1-2 | `gen.Engine.Sector`, `gen.Place`, `gen.MemberOf`, `cmd/ctworldgen.sectorCmd` | `TestASectorsMembersAreTheSubsectorsNewWrites`, `TestLanesCrossTheSeams`, `TestTranslationKeepsThePageThreeParity`, `TestEveryPairIsExaminedOnce`, `TestTheSeamsGolden`, `TestASectorRendersOnItsOwnGrid`, `TestTheListingSaysWhichGridItDrew`, `TestASectorRecordValidates` | done |
 
 ## Determinism and provenance
 
@@ -102,6 +103,7 @@ reading is stamped only once the engine implements the step it governs.
 | E003    | Which pairs are examined, when a die is thrown, in what order | `gen/gen.go`, `tables/tables.go`                     | records with two or more worlds, now         |
 | E004    | Floored at 0, capped only at the technological index          | `gen/gen.go`, `tables/tables.go`, `render/render.go` | where a floor or the cap actually bound, now |
 | E005    | The string of digits: order, alphabet, no separator           | `subsector/record.go`, `subsector/digit.go`          | records with at least one world, now         |
+| E006 | Sixteen subsectors on one grid, and the lane pass at their seams | `gen/sector.go`, `subsector/hex.go`, `subsector/record.go` | every sector record |
 
 Both directions are checked by `internal/audit`: every `E00N` cited in the
 code or the documents resolves to a heading in `ERRATA.md`, and every

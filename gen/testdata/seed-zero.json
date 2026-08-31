@@ -13,6 +13,10 @@
   ],
   "name": "",
   "occurrence_dm": 0,
+  "grid": {
+    "columns": 8,
+    "rows": 10
+  },
   "worlds": [
     {
       "hex": "0102",

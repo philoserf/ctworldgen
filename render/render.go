@@ -58,12 +58,24 @@ func (r *Renderer) Subsector(out io.Writer, record *subsector.Subsector) error {
 func (r *Renderer) heading(built *strings.Builder, record *subsector.Subsector) {
 	name := record.Name
 	if name == "" {
-		name = "Subsector"
+		name = untitled(record)
 	}
 
 	fmt.Fprintf(built, "# %s\n\n", name)
 	fmt.Fprintf(built, "%d worlds, %d space lanes. Generated from seed %d at occurrence DM %s.\n\n",
 		len(record.Worlds), len(record.Routes), record.Seed, occurrenceDM(record.OccurrenceDM))
+}
+
+// untitled is the heading a record the referee has not named gets. It is
+// what the record is, and a sector is not a subsector: those two grids
+// are the only shapes a record takes (ERRATA E006), and heading a 32x40
+// one "Subsector" is the listing misreporting its own subject.
+func untitled(record *subsector.Subsector) string {
+	if record.Grid == subsector.SectorGrid() {
+		return "Sector"
+	}
+
+	return "Subsector"
 }
 
 // The map is drawn as p. 3 prints the grid: a hex is one slot wide, the
@@ -79,7 +91,25 @@ const (
 // mapNote says what the map shows and, as much to the point, what it does
 // not: p. 2 asks for "a line connecting the two worlds on the map" and
 // this one draws none.
-const mapNote = "The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the " +
+//
+// The first sentence names the grid actually drawn. The rest is true of
+// either, because the parity it describes is the p. 3 parity in both
+// cases -- which is exactly what makes the sector translation safe
+// (ERRATA E006 part 2).
+func mapNote(record *subsector.Subsector) string {
+	if record.Grid == subsector.SectorGrid() {
+		return sectorGridNote + mapNoteTail
+	}
+
+	return pageThreeGridNote + mapNoteTail
+}
+
+const (
+	pageThreeGridNote = "The p. 3 sub-sector hex grid."
+	sectorGridNote    = "Sixteen p. 3 sub-sector hex grids on one sheet, 0101 through 3240 (ERRATA E006)."
+)
+
+const mapNoteTail = " The odd-numbered columns sit high and the " +
 	"even-numbered ones half a hex below them, which is how the page prints it. " +
 	"A world carries the letter of its starport -- p. 1 marks the hex with the " +
 	"letter the starports table gives -- and a hex with no world is left blank, " +
@@ -91,7 +121,7 @@ const mapNote = "The p. 3 sub-sector hex grid. The odd-numbered columns sit high
 // nothing else, so it is a render of the record like every other section.
 func (r *Renderer) grid(built *strings.Builder, record *subsector.Subsector) {
 	built.WriteString("## The map\n\n")
-	built.WriteString(mapNote)
+	built.WriteString(mapNote(record))
 	built.WriteString("```text\n")
 
 	marked := make(map[subsector.Hex]subsector.Starport, len(record.Worlds))
@@ -99,26 +129,27 @@ func (r *Renderer) grid(built *strings.Builder, record *subsector.Subsector) {
 		marked[world.Hex] = world.Starport
 	}
 
-	for row := 1; row <= subsector.Rows; row++ {
+	for row := 1; row <= record.Grid.Rows; row++ {
 		// Odd columns first, then the even ones half a slot right: one
 		// printed row of the grid is two lines of the map.
-		built.WriteString(gridLine(marked, row, 1))
-		built.WriteString(gridLine(marked, row, 0))
+		built.WriteString(gridLine(marked, record.Grid.Columns, row, 1))
+		built.WriteString(gridLine(marked, record.Grid.Columns, row, 0))
 	}
 
 	built.WriteString("```\n\n")
 }
 
-// gridLine draws the columns of one parity across a single row. parity is
-// the remainder that selects them: 1 for the high columns, 0 for the low.
-func gridLine(marked map[subsector.Hex]subsector.Starport, row, parity int) string {
+// gridLine draws the columns of one parity across a single row of the
+// record's grid. parity is the remainder that selects them: 1 for the
+// high columns, 0 for the low.
+func gridLine(marked map[subsector.Hex]subsector.Starport, columns, row, parity int) string {
 	var line strings.Builder
 
 	if parity == 0 {
 		line.WriteString(strings.Repeat(" ", mapHalfSlot))
 	}
 
-	for col := 1; col <= subsector.Columns; col++ {
+	for col := 1; col <= columns; col++ {
 		if col%2 != parity {
 			continue
 		}
@@ -261,10 +292,11 @@ func (r *Renderer) details(built *strings.Builder, names map[subsector.Hex]strin
 
 // techIndexNote says once what the technological index line does not
 // repeat on every world: the index is generated (p. 9), but the tables
-// saying what one means during play (pp. 10-11) are out of the scope
-// PRD.md declares, so the listing carries the digit alone. Those tables
-// are printed with holes besides, which p. 11 asks the referee or the
-// players to fill in as play discovers items or devices of interest.
+// saying what one means during play (pp. 10-11) are not transcribed, so
+// the listing carries the digit alone. That is a gap and not a boundary
+// -- issue 1 asks for the gloss, and p. 11 is the line players ask about
+// -- and the tables are printed with holes besides, which p. 11 asks the
+// referee or the players to fill in as play discovers them.
 const techIndexNote = "The technological index carries its digit and no description. " +
 	"The technological levels tables of pp. 10-11 say what an index means " +
 	"during play rather than how it is generated, so this tool does not read " +

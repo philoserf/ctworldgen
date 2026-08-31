@@ -15,8 +15,14 @@ var (
 	ErrNoDigitForValue = errors.New("no digit writes this value")
 
 	// ErrOffGrid and ErrNotAHex are the sub-sector hex grid of Book 3 p. 3.
-	ErrOffGrid = errors.New("outside the subsector grid of Book 3 p. 3")
+	ErrOffGrid = errors.New("outside the grid the record is drawn on")
 	ErrNotAHex = errors.New("a hex is four digits")
+
+	// ErrNotAGrid is the two grids there are: the p. 3 sub-sector grid,
+	// and the sector of sixteen of them (ERRATA E006). The schema states
+	// the same pair, and the two must agree -- a schema alone rejects
+	// nothing at read time.
+	ErrNotAGrid = errors.New("not the p. 3 sub-sector grid nor a sector of sixteen of them")
 
 	// ErrNotAStarport is the starport types of Book 3 p. 4.
 	ErrNotAStarport = errors.New("not one of A B C D E X (Book 3 p. 4)")
