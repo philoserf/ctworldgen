@@ -113,6 +113,8 @@
 
 ## The worlds in detail
 
+The technological index carries its digit and no description. The technological levels tables of pp. 10-11 say what an index means during play rather than how it is generated, so this tool does not read them; p. 11 asks the referee or the players to fill in their holes as play discovers them.
+
 ### 0102 &mdash; D5357872
 
 - **Starport D.** Poor quality installation. Only unrefined fuel available. No repair or shipyard facilities present.
@@ -158,7 +160,7 @@
 - **Hydrographics 0.** No free standing water.
 - **Population 9.** 1,000,000,000
 - **Government B.** Non-Charismatic Leader. A previous charismatic dictator has been replaced by a leader through normal channels.
-- **Law level G.**
+- **Law level G.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index A.**
 - **Bases.** --
 
@@ -179,7 +181,7 @@
 - **Starport B.** Good quality installation. Refined fuel available. Annual maintenance overhaul available. Shipyard capable of constructing non-starships present.
 - **Size A.** 10000 miles diameter.
 - **Atmosphere 8.** Dense.
-- **Hydrographics B.**
+- **Hydrographics B.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Population 5.** 100,000
 - **Government 5.** Feudal Technocracy. Ruling functions are performed by specific individuals for persons who agree to be ruled by them. Relationships are based on the performance of technical activities which are mutually beneficial.
 - **Law level 9.** Possession of any weapon outside of one's home is prohibited.
@@ -303,7 +305,7 @@
 - **Hydrographics 5.** 50%
 - **Population 6.** 1,000,000
 - **Government A.** Charismatic Dictator. Ruling functions are performed by agencies directed by a single leader who enjoys the overwhelming confidence of the citizens.
-- **Law level F.**
+- **Law level F.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index 7.**
 - **Bases.** --
 

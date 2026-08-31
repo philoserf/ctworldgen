@@ -126,6 +126,8 @@
 
 ## The worlds in detail
 
+The technological index carries its digit and no description. The technological levels tables of pp. 10-11 say what an index means during play rather than how it is generated, so this tool does not read them; p. 11 asks the referee or the players to fill in their holes as play discovers them.
+
 ### 0101 &mdash; B799ACCD
 
 - **Starport B.** Good quality installation. Refined fuel available. Annual maintenance overhaul available. Shipyard capable of constructing non-starships present.
@@ -134,7 +136,7 @@
 - **Hydrographics 9.** 90%
 - **Population A.** 10,000,000,000
 - **Government C.** Charismatic Oligarchy. Ruling functions are performed by a select group of members of an organization or class which enjoys the overwhelming confidence of the citizenry.
-- **Law level C.**
+- **Law level C.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index D.**
 - **Bases.** naval, scout
 
@@ -170,7 +172,7 @@
 - **Hydrographics 1.** 10%
 - **Population 6.** 1,000,000
 - **Government B.** Non-Charismatic Leader. A previous charismatic dictator has been replaced by a leader through normal channels.
-- **Law level A.**
+- **Law level A.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index 7.**
 - **Bases.** --
 
@@ -255,7 +257,7 @@
 - **Hydrographics 2.** 20%
 - **Population A.** 10,000,000,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
-- **Law level A.**
+- **Law level A.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index 8.**
 - **Bases.** --
 
@@ -292,7 +294,7 @@
 - **Hydrographics 5.** 50%
 - **Population 8.** 100,000,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
-- **Law level C.**
+- **Law level C.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index A.**
 - **Bases.** --
 
@@ -536,7 +538,7 @@
 - **Hydrographics 8.** 80%
 - **Population 9.** 1,000,000,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
-- **Law level A.**
+- **Law level A.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index A.**
 - **Bases.** naval, scout
 

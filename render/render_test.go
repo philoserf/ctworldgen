@@ -205,8 +205,11 @@ func TestLabelsComeFromTheTables(t *testing.T) {
 
 				beyond++
 
-				if !strings.Contains(page, bullet+"\n") {
-					t.Fatalf("%s: %s %d at %s is beyond the printed table and should carry the digit alone",
+				// The note is transcribed a second time here rather than
+				// shared with the renderer: a check that read the same
+				// constant would assert only that a constant is itself.
+				if !strings.Contains(page, bullet+" Above the last row its table prints; p. 8 leaves") {
+					t.Fatalf("%s: %s %d at %s is beyond the printed table and should say so, not print a bare digit",
 						golden.File, line.name, line.value, world.Hex)
 				}
 			}
@@ -285,5 +288,121 @@ func TestAnEmptySubsectorRenders(t *testing.T) {
 
 	if strings.Contains(written, "## The worlds in detail") {
 		t.Error("the listing of an empty subsector has a detail section")
+	}
+}
+
+// annotated is a record with names written in on some worlds and not
+// others, which is the state a referee's file is actually in: he names
+// the worlds he has used and leaves the rest as hexes.
+func annotated(t *testing.T) *subsector.Subsector {
+	t.Helper()
+
+	record := subsector.New(1, "Aramis", 0)
+
+	for _, world := range []struct {
+		col, row int
+		name     string
+	}{{1, 1, "Regina"}, {1, 2, "Efate"}, {1, 3, ""}} {
+		hex, err := subsector.NewHex(world.col, world.row)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		record.Worlds = append(record.Worlds, subsector.World{
+			Hex: hex, Name: world.name, Starport: subsector.StarportA,
+			NavalBase: false, ScoutBase: false,
+			Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
+			Government: 0, LawLevel: 0, TechIndex: 0,
+			Digits: "A0000000", Clamps: nil,
+		})
+	}
+
+	record.Routes = append(record.Routes,
+		subsector.Route{From: record.Worlds[0].Hex, To: record.Worlds[1].Hex, Distance: 1},
+		subsector.Route{From: record.Worlds[1].Hex, To: record.Worlds[2].Hex, Distance: 1})
+
+	return record
+}
+
+// TestARefereesNameReachesEveryPlaceTheHexAppears: a name written into
+// the record reaches the roster, the world's own detail heading, and both
+// columns of the lane table -- a hex the referee has named should not go
+// on reading as a bare number anywhere he meets it.
+//
+// Every assertion is against one exact line, not against the document.
+// Searching the whole listing for a name is satisfied by the roster alone,
+// and searching a lane table for "Regina" is satisfied by either column;
+// both are the shape of check that has already gone dead here twice.
+func TestARefereesNameReachesEveryPlaceTheHexAppears(t *testing.T) {
+	t.Parallel()
+
+	written := listing(t, annotated(t))
+	pages := detailPages(t, written)
+
+	for hex, want := range map[string]string{"0101": "0101 Regina", "0102": "0102 Efate", "0103": "0103"} {
+		if !strings.HasPrefix(pages[hex], want+" &mdash; ") {
+			t.Errorf("the detail heading at %s should read %q and reads %q",
+				hex, want, line(pages[hex]))
+		}
+	}
+
+	// Both lane rows are pinned whole. The first names both endpoints;
+	// the second names only its From, so a change that filled the To
+	// column from the wrong world would show here.
+	lanes := section(t, written, "Space lanes")
+	for _, want := range []string{"| 0101 Regina | 0102 Efate | 1 |", "| 0102 Efate | 0103 | 1 |"} {
+		if !strings.Contains(lanes, "\n"+want+"\n") {
+			t.Errorf("the lane table has no row %q:\n%s", want, lanes)
+		}
+	}
+
+	roster := section(t, written, "Worlds")
+	if !strings.Contains(roster, "\n| 0101 | Regina | ") {
+		t.Errorf("the roster row for 0101 does not carry its name:\n%s", roster)
+	}
+}
+
+// line returns the first line of a string, for an error message that
+// quotes a heading rather than the page beneath it.
+func line(s string) string {
+	first, _, _ := strings.Cut(s, "\n")
+
+	return first
+}
+
+// TestTheListingSaysWhyTheTechnologicalIndexIsBare: pp. 10-11 are out of
+// scope by PRD.md's declaration, so every world's technological index
+// prints its digit alone. That is 670 bare lines in a sector, and the
+// listing says once why, rather than in every one of them or nowhere.
+func TestTheListingSaysWhyTheTechnologicalIndexIsBare(t *testing.T) {
+	t.Parallel()
+
+	for _, golden := range fixture.Goldens() {
+		t.Run(golden.File, func(t *testing.T) {
+			t.Parallel()
+
+			record := generated(t, golden)
+			written := listing(t, record)
+
+			if len(record.Worlds) == 0 {
+				return
+			}
+
+			details := section(t, written, "The worlds in detail")
+			if said := strings.Count(details, "technological levels tables of pp. 10-11"); said != 1 {
+				t.Errorf("the detail section explains the bare technological index %d times, want once", said)
+			}
+
+			for _, page := range detailPages(t, written) {
+				start := strings.Index(page, "- **Technological index ")
+				if start < 0 {
+					t.Fatalf("a detail page has no technological index line:\n%s", page)
+				}
+
+				if got := line(page[start:]); !strings.HasSuffix(got, ".**") {
+					t.Errorf("the technological index line carries a description: %q", got)
+				}
+			}
+		})
 	}
 }

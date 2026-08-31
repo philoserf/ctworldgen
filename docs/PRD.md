@@ -339,6 +339,19 @@ world with the labels its Book 3 tables give (R16) — "at least one (and
 preferably several) pages in a central notebook maintained by the referee"
 (p. 4), which is what this stands in for.
 
+A name is the referee's own (p. 12 step 3), and it reaches every place his
+hex appears: the roster, the world's own detail heading, and both columns
+of the lane table. A world he has not named stays the bare hex, so a
+record he has not annotated reads as it always did.
+
+Where the listing prints no description it says why, because a bare value
+otherwise reads as a defect in the tool at exactly the places the tool is
+being careful. A value above the last row its table prints carries p. 8's
+remedy — the referee's rationale or his alternative description (E004).
+The technological index carries no description at all, on every world, and
+the detail section says once that pp. 10–11 are the pages that would
+supply one and are out of scope.
+
 ## Determinism and provenance
 
 A seed and the inputs reproduce a subsector exactly. **Dice-stream

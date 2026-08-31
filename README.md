@@ -41,6 +41,29 @@ any filename.
 $ go run ./cmd/ctworldgen new --seed 1977 --name Aramis --occurrence-dm -1
 ```
 
+### What a seed fixes, and what it does not
+
+A seed and the inputs reproduce a subsector exactly, and only exactly. All
+the dice come from one stream in procedure order, so anything that changes
+how many throws are made before a given world changes that world.
+
+**Changing `--occurrence-dm` regenerates the subsector; it does not thin
+the one you have.** The occurrence scan throws one die per hex over all
+eighty before anything else, so the same seed gives the same eighty faces
+and the star fields nest: every hex placed at -1 is placed at 0, and every
+hex placed at 0 is placed at +1. The map looks like a dial. But each extra
+world consumes dice for its starport, its bases and its characteristics,
+so the hexes two runs share keep almost nothing else — different starports,
+different populations, a different string of digits. "The same subsector, a
+touch sparser" is not available: change the seed for another subsector, and
+hold the DM to keep this one.
+
+**`batch` member seeds are consecutive.** Member _i_ runs on `seed + i`,
+which is what makes `batch --count 1 --seed N` produce exactly `new --seed
+N`. It also means two batches whose base seeds sit closer together than
+their counts share members: `--seed 100 --count 16` and `--seed 110 --count
+16` have six subsectors in common.
+
 ## The documents
 
 `docs/PRD.md` is the contract: the authority model, the requirements, the

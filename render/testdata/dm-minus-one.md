@@ -62,15 +62,17 @@
 
 ## The worlds in detail
 
+The technological index carries its digit and no description. The technological levels tables of pp. 10-11 say what an index means during play rather than how it is generated, so this tool does not read them; p. 11 asks the referee or the players to fill in their holes as play discovers them.
+
 ### 0101 &mdash; B9E578AA
 
 - **Starport B.** Good quality installation. Refined fuel available. Annual maintenance overhaul available. Shipyard capable of constructing non-starships present.
 - **Size 9.** 9000 miles diameter.
-- **Atmosphere E.**
+- **Atmosphere E.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Hydrographics 5.** 50%
 - **Population 7.** 10,000,000
 - **Government 8.** Civil Service Bureaucracy. Ruling functions are performed by government agencies employing individuals selected for their expertise.
-- **Law level A.**
+- **Law level A.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index A.**
 - **Bases.** naval, scout
 
@@ -121,7 +123,7 @@
 - **Hydrographics 0.** No free standing water.
 - **Population 6.** 1,000,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
-- **Law level B.**
+- **Law level B.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index B.**
 - **Bases.** --
 
@@ -218,7 +220,7 @@
 - **Hydrographics 5.** 50%
 - **Population 7.** 10,000,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
-- **Law level B.**
+- **Law level B.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index A.**
 - **Bases.** --
 
@@ -227,7 +229,7 @@
 - **Starport A.** Excellent quality installation. Refined fuel available. Annual maintenance overhaul available. Shipyard capable of both starship and non-starship construction present.
 - **Size 9.** 9000 miles diameter.
 - **Atmosphere 7.** Standard, tainted.
-- **Hydrographics C.**
+- **Hydrographics C.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Population 1.** 10
 - **Government 2.** Participating Democracy. Ruling function decisions are reached by the advice and consent of the citizenry directly.
 - **Law level 0.** No laws affecting weapons possession or weapons ownership.
@@ -279,7 +281,7 @@
 - **Hydrographics 3.** 30%
 - **Population 7.** 10,000,000
 - **Government A.** Charismatic Dictator. Ruling functions are performed by agencies directed by a single leader who enjoys the overwhelming confidence of the citizens.
-- **Law level B.**
+- **Law level B.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index A.**
 - **Bases.** --
 
@@ -313,10 +315,10 @@
 - **Starport B.** Good quality installation. Refined fuel available. Annual maintenance overhaul available. Shipyard capable of constructing non-starships present.
 - **Size 8.** 8000 miles diameter.
 - **Atmosphere 6.** Standard.
-- **Hydrographics B.**
+- **Hydrographics B.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Population 8.** 100,000,000
 - **Government C.** Charismatic Oligarchy. Ruling functions are performed by a select group of members of an organization or class which enjoys the overwhelming confidence of the citizenry.
-- **Law level C.**
+- **Law level C.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index 5.**
 - **Bases.** scout
 

@@ -215,6 +215,8 @@
 
 ## The worlds in detail
 
+The technological index carries its digit and no description. The technological levels tables of pp. 10-11 say what an index means during play rather than how it is generated, so this tool does not read them; p. 11 asks the referee or the players to fill in their holes as play discovers them.
+
 ### 0101 &mdash; B63165A8
 
 - **Starport B.** Good quality installation. Refined fuel available. Annual maintenance overhaul available. Shipyard capable of constructing non-starships present.
@@ -223,7 +225,7 @@
 - **Hydrographics 1.** 10%
 - **Population 6.** 1,000,000
 - **Government 5.** Feudal Technocracy. Ruling functions are performed by specific individuals for persons who agree to be ruled by them. Relationships are based on the performance of technical activities which are mutually beneficial.
-- **Law level A.**
+- **Law level A.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index 8.**
 - **Bases.** naval, scout
 
@@ -298,7 +300,7 @@
 - **Hydrographics 8.** 80%
 - **Population 9.** 1,000,000,000
 - **Government A.** Charismatic Dictator. Ruling functions are performed by agencies directed by a single leader who enjoys the overwhelming confidence of the citizens.
-- **Law level B.**
+- **Law level B.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index 6.**
 - **Bases.** --
 
@@ -322,7 +324,7 @@
 - **Hydrographics 4.** 40%
 - **Population 5.** 100,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
-- **Law level E.**
+- **Law level E.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index 2.**
 - **Bases.** --
 
@@ -343,7 +345,7 @@
 - **Starport E.** Frontier installation. Essentially a bare spot of bedrock with no fuel, facilities, or bases present.
 - **Size 9.** 9000 miles diameter.
 - **Atmosphere 4.** Thin, tainted.
-- **Hydrographics E.**
+- **Hydrographics E.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Population 9.** 1,000,000,000
 - **Government B.** Non-Charismatic Leader. A previous charismatic dictator has been replaced by a leader through normal channels.
 - **Law level 7.** Shotguns are prohibited.
@@ -620,7 +622,7 @@
 - **Hydrographics 4.** 40%
 - **Population 6.** 1,000,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
-- **Law level B.**
+- **Law level B.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index 7.**
 - **Bases.** scout
 
@@ -632,7 +634,7 @@
 - **Hydrographics 3.** 30%
 - **Population 9.** 1,000,000,000
 - **Government D.** Religious Dictatorship. Ruling functions are performed by a religious organization without regard to the specific individual needs of the citizenry.
-- **Law level C.**
+- **Law level C.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index A.**
 - **Bases.** naval, scout
 - **Clamped.** atmosphere threw -1 and is recorded as 0.
@@ -726,7 +728,7 @@
 - **Starport B.** Good quality installation. Refined fuel available. Annual maintenance overhaul available. Shipyard capable of constructing non-starships present.
 - **Size 7.** 7000 miles diameter.
 - **Atmosphere 7.** Standard, tainted.
-- **Hydrographics B.**
+- **Hydrographics B.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Population 5.** 100,000
 - **Government 6.** Captive Government. Ruling functions are performed by an imposed leadership answerable to an outside group. A colony or conquered area.
 - **Law level 6.** Most firearms (all except shotguns) are prohibited. The carrying of any type of weapon openly is discouraged.
@@ -790,7 +792,7 @@
 - **Hydrographics 7.** 70%
 - **Population A.** 10,000,000,000
 - **Government B.** Non-Charismatic Leader. A previous charismatic dictator has been replaced by a leader through normal channels.
-- **Law level B.**
+- **Law level B.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
 - **Technological index H.**
 - **Bases.** --
 
