@@ -7,20 +7,28 @@ referee can run from.
 
 ## Status
 
-Milestone 3: the engine walks the whole of Book 3 pp. 1-12. The eighty-hex
-occurrence scan, starport types, naval and scout bases, commercial space
-lanes, and the eight characteristics of every world all generate
-deterministically from a recorded seed. The Markdown listing and `batch`
-are milestone 4.
+All four milestones are complete. The engine walks the whole of Book 3
+pp. 1-12 -- the eighty-hex occurrence scan, starport types, naval and
+scout bases, commercial space lanes, and the eight characteristics of
+every world -- all from a recorded seed. `render` turns a record into the
+Markdown listing a referee can run from, and `batch` produces a sector's
+worth of subsectors at a time.
 
 `docs/COVERAGE.md` is the current map of rule to code to test.
 
 ## Use
 
 ```sh
-ctworldgen new [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
+ctworldgen new   [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
+ctworldgen batch --count N [--seed N] [--name X] [--occurrence-dm N] [-o dir|file.jsonl] [--force]
+ctworldgen render [-o file] [--force] subsector.json
 ctworldgen version
 ```
+
+`batch` emits JSONL to stdout; given a directory it writes one file per
+subsector, named for the subsector and its index -- `aramis-00.json`.
+Members are numbered from zero, so `batch --count 1 --seed N` produces
+exactly the subsector `new --seed N` produces.
 
 `--occurrence-dm` takes -1, 0 or +1 and nothing else, and defaults to 0.
 Without `--seed`, a seed is drawn from OS entropy and written into the

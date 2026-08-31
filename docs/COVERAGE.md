@@ -37,7 +37,7 @@ with a test named in it.
 | R13 The two throws not made | 4 | `gen.Engine.detail` | `assertAutomaticZeros` | done |
 | R14 Floored at 0; the technological index capped at 18 | 4-9 | `gen.clamp`, `subsector.Clamp` | `assertClampsAreHonest`, `TestTheClampsThatBindAreTheOnesR14Names` | done |
 | R15 The string of digits, eight characters, no separator | 4, B1 8 | `subsector.World.DigitString` | `TestDigitAlphabet`, `assertDigitsSpellTheWorld` | done |
-| R16 The descriptive tables                               | 5-7     | `tables.Labels`, `tables.StarportChart.Row`    | `TestEveryPrintedValueHasALabel`, `TestStarportChartDescriptions`  | data only (milestone 4) |
+| R16 The descriptive tables | 5-7 | `tables.Labels`, `render.Renderer.world` | `TestEveryPrintedValueHasALabel`, `TestLabelsComeFromTheTables` | done |
 
 ## The tool
 
@@ -45,8 +45,8 @@ with a test named in it.
 | ------------------------------------------------------------- | ------ | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------- |
 | R17 Dice engine, one and two dice, cumulative DMs, N+ targets | B1 2-3 | `dice.Stream.Die`/`D2`, `dice.Sum`, `dice.Target`          | `TestDieIsOneDie`, `TestD2ConsumesTwoDiceInOrder`, `TestTargetIsNPlus`, `TestSumIsCumulative` | done                      |
 | R18 The subsector record and its provenance | -- | `subsector.Subsector`, `subsector.World`, `subsector.Route`, `subsector.New`, `subsector.Decode` | `TestNewRecordCarriesItsProvenance`, `TestGoldensValidate`, `TestDecodeRejectsUnknownFields` | grows with each milestone |
-| R19 Batch                                                     | --     | --                                                         | --                                                                                            | not yet (milestone 4)     |
-| R20 The subsector listing                                     | 4      | --                                                         | --                                                                                            | not yet (milestone 4)     |
+| R19 Batch | -- | `cmd/ctworldgen.batchCmd`, `batch`, `memberName` | `TestBatchMemberZeroIsTheBaseSeed`, `TestBatchDerivesEachMemberFromTheBase`, `TestBatchNamesMembersForTheSubsector` | done |
+| R20 The subsector listing | 4 | `render.Renderer` | `TestListings`, `TestEveryWorldAndLaneReachesTheListing`, `TestLabelsComeFromTheTables`, `TestAnEmptySubsectorRenders` | done |
 
 ## Determinism and provenance
 

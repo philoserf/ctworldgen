@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/philoserf/ctworldgen/gen"
 	"github.com/philoserf/ctworldgen/internal/fixture"
+	"github.com/philoserf/ctworldgen/render"
 	"github.com/philoserf/ctworldgen/subsector"
 )
 
@@ -41,14 +43,16 @@ func run() error {
 	}
 
 	for _, golden := range fixture.Goldens() {
-		record, err := engine.Generate(gen.Inputs{Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM})
-		if err != nil {
-			return fmt.Errorf("%s: %w", golden.File, err)
+		record, genErr := engine.Generate(gen.Inputs{
+			Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+		})
+		if genErr != nil {
+			return fmt.Errorf("%s: %w", golden.File, genErr)
 		}
 
-		encoded, err := subsector.Marshal(record)
-		if err != nil {
-			return fmt.Errorf("%s: %w", golden.File, err)
+		encoded, marshalErr := subsector.Marshal(record)
+		if marshalErr != nil {
+			return fmt.Errorf("%s: %w", golden.File, marshalErr)
 		}
 
 		path := filepath.Join(dir, golden.File+".json")
@@ -61,7 +65,61 @@ func run() error {
 		_, _ = fmt.Fprintln(os.Stdout, "wrote", path, "--", len(record.Worlds), "worlds")
 	}
 
-	return writeExample()
+	err = writeExample()
+	if err != nil {
+		return err
+	}
+
+	return writeListings()
+}
+
+// writeListings rewrites the Markdown golden for every fixture. The two
+// golden trees are driven from the one roster, so they cannot come to
+// describe different subsectors under the same name.
+func writeListings() error {
+	dir := filepath.Join("render", "testdata")
+
+	err := os.MkdirAll(dir, dirMode)
+	if err != nil {
+		return fmt.Errorf("creating %s: %w", dir, err)
+	}
+
+	engine, err := gen.New()
+	if err != nil {
+		return fmt.Errorf("building the engine: %w", err)
+	}
+
+	renderer, rendererErr := render.New()
+	if rendererErr != nil {
+		return fmt.Errorf("building the renderer: %w", rendererErr)
+	}
+
+	for _, golden := range fixture.Goldens() {
+		record, genErr := engine.Generate(gen.Inputs{
+			Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+		})
+		if genErr != nil {
+			return fmt.Errorf("%s: %w", golden.File, genErr)
+		}
+
+		var built strings.Builder
+
+		renderErr := renderer.Subsector(&built, record)
+		if renderErr != nil {
+			return fmt.Errorf("%s: %w", golden.File, renderErr)
+		}
+
+		path := filepath.Join(dir, golden.File+".md")
+
+		writeErr := os.WriteFile(path, []byte(built.String()), fileMode)
+		if writeErr != nil {
+			return fmt.Errorf("writing %s: %w", path, writeErr)
+		}
+
+		_, _ = fmt.Fprintln(os.Stdout, "wrote", path)
+	}
+
+	return nil
 }
 
 // writeExample rewrites the complete example record shipped beside the

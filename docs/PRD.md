@@ -367,7 +367,10 @@ golden fixtures pin it.
 - **Batch derivation.** Member _i_ of a batch is seeded with `base + i` as
   an unsigned 64-bit addition, wrapping if it overflows, and that derived
   seed — not the base — is what its record carries. Each member is a
-  complete, independently reproducible record.
+  complete, independently reproducible record. **Members are numbered from
+  zero**, so member 0 carries the base seed itself and `batch --count 1
+  --seed N` produces exactly the subsector `new --seed N` produces. Every
+  seed a referee can type is reachable as a member.
 - **The engine version is a constant in the code**, not the build's own
   version, and it bumps for three things and no others: a rule change, a
   change to dice-stream consumption order, or a change to the RNG
@@ -477,7 +480,12 @@ ctworldgen version
 - `new` and `render` write to stdout unless `-o` is given. `batch` emits
   JSONL to stdout; with `-o`, a path that names an existing directory or
   ends in a separator gets one file per subsector, and any other path is a
-  single JSONL file.
+  single JSONL file. A member's file is named for the subsector and its
+  index — `aramis-00.json` — the name lowercased with every run of
+  characters that is not a letter or a digit reduced to a single hyphen,
+  and `subsector` where `--name` is empty or slugs to nothing. The index is
+  zero-padded to at least two digits, and wider where the count needs it,
+  so the files sort in the order they were generated.
 - Existing files are never overwritten without `--force`.
 - Flags precede the filename (Go `flag` stops at the first non-flag
   argument).

@@ -14,14 +14,17 @@ shape, and the milestones all live there, and this file does not restate
 them. `docs/ERRATA.md` holds the recorded readings; `docs/COVERAGE.md`
 maps rules to implementation and tests.
 
-**Status: milestone 3 is complete.** The engine walks the whole of
-pp. 1-12: star mapping, then the eight characteristics of every world,
-with the floors and the one cap, the recorded clamp data, and the string
-of digits. All five readings stamp the records they govern, and every rule
-of pp. 1-12 has a row marked done in `docs/COVERAGE.md`. Milestone 4 is
-the Markdown listing (R20) and `batch` (R19) -- the descriptive tables of
-pp. 5-7 are already transcribed and validated, and nothing renders them
-yet.
+**Status: all four milestones are complete.** The engine walks the whole
+of pp. 1-12, `render` writes the subsector listing from a record, and
+`batch` produces N independent subsectors. Every rule of pp. 1-12 has a
+row marked done in `docs/COVERAGE.md`, and all five readings stamp the
+records they govern.
+
+There are two golden trees now -- the JSON records in `gen/testdata` and
+the Markdown listings in `render/testdata` -- and both are driven from the
+one roster in `internal/fixture`, so they cannot come to describe
+different subsectors under the same name. `task regenerate` rewrites
+both.
 
 ## The rule that matters most
 
