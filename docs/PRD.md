@@ -173,6 +173,17 @@ package's `Target` are types. Size, atmosphere, hydrographics, population,
 government, law level, and the technological index are `int`, bounded only
 by R14 — a floor of 0, and the technological index's printed cap.
 
+Two consequences of that rule, recorded because both look like oversights.
+**`Digit` spans the whole p. 2 alphabet** — 0 through 33, O and I omitted —
+and does not stop at 20. R15's "it must reach 20" is a floor on the
+notation, not a bound on it, and a `Digit` capped at law level's maximum
+would put a rules claim in a type definition, which is the thing this
+section refuses. **`Characteristic` is the seven values Size through
+TechIndex**, and starport is not among them: starport is a table lookup and
+never arithmetic, so it can never be the subject of a clamp, and the
+technological index matrix takes it as an argument separate from its six
+`Characteristic` columns.
+
 ## Requirements
 
 In the order the book walks them. Rule citations are printed page numbers
@@ -300,11 +311,13 @@ unaffected: it covers the range the table prints.
 ### The tool
 
 **R17 — Dice engine.** One- and two-die throws with cumulative DMs against
-`N+`/`N−`/exact targets, per the die roll conventions (B1 pp. 2–3). Book 3
-uses one-die targets the character procedure never does — world occurrence
-is 4+ on one die, and the jump routes table's cells are one-die targets
-from 1 to 6 — so the target notation admits values below 2. All dice are
-consumed from one seeded stream, in procedure order.
+`N+` targets, per the die roll conventions (B1 pp. 2–3). `N+` is the only
+target kind: every throw in pp. 1–12 is one, and an `N−` or an exact target
+would ship with no call site and no golden to pin it. Book 3 uses one-die
+targets the character procedure never does — world occurrence is 4+ on one
+die, and the jump routes table's cells are one-die targets from 1 to 6 — so
+the target notation admits values below 2. All dice are consumed from one
+seeded stream, in procedure order.
 
 **R18 — The subsector record.** The subsector's name, the occurrence DM it
 was generated under, every world (hex, name, the seven basic
@@ -336,6 +349,12 @@ golden fixtures pin it.
   words of the PCG state — `rand.New(rand.NewPCG(seed, seed))` — so one
   seed field reproduces the stream. The record stamps the algorithm as the
   exact string `go-math-rand-v2-pcg`.
+- **The die.** One die is one `IntN(6)` draw plus one — `r.IntN(6) + 1` —
+  and a two-die throw is two of those in sequence, first die then second.
+  This is as load-bearing as the consumption order it feeds: `IntN(36)`, or
+  a masked `Uint64`, would be the same PCG under the same seed and would
+  produce an entirely different subsector. The two throws R13 does not make
+  skip both draws.
 - **A seed is always recorded.** Without `--seed`, one is drawn from the
   OS entropy source and written into the record, so a run is reproducible
   after the fact. That draw is the one exception to the seeded-stream
@@ -345,11 +364,16 @@ golden fixtures pin it.
   an unsigned 64-bit addition, wrapping if it overflows, and that derived
   seed — not the base — is what its record carries. Each member is a
   complete, independently reproducible record.
-- **The engine version bumps for three things and no others**: a rule
-  change, a change to dice-stream consumption order, or a change to the
-  RNG construction. Nothing else can alter what a seed produces. The
-  engine emits no prose at all, so there is no wording anywhere in the
-  contract for a version to track.
+- **The engine version is a constant in the code**, not the build's own
+  version, and it bumps for three things and no others: a rule change, a
+  change to dice-stream consumption order, or a change to the RNG
+  construction. Nothing else can alter what a seed produces, and a tag cut
+  for a documentation fix must not move it. The engine emits no prose at
+  all, so there is no wording anywhere in the contract for a version to
+  track. It is `0` until the engine walks the whole of pp. 1–12 and `1`
+  from then on, the bump discipline governing from that point: during the
+  milestones every increment would be a rule change and the number would
+  be noise.
 - **The schema version tracks the shape of the records the engine
   writes.** A constraint that only narrows the schema to what the engine
   already produced is a clarification; one that would invalidate a record
@@ -391,6 +415,10 @@ notebook (p. 4), and the domain type marshals to it. Starports and digits
 are the single characters the book prints. Routes store the two hexes and
 the jump distance, the lower hex identifier first.
 
+Field names are snake_case. `schema_version` is an integer — the bump rule
+above wants one number and nothing more. `ruleset` is the constant
+`ct-1977-book3-pp1-12`, naming the held pages.
+
 A floor or the cap that bound is recorded on its world. Both are called
 clamps in the record, which is the one word for the one mechanism:
 
@@ -411,6 +439,14 @@ a floor or the cap actually bound, E005 where there was at least one
 world. Each
 entry in `ERRATA.md` states its own condition, and those statements are
 the specification.
+
+Those conditions describe the finished engine. Until it walks all of
+pp. 1–12 the `errata` array grows with the milestones exactly as the schema
+does: a reading is stamped only once the step it governs is implemented. A
+milestone-1 record stamps E002 alone — E005's condition is "at least one
+world," but E005 governs the string of digits, and stamping a reading about
+a field the record does not yet carry would be a lie in the record. E001
+and E003 join at milestone 2, E004 and E005 at milestone 3.
 
 The schema is `subsector.schema.json` (draft 2020-12) with a minimal and a
 complete example beside it. **Rejecting unknown fields is two
@@ -440,8 +476,11 @@ ctworldgen version
 - Existing files are never overwritten without `--force`.
 - Flags precede the filename (Go `flag` stops at the first non-flag
   argument).
-- `version` reports the build and the versions a record stamps, read from
-  the toolchain's embedded build info.
+- `version` reports the build — module version, revision and dirty state,
+  read from the toolchain's embedded build info — and, separately, the
+  versions a record stamps. The stamps are constants in the code; the
+  build info is the binary's own provenance. An untagged or dirty build
+  changes what `version` prints about the build and cannot change a stamp.
 
 ## Architecture
 
@@ -524,7 +563,13 @@ ctworldgen version
    second transcription in place, and the record with its marshalers and
    `subsector.schema.json`. Walking skeleton: the occurrence scan and
    starport types, written out as JSON — a map with no worlds detailed on
-   it.
+   it. **The schema describes the record the engine actually writes**, so a
+   world carries a hex, a name and a starport here and nothing more, and
+   the schema grows with each milestone that adds fields. All of that
+   growth is `schema_version` 1: it invalidates no released record. Every
+   table of pp. 1–12 is transcribed at this milestone, in one visual
+   reading pass — the font trap makes a second pass over the same pages
+   expensive for nothing.
 2. **The rest of star mapping**: bases and space lanes. Exit criterion: a
    living `COVERAGE.md` mapping every step of pp. 1–12 to its page cite,
    implementation, and test.
