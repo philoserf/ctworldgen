@@ -63,9 +63,9 @@ const (
 const usage = `ctworldgen generates Classic Traveller subsectors from Book 3 pp. 1-12.
 
 usage:
-  ctworldgen new   [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
+  ctworldgen new    [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
   ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
-  ctworldgen render [--format markdown|pdf] [--lanes legible|all] [-o file] [--force] subsector.json
+  ctworldgen render [--format markdown|pdf] [--lanes legible|all] [-o file] [--force] record.json
   ctworldgen version
 `
 
