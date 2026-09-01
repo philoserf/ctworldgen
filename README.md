@@ -88,6 +88,27 @@ warns about it, because each sector is individually correct. Leave a gap
 of at least sixteen when generating a second sector to set beside the
 first.
 
+### Writing in the record
+
+The record is the referee's notebook page, so there is a place for him to
+write in it. `notes` on a world, and `notes` on the record as a whole, are
+his: the tool never generates either and never reads them back. Both
+survive re-rendering -- a world's note becomes a line in its detail block
+and the record's becomes a paragraph under the heading, in the listing and
+in the booklet alike.
+
+```json
+{
+  "name": "Tessarane",
+  "notes": "The rift campaign. Players start at 0602.",
+  "worlds": [{ "hex": "0602", "name": "Reagan", "notes": "dust storms" }]
+}
+```
+
+Nothing else is admitted. Every other key the record does not define is
+still refused, which is what makes the generated fields worth trusting;
+`notes` is a field the record names rather than a hole in that rule.
+
 ## The documents
 
 `docs/ERRATA.md` records every reading of an ambiguous or silent page,

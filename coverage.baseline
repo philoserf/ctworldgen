@@ -9,5 +9,5 @@ github.com/philoserf/ctworldgen/internal/cmd/ratchet 31
 github.com/philoserf/ctworldgen/internal/cmd/regenerate 105
 github.com/philoserf/ctworldgen/internal/fixture 5
 github.com/philoserf/ctworldgen/render 4
-github.com/philoserf/ctworldgen/starmap 23
+github.com/philoserf/ctworldgen/starmap 20
 github.com/philoserf/ctworldgen/tables 28

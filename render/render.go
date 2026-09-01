@@ -64,6 +64,12 @@ func (r *Renderer) heading(built *strings.Builder, record *starmap.Record) {
 	fmt.Fprintf(built, "# %s\n\n", name)
 	fmt.Fprintf(built, "%d worlds, %d routes. Generated from seed %d at occurrence DM %s.\n\n",
 		len(record.Worlds), len(record.Routes), record.Seed, occurrenceDM(record.OccurrenceDM))
+
+	// The referee's note about the map as a whole, under the summary and
+	// above everything the tool generated (issue 1 #6).
+	if record.Notes != "" {
+		fmt.Fprintf(built, "%s\n\n", oneLine(record.Notes))
+	}
 }
 
 // untitled is the heading a record the referee has not named gets. It is
@@ -405,6 +411,14 @@ func bullets(charts *tables.Tables, world starmap.World) []bullet {
 			description: fmt.Sprintf("%s threw %d and is recorded as %d.",
 				clamp.Characteristic, clamp.Raw, clamp.Value),
 		})
+	}
+
+	// Last, and only where he wrote one: everything above is the book's,
+	// and this is the referee's (issue 1 #6). Flattened as his name for a
+	// world already is -- a line break would end the Markdown list, and the
+	// two documents must carry the same line.
+	if world.Notes != "" {
+		lines = append(lines, bullet{label: "Notes.", description: oneLine(world.Notes)})
 	}
 
 	return lines

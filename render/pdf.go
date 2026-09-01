@@ -209,12 +209,44 @@ func (b *booklet) text(x, y float64, s string) { b.pdf.Text(x, y, b.encode(s)) }
 
 func (b *booklet) width(s string) float64 { return b.pdf.GetStringWidth(b.encode(s)) }
 
-// split wraps a paragraph to a width. It measures the string as it was
-// written rather than as it is encoded, because fpdf indexes its widths
-// by rune and Windows-1252 agrees with Unicode over the range a
-// description reaches.
+// drawable rewrites a string in the alphabet the page can draw: every rune
+// Windows-1252 has no character for becomes a question mark, and the result
+// is still UTF-8. A question mark rather than nothing, so a line keeps the
+// length and shape the referee gave it -- the same promise encode makes.
+//
+// This is not only tidiness. fpdf indexes its character widths into a
+// 256-entry table by rune, so measuring a rune above 255 panics outright.
+// That was unreachable while every wrapped paragraph was a Book 3 table
+// label; notes let the referee's own text reach one, and an arrow in a
+// note crashed the render.
+func (b *booklet) drawable(text string) string {
+	_, err := b.latin.String(text)
+	if err == nil {
+		return text
+	}
+
+	var built strings.Builder
+
+	for _, char := range text {
+		_, charErr := b.latin.String(string(char))
+		if charErr != nil {
+			built.WriteByte('?')
+
+			continue
+		}
+
+		built.WriteRune(char)
+	}
+
+	return built.String()
+}
+
+// split wraps a paragraph to a width. It measures the drawable form rather
+// than the encoded one, because fpdf indexes its widths by rune -- and
+// rather than the string as written, because a rune the page cannot draw
+// is a rune fpdf cannot measure.
 func (b *booklet) split(s string, width float64) []string {
-	return b.pdf.SplitText(s, width)
+	return b.pdf.SplitText(b.drawable(s), width)
 }
 
 // firstPage is the booklet page: the title, the summary the listing opens
@@ -239,6 +271,15 @@ func (b *booklet) firstPage() {
 	b.text(pageMargin, b.y+noteSize, summary(b.record))
 
 	b.y += sectionGap
+
+	// The referee's note about the map as a whole, where the listing puts
+	// it: under the summary, above everything the tool generated (issue 1
+	// #6). body wraps it, and the map below is fitted to whatever height is
+	// left rather than to a fixed box, so a long note costs hex size and
+	// never runs off the page.
+	if b.record.Notes != "" {
+		b.body(oneLine(b.record.Notes))
+	}
 
 	b.rule(pageMargin, contentRight)
 

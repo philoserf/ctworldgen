@@ -49,7 +49,19 @@ type Record struct {
 	Seed          uint64   `json:"seed"`
 	Errata        []string `json:"errata"`
 	Name          string   `json:"name"`
-	OccurrenceDM  int      `json:"occurrence_dm"`
+
+	// Notes is the referee's, like Name, and about the map as a whole. It
+	// is never generated and never read back: the engine writes nothing
+	// here and no later step consults it.
+	//
+	// It is a field rather than an escape hatch. The record refuses every
+	// key it does not define, which is what makes it trustworthy, so the
+	// place to write had to be named rather than carved out (issue 1 #6).
+	// omitempty keeps a record without one byte-identical to what the tool
+	// wrote before this field existed.
+	Notes string `json:"notes,omitempty"`
+
+	OccurrenceDM int `json:"occurrence_dm"`
 
 	// Grid is what the hexes below are numbered on: the p. 3 sub-sector
 	// grid, or the sector grid of sixteen of them (ERRATA E006).
@@ -65,8 +77,14 @@ type Record struct {
 // prints no table, so the hex identifies it. The field is carried because
 // the record is the referee's notebook page and he writes in it.
 type World struct {
-	Hex      Hex      `json:"hex"`
-	Name     string   `json:"name"`
+	Hex  Hex    `json:"hex"`
+	Name string `json:"name"`
+
+	// Notes is the other field the referee writes: what happened here, what
+	// the players know, what he means to do with it. Same rules as Name --
+	// never generated, never read back, absent from a record that has none.
+	Notes string `json:"notes,omitempty"`
+
 	Starport Starport `json:"starport"`
 
 	// NavalBase and ScoutBase are the throws the p. 5 starport chart
@@ -140,6 +158,7 @@ func New(seed uint64, name string, occurrenceDM int) *Record {
 		Seed:          seed,
 		Errata:        []string{},
 		Name:          name,
+		Notes:         "",
 		OccurrenceDM:  occurrenceDM,
 		Grid:          PageThreeGrid(),
 		Worlds:        []World{},

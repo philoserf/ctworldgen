@@ -317,6 +317,81 @@ func TestAnEmptyArrayIsNotAMissingOne(t *testing.T) {
 	}
 }
 
+// TestNotesRoundTripAndDoNotLoosenTheRecord: the record is the referee's
+// notebook page, so it has a place for him to write (issue 1 #6). Both
+// halves are asserted together, because the second is the whole reason the
+// first is shaped as a named field rather than an escape hatch: `notes` is
+// now a field the record defines, and every key it does not define is
+// refused exactly as before.
+func TestNotesRoundTripAndDoNotLoosenTheRecord(t *testing.T) {
+	t.Parallel()
+
+	const (
+		onTheMap   = "The rift campaign. Players start at 0602."
+		onTheWorld = "dust storms; ask about the yard"
+	)
+
+	written := strings.Replace(recordWith("", "0101"),
+		`"name":"Aramis",`, `"name":"Aramis","notes":"`+onTheMap+`",`, 1)
+
+	written = strings.Replace(written,
+		`"name":"","starport":"A"`, `"name":"","notes":"`+onTheWorld+`","starport":"A"`, 1)
+
+	record, err := starmap.Decode(strings.NewReader(written))
+	if err != nil {
+		t.Fatalf("a record carrying the referee's notes did not decode: %v", err)
+	}
+
+	if record.Notes != onTheMap {
+		t.Errorf("the map's note decoded as %q", record.Notes)
+	}
+
+	if record.Worlds[0].Notes != onTheWorld {
+		t.Errorf("the world's note decoded as %q", record.Worlds[0].Notes)
+	}
+
+	// Re-marshalled, both survive: what he writes is still there when the
+	// record is written back out.
+	encoded, err := starmap.Marshal(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, want := range []string{onTheMap, onTheWorld} {
+		if !strings.Contains(string(encoded), want) {
+			t.Errorf("re-marshalling lost %q", want)
+		}
+	}
+
+	// And the strictness that makes the record worth trusting is untouched.
+	unknown := strings.Replace(recordWith("", "0101"), `"name":"","starport":"A"`,
+		`"name":"","nonesuch":"x","starport":"A"`, 1)
+
+	_, err = starmap.Decode(strings.NewReader(unknown))
+	if err == nil {
+		t.Error("a key the record does not define was accepted; adding notes must not have loosened this")
+	}
+}
+
+// TestARecordWithNoNotesIsUnchanged holds the omitempty guarantee that
+// made this an additive change: a record with nothing written in it must
+// serialise exactly as it did before the field existed, or every golden
+// moves and the field is not additive at all.
+func TestARecordWithNoNotesIsUnchanged(t *testing.T) {
+	t.Parallel()
+
+	record := starmap.New(1977, "Aramis", -1)
+
+	encoded, err := starmap.Marshal(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if strings.Contains(string(encoded), "notes") {
+		t.Errorf("a record with no notes wrote the key anyway:\n%s", encoded)
+	}
+}
+
 // recordWith builds a one-world record with whatever grid clause is given,
 // so a test can hand Decode a record that has no grid at all.
 func recordWith(gridClause, hex string) string {
