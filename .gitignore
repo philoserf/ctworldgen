@@ -1,3 +1,10 @@
 coverage.out
 /ctworldgen
 .DS_Store
+
+# Booklets. `render --format pdf` writes them and nothing tracks one: the
+# goldens are JSON records and Markdown listings, and pdf_test.go argues
+# against a binary golden on purpose. The pattern is broad rather than
+# narrow because the held rulebooks are PDFs too, and none of them belongs
+# in this repository.
+*.pdf
