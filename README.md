@@ -80,6 +80,14 @@ for i in $(seq 0 15); do
 done
 ```
 
+**Sector seeds closer together than sixteen share subsectors.** A sector's
+members run on `seed` through `seed + 15`, so `sector --seed 100` and
+`sector --seed 110` have six subsectors in common -- the same worlds with
+the same digits, sitting in different corners of the two maps. Nothing
+warns about it, because each sector is individually correct. Leave a gap
+of at least sixteen when generating a second sector to set beside the
+first.
+
 ## The documents
 
 `docs/ERRATA.md` records every reading of an ambiguous or silent page,
