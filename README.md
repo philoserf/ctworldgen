@@ -37,8 +37,10 @@ in here; this section only says what the shape of the thing is.
 What the tool should do comes from
 [issue 1](https://github.com/philoserf/ctworldgen/issues/1), the first
 alpha's report: it was played as a referee rather than as a developer, and
-what that found is the backlog. A second alpha is close, and it will be
-read the same way. `docs/PRD.md` was the contract through
+what that found is the backlog. The second alpha shipped everything it
+asked for but the technological levels tables, and it wants reading the
+same way -- play it as a referee and file what the table finds.
+`docs/PRD.md` was the contract through
 `v1.0.0-alpha.1` and governs nothing now -- read it for why a thing is the
 way it is, never for whether a thing may be built.
 

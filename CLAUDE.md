@@ -31,6 +31,13 @@ routes at their seams (E006). A sector's members are unchanged -- member
 _i_ of `sector --seed N` is the subsector `new --seed N+i` writes -- which
 is the property that keeps a sector trustworthy and is tested directly.
 
+A sector's **documents** are an index of the whole grid and then the
+sixteen sub-sector listings its members would have had, each on its own
+p. 3 grid, ringed by one hex of its neighbours, headed with the seed that
+writes it standalone (E008). The sector map is an index and carries no hex
+numbers; the member maps carry them. That reading governs the documents
+rather than the generation, so like E007 it is never stamped.
+
 `render` draws legible lanes by default -- a route whose worlds are already
 joined by shorter routes is not drawn (E007) -- and `--lanes all` draws
 every one. The record carries them all either way.
