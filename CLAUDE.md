@@ -31,6 +31,10 @@ routes at their seams (E006). A sector's members are unchanged -- member
 _i_ of `sector --seed N` is the subsector `new --seed N+i` writes -- which
 is the property that keeps a sector trustworthy and is tested directly.
 
+`render` draws legible lanes by default -- a route whose worlds are already
+joined by shorter routes is not drawn (E007) -- and `--lanes all` draws
+every one. The record carries them all either way.
+
 `docs/COVERAGE.md` is the live map of rule to code to test. The
 technological levels tables of pp. 10-11 are the one thing inside pp. 1-12
 that is not built (issue 1 #4).

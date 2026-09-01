@@ -1,6 +1,6 @@
 # Aramis
 
-24 worlds, 24 routes. Generated from seed 1 at occurrence DM -1.
+24 worlds, 24 routes, 22 drawn. Generated from seed 1 at occurrence DM -1.
 
 ## The map
 
@@ -60,6 +60,8 @@ The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-num
 
 ## Routes
 
+2 of these 24 lanes are not listed: each joins two worlds already joined by shorter lanes, which p. 2 says may be ignored in the drawing (ERRATA E007). The record carries every one of them, and `render --lanes=all` lists them.
+
 | From | To | Parsecs |
 | --- | --- | --- |
 | 0101 | 0202 | 2 |
@@ -68,8 +70,6 @@ The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-num
 | 0106 | 0107 | 1 |
 | 0106 | 0307 | 2 |
 | 0107 | 0307 | 2 |
-| 0107 | 0505 | 4 |
-| 0107 | 0506 | 4 |
 | 0306 | 0307 | 1 |
 | 0307 | 0505 | 3 |
 | 0307 | 0605 | 3 |

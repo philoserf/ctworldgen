@@ -28,7 +28,7 @@ func TestClipCutsWholeCharacters(t *testing.T) {
 	t.Parallel()
 
 	book := &booklet{
-		pdf: newPDF(), charts: nil, record: nil, names: nil,
+		pdf: newPDF(), charts: nil, record: nil, drawn: nil, names: nil,
 		latin: windows1252(), y: pageMargin,
 	}
 

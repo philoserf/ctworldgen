@@ -22,7 +22,7 @@ routes joined; `sector` produces sixteen subsectors on one grid.
 ```sh
 ctworldgen new   [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
 ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
-ctworldgen render [--format markdown|pdf] [-o file] [--force] subsector.json
+ctworldgen render [--format markdown|pdf] [--lanes legible|all] [-o file] [--force] subsector.json
 ctworldgen version
 ```
 
@@ -87,6 +87,24 @@ the same digits, sitting in different corners of the two maps. Nothing
 warns about it, because each sector is individually correct. Leave a gap
 of at least sixteen when generating a second sector to set beside the
 first.
+
+### Which lanes are drawn
+
+A dense subsector throws a hundred and sixty commercial routes over
+forty-six worlds, and a map with all of them on it cannot be read. P. 2
+offers the map-drawer a way out in the book's own voice -- a connection
+already present "may be ignored" -- and `render` takes it by default: a
+lane whose two worlds are already joined by shorter lanes is not drawn and
+not listed (`ERRATA.md` E007).
+
+It removes about 46% of the lanes and changes the reachability of nothing,
+because a lane is only dropped when its ends are already joined. The
+summary line says how many were drawn, the route section says how many were
+not, and `--lanes all` draws every one.
+
+**The record is unchanged and carries every lane.** This is a decision
+about ink, not about dice: the engine still examines every pair and
+consumes every die (E003), so no seed's meaning moves.
 
 ### Writing in the record
 

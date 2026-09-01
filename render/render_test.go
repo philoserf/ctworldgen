@@ -21,7 +21,13 @@ const emptyWorldDigits = "A0000000"
 func listing(t *testing.T, record *starmap.Record) string {
 	t.Helper()
 
-	renderer, err := render.New()
+	return listingWith(t, record, render.LegibleLanes)
+}
+
+func listingWith(t *testing.T, record *starmap.Record, lanes render.Lanes) string {
+	t.Helper()
+
+	renderer, err := render.New(lanes)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,7 +115,6 @@ func TestEveryWorldAndRouteReachesTheListing(t *testing.T) {
 			record := generated(t, golden)
 			written := listing(t, record)
 			roster := section(t, written, "Worlds")
-			routes := section(t, written, "Routes")
 			details := section(t, written, "The worlds in detail")
 
 			for _, world := range record.Worlds {
@@ -131,15 +136,20 @@ func TestEveryWorldAndRouteReachesTheListing(t *testing.T) {
 				t.Errorf("there are %d detail pages and %d worlds", pages, len(record.Worlds))
 			}
 
+			// The route table is checked under --lanes=all, which is the
+			// mode that still promises every lane. What the default draws
+			// is TestTheDefaultListingDrawsLegibleLanes.
+			all := section(t, listingWith(t, record, render.AllLanes), "Routes")
+
 			for _, route := range record.Routes {
 				row := "| " + route.From.String() + " | " + route.To.String() + " |"
-				if !strings.Contains(routes, row) {
-					t.Errorf("the routes table has no row for %s-%s", route.From, route.To)
+				if !strings.Contains(all, row) {
+					t.Errorf("--lanes=all has no row for %s-%s", route.From, route.To)
 				}
 			}
 
-			if rows := tableRows(routes); rows != len(record.Routes) {
-				t.Errorf("the routes table has %d rows and the subsector has %d routes", rows, len(record.Routes))
+			if rows := tableRows(all); rows != len(record.Routes) {
+				t.Errorf("--lanes=all has %d rows and the subsector has %d routes", rows, len(record.Routes))
 			}
 		})
 	}
@@ -785,8 +795,9 @@ func TestASectorRendersOnItsOwnGrid(t *testing.T) {
 		t.Errorf("the roster has %d rows and the sector has %d worlds", rows, len(record.Worlds))
 	}
 
-	if rows := tableRows(section(t, written, "Routes")); rows != len(record.Routes) {
-		t.Errorf("the route table has %d rows and the sector has %d routes", rows, len(record.Routes))
+	all := listingWith(t, record, render.AllLanes)
+	if rows := tableRows(section(t, all, "Routes")); rows != len(record.Routes) {
+		t.Errorf("--lanes=all has %d rows and the sector has %d routes", rows, len(record.Routes))
 	}
 }
 
