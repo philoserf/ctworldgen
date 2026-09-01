@@ -3,7 +3,11 @@
 // under the same name. It is test support, not architecture.
 package fixture
 
-import "path/filepath"
+import (
+	"fmt"
+	"path/filepath"
+	"strings"
+)
 
 // aramis is the subsector name the roster uses throughout.
 const aramis = "Aramis"
@@ -51,6 +55,48 @@ func SectorGolden() Golden {
 // different files.
 func SeamsPath() string {
 	return filepath.Join("gen", "testdata", SectorGolden().File+".json")
+}
+
+// SectorSliceMember is which of a sector's sixteen the listing golden
+// pins. An interior member, so its ring of neighbours is populated on all
+// four sides and its lanes cross at every seam: a corner member would
+// leave half the thing being pinned unexercised.
+const SectorSliceMember = 5
+
+// SectorSlicePath is the golden of one member's section of a sector's
+// listing, relative to the repository root.
+//
+// One member and not the whole listing. A sector's listing is half a
+// megabyte, and a golden exists so that a human reads its diff -- which
+// nobody does at that size, and a golden nobody reads is a test that
+// cannot fail wearing the costume of one that passes. A member's section
+// is the size of the subsector goldens beside it, and it is where the
+// decomposition, the ring and the doubled crossing lanes can be read.
+//
+// It catches drift and nothing else: it is regenerated from the code
+// under test, so what holds the decomposition itself is the live
+// assertions in render's tests.
+func SectorSlicePath() string {
+	return filepath.Join("render", "testdata", fmt.Sprintf("sector-member-%02d.md", SectorSliceMember))
+}
+
+// SectorSlice cuts the member section SectorSlicePath pins out of a whole
+// sector listing. The writer and the reader of that golden both call it,
+// so the two cannot come to cut different things.
+func SectorSlice(listing string) string {
+	heading := fmt.Sprintf("## Subsector %d ", SectorSliceMember)
+
+	start := strings.Index(listing, heading)
+	if start < 0 {
+		return ""
+	}
+
+	section := listing[start:]
+	if end := strings.Index(section[len(heading):], "\n## "); end >= 0 {
+		section = section[:len(heading)+end+1]
+	}
+
+	return section
 }
 
 // CompleteExamplePath is the example record shipped beside the schema,

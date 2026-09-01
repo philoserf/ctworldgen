@@ -67,7 +67,49 @@ func run() error {
 		return err
 	}
 
+	err = writeSectorSlice(engine)
+	if err != nil {
+		return err
+	}
+
 	return writeExample()
+}
+
+// writeSectorSlice pins one member's section of a sector's listing: the
+// decomposition, the ring of neighbours its map draws, and the crossing
+// lanes it shares with its neighbours (ERRATA E008).
+func writeSectorSlice(engine *gen.Engine) error {
+	golden := fixture.SectorGolden()
+
+	record, err := engine.Sector(gen.Inputs{
+		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+	})
+	if err != nil {
+		return fmt.Errorf("the sector slice: %w", err)
+	}
+
+	renderer, err := render.New(render.LegibleLanes)
+	if err != nil {
+		return fmt.Errorf("building the renderer: %w", err)
+	}
+
+	var whole strings.Builder
+
+	err = renderer.Listing(&whole, record)
+	if err != nil {
+		return fmt.Errorf("rendering the sector: %w", err)
+	}
+
+	path := fixture.SectorSlicePath()
+
+	err = os.WriteFile(path, []byte(fixture.SectorSlice(whole.String())), fileMode)
+	if err != nil {
+		return fmt.Errorf("writing %s: %w", path, err)
+	}
+
+	_, _ = fmt.Fprintln(os.Stdout, "wrote", path, "-- subsector", fixture.SectorSliceMember)
+
+	return nil
 }
 
 // writeSeams pins the one stream a sector adds: the route pass over pairs

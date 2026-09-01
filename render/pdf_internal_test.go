@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 	"unicode/utf8"
+
+	"github.com/philoserf/ctworldgen/starmap"
 )
 
 // TestClipCutsWholeCharacters is an internal test because clip's rule
@@ -52,5 +54,23 @@ func TestClipCutsWholeCharacters(t *testing.T) {
 		if strings.ContainsRune(trimmed, utf8.RuneError) {
 			t.Fatalf("clipping to %dpt produced a replacement rune: %q", width, trimmed)
 		}
+	}
+}
+
+// TestMemberSeedRefusesAnIndexThatIsNotAMembers holds the bound the
+// conversion in memberSeed relies on. A sector has sixteen members and
+// nothing asks for a seventeenth, but the guard is what makes converting
+// the index to the seed's width safe rather than merely true today.
+func TestMemberSeedRefusesAnIndexThatIsNotAMembers(t *testing.T) {
+	t.Parallel()
+
+	for _, index := range []int{-1, starmap.Members, starmap.Members + 1} {
+		if got := memberSeed(100, index); got != 100 {
+			t.Errorf("memberSeed(100, %d) = %d; an index that is not a member's returns the base", index, got)
+		}
+	}
+
+	if got := memberSeed(100, starmap.Members-1); got != 100+starmap.Members-1 {
+		t.Errorf("memberSeed(100, %d) = %d; want %d", starmap.Members-1, got, 100+starmap.Members-1)
 	}
 }

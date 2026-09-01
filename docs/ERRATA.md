@@ -381,6 +381,81 @@ _Never stamped. This reading governs the documents rather than the
 generation, so it is not a property of any record — the same record draws
 both ways. The listing and the booklet cite it where they suppress._
 
+## E008 — How a sector's documents present its sixteen sub-sectors (pp. 1–4)
+
+E006 assembles a sector the book does not print. Nothing on pp. 1–12 then
+says how to *read* one: p. 1 maps "in convenient segments, called
+subsectors" and p. 4 asks the referee to keep "at least one (and preferably
+several) pages in a central notebook", and both sentences are about a
+subsector. The sector is the tool's, so how its documents are laid out is a
+reading and not a rule.
+
+What the page leaves unfixed is everything about presentation at sector
+scale, and it decides whether the document can be used at the table. A
+sector's listing rendered as one large subsector is 662 worlds in one
+roster, 1,879 lanes in one table, and a map of 1,280 hexes whose four-digit
+numbers do not fit inside them. The alpha's referee read sixteen separate
+listings and ran one of them; a single document that cannot be opened at a
+sub-sector took that away.
+
+**The reading, in four parts.**
+
+### 1. A sub-sector of a sector is identified by its index, its seed and its hexes
+
+E006 part 1 already makes member _i_ of `sector --seed N` the subsector
+`new --seed N+i` writes. That identity is the honest name: the documents
+head each section with the member's index, the range of hexes it occupies
+on the sector grid, and the command that writes it standalone.
+
+The familiar A-through-P lettering of subsectors is **not** used. It comes
+from the 1981 revision and later editions, not from the held © 1977 pages,
+and CLAUDE.md's rule is that the held page governs. An index and a seed are
+things the tool itself established; a letter would be borrowed.
+
+### 2. A member's map draws its eighty hexes and one hex of bleed
+
+A member's own map is the p. 3 grid it would have had alone, numbered where
+the sector lays it. Around it is drawn one hex of each neighbour, because a
+lane crossing a seam otherwise ends nowhere.
+
+One hex and not four. A lane runs up to four parsecs (p. 2), so a ring deep
+enough to hold every lane would be sixteen columns by eighteen and would
+shrink the hexes back to the size this reading exists to avoid. Under the
+default lanes (E007) a one-hex ring holds about six in seven of the drawn
+lanes that cross; the rest are counted in the map's own note and carried in
+the table below it, with the sub-sector each leaves for named. Nothing is
+dropped in silence.
+
+All sixteen maps are fitted to the same window, so a member at a corner of
+the sector — which has neighbours on two sides only — is drawn at the same
+scale as one in the middle rather than larger.
+
+### 3. A lane that crosses a seam is listed under both its sub-sectors
+
+A referee reading one sub-sector needs to see the road out of it, so a
+crossing lane appears in both members' tables with the other sub-sector
+named. The sixteen tables therefore carry more rows between them than the
+record has lanes, and the document says so where the tables begin.
+
+### 4. The map of the whole sector is an index
+
+Thirty-two columns fitted to a sheet give a hex too small to print a
+four-digit number inside; drawn anyway, the number runs out into the hex
+beside it. So the sector map carries no hex numbers. It carries the
+starport letters p. 1 marks a hex with, the lanes, and the seams between
+the sixteen — enough to see the shape of the sector and choose a
+sub-sector, which is what a reader of that page is doing. The hex numbers
+are on the sixteen maps overleaf, where there is room for them.
+
+The drawn seams are straight. The true border between two bands steps,
+because the even-numbered columns sit half a hex low (p. 3); an index is
+dividing an index rather than tracing a hex edge.
+
+_Never stamped. Like E007 this reading governs the documents rather than
+the generation: the record is unchanged and carries no member field, and
+which sub-sector a world or a lane belongs to is read back off its hex.
+The listing and the booklet cite it where they present a member._
+
 ## Noted discrepancies (not stamped)
 
 These need no reading. They are recorded because each one looks, on the

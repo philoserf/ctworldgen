@@ -245,3 +245,85 @@ func FuzzParseHex(f *testing.F) {
 		}
 	})
 }
+
+// lastHexOfTheP3Grid is the corner Book 3 p. 3 prints last, written once
+// because it is the same corner in both tables below.
+const lastHexOfTheP3Grid = "0810"
+
+// TestTheMemberBandsAreLeftToRightThenDown is the transcription that pins
+// ERRATA E006 part 1's reading -- members "numbered left to right and then
+// down" -- against a hand-written table rather than against more
+// arithmetic.
+//
+// It exists because Place and MemberOf are exact inverses, so every test
+// that puts a hex through one and reads it back through the other passes
+// under a consistent transpose: swap across and down in both and the
+// distance checks, the seam checks and the member-identity check all stay
+// green, because both band widths are even and the parity survives. The
+// sector would simply be laid out in columns instead of rows, and nothing
+// but the goldens would say so -- which CLAUDE.md records as proving
+// nothing.
+//
+// So these expectations are written out, not derived. Member 1 is the band
+// to the *right* of member 0, not the one below it; member 4 is the band
+// below member 0. Read them off E006 part 1, never off Place.
+func TestTheMemberBandsAreLeftToRightThenDown(t *testing.T) {
+	t.Parallel()
+
+	for _, want := range []struct {
+		index int
+		local string
+		on    string
+	}{
+		{0, "0101", "0101"},                         // the first member is the sector's own corner
+		{0, lastHexOfTheP3Grid, lastHexOfTheP3Grid}, // and its last hex is the p. 3 grid's last
+		{1, "0101", "0901"},                         // member 1 is one band to the right
+		{3, "0101", "2501"},                         // member 3 is the last band of the first row
+		{4, "0101", "0111"},                         // member 4 begins the second row of bands
+		{5, "0101", "0911"},                         // right one band and down one
+		{12, "0101", "0131"},                        // the first band of the last row
+		{15, lastHexOfTheP3Grid, "3240"},            // and the last hex of the sector
+	} {
+		local, err := starmap.ParseHex(want.local)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		placed, err := starmap.ParseHex(want.on)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if got := starmap.Place(want.index, local); got != placed {
+			t.Errorf("member %d puts %s at %s, and E006 part 1 puts it at %s",
+				want.index, want.local, got, want.on)
+		}
+
+		if got := starmap.MemberOf(placed); got != want.index {
+			t.Errorf("%s reads back as member %d, and E006 part 1 puts it in member %d",
+				want.on, got, want.index)
+		}
+	}
+}
+
+// TestMemberBoundsAreTheCornersOfTheBand pins the inverse Place does not
+// state, again by transcription: member 5's band runs 0911 to 1620.
+func TestMemberBoundsAreTheCornersOfTheBand(t *testing.T) {
+	t.Parallel()
+
+	for _, want := range []struct {
+		index       int
+		first, last string
+	}{
+		{0, "0101", lastHexOfTheP3Grid},
+		{3, "2501", "3210"},
+		{5, "0911", "1620"},
+		{15, "2531", "3240"},
+	} {
+		first, last := starmap.MemberBounds(want.index)
+		if first.String() != want.first || last.String() != want.last {
+			t.Errorf("member %d spans %s to %s, and E006 part 1 spans it %s to %s",
+				want.index, first, last, want.first, want.last)
+		}
+	}
+}

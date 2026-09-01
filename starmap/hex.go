@@ -34,6 +34,52 @@ const (
 	SectorRows    = Rows * SectorAcross
 )
 
+// Members is how many sub-sectors a sector is: four across and four down
+// (ERRATA E006).
+const Members = SectorAcross * SectorAcross
+
+// Place translates a member's local hex onto the sector grid: member
+// index sits at column band index mod 4 and row band index div 4, and a
+// local hex moves by whole bands (ERRATA E006 parts 1 and 2).
+//
+// A sub-sector is eight columns wide and eight is even, so a column's
+// odd-or-even parity survives this -- which is what makes an interior
+// pair measure the same distance on the sector grid as it did at home.
+// It is exported because that property is worth asserting against the
+// translation the engine actually uses, rather than against a second copy
+// of the arithmetic written in a test.
+//
+// It lives here rather than in gen because it is grid geometry and not a
+// rule: the engine needed it first, and the renderer needs the same one.
+func Place(index int, hex Hex) Hex {
+	across := index % SectorAcross
+	down := index / SectorAcross
+
+	return Hex{Col: across*Columns + hex.Col, Row: down*Rows + hex.Row}
+}
+
+// MemberOf returns which of a sector's sixteen sub-sectors a hex fell in,
+// numbered left to right and then down (ERRATA E006 part 1).
+func MemberOf(hex Hex) int {
+	across := (hex.Col - 1) / Columns
+	down := (hex.Row - 1) / Rows
+
+	return down*SectorAcross + across
+}
+
+// MemberBounds returns the corners of a member's band on the sector grid:
+// the hex at its top left and the hex at its bottom right.
+//
+// It is the inverse Place does not state. The documents need it to draw
+// one member's eighty hexes and to name the range in a heading, and
+// deriving the corners at each call site would put the band arithmetic in
+// as many places as there are call sites.
+func MemberBounds(index int) (Hex, Hex) {
+	first := Place(index, Hex{Col: 1, Row: 1})
+
+	return first, Hex{Col: first.Col + Columns - 1, Row: first.Row + Rows - 1}
+}
+
 // Grid is the hex grid a record is drawn on. A record carries its own
 // because the renderer cannot infer one -- a subsector whose eighth
 // column drew no world is not a seven-column subsector.
