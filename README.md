@@ -1,29 +1,63 @@
 # ctworldgen
 
-A Go CLI that generates rules-accurate Classic Traveller subsectors from
-Book 3 _Worlds and Adventures_, the Worlds chapter (pp. 1-12, © 1977
-text). It writes a JSON record and renders it as a Markdown listing a
-referee can run from.
+A Go CLI that generates rules-accurate Classic Traveller subsectors and
+sectors from Book 3 _Worlds and Adventures_, the Worlds chapter (pp. 1-12,
+© 1977 text). It writes a JSON record from a recorded seed and renders it
+as the Markdown listing a referee runs from, or as a printable PDF booklet
+with the hex map drawn and the routes joined.
 
-## Status
+## Install
 
-All four milestones are complete. The engine walks the whole of Book 3
-pp. 1-12 -- the eighty-hex occurrence scan, starport types, naval and
-scout bases, commercial routes, and the eight characteristics of
-every world -- all from a recorded seed. `render` turns a record into the
-Markdown listing a referee can run from, opening with a text map of the
-p. 3 hex grid, or into a printable PDF booklet with the grid drawn and the
-routes joined; `sector` produces sixteen subsectors on one grid.
+```sh
+go install github.com/philoserf/ctworldgen/cmd/ctworldgen@latest
+```
 
-`docs/COVERAGE.md` is the current map of rule to code to test.
+**Until `v1.0.0-alpha.2` is tagged, use `@main` instead.** The newest tag is
+still `v1.0.0-alpha.1`, which predates `sector`, the drawn map and
+`--lanes`, so `@latest` installs a tool this README does not describe. This
+paragraph goes away with the tag; the line above it does not change.
+
+## What is built, and what is not
+
+The engine walks the whole of Book 3 pp. 1-12 -- the eighty-hex occurrence
+scan, starport types, naval and scout bases, commercial routes, and the
+eight characteristics of every world -- all from one seed. `render` turns a
+record into the listing, opening with a text map of the p. 3 hex grid, or
+into the booklet. `sector` lays sixteen subsectors on one 32x40 grid and
+throws for the routes at their seams.
+
+Two things are not built, and both are open:
+
+- **The technological levels tables of pp. 10-11.** Every world carries a
+  technological index and no gloss of it. The listing says why the line is
+  bare rather than leaving it silently so
+  ([#4](https://github.com/philoserf/ctworldgen/issues/4)).
+- **Per-area occurrence DMs** -- a rift in one corner, a cluster in the
+  other ([#5](https://github.com/philoserf/ctworldgen/issues/5)).
+
+`docs/COVERAGE.md` is the live map of rule to code to test, and it carries a
+row for what is not built as well as for what is. Ask it whether a rule is
+in here; this section only says what the shape of the thing is.
+
+What the tool should do comes from
+[issue 1](https://github.com/philoserf/ctworldgen/issues/1), the first
+alpha's report: it was played as a referee rather than as a developer, and
+what that found is the backlog. A second alpha is close, and it will be
+read the same way. `docs/PRD.md` was the contract through
+`v1.0.0-alpha.1` and governs nothing now -- read it for why a thing is the
+way it is, never for whether a thing may be built.
 
 ## Use
 
 ```sh
-ctworldgen new   [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
+ctworldgen new    [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
 ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
-ctworldgen render [--format markdown|pdf] [--lanes legible|all] [-o file] [--force] subsector.json
+ctworldgen render [--format markdown|pdf] [--lanes legible|all] [-o file] [--force] record.json
 ctworldgen version
+```
+
+```sh
+$ ctworldgen new --seed 1977 --name Aramis --occurrence-dm -1
 ```
 
 `sector` writes one record covering sixteen subsectors on a single 32x40
@@ -34,12 +68,13 @@ subsector `new --seed N+i` writes, so the subsector you read is the
 subsector you get. The seams are one further reading (`ERRATA.md` E006),
 stamped on every sector record.
 
-`render` writes the Markdown listing by default. `--format pdf` writes the
-booklet instead: the map beside its roster on the first page, then the
-routes and a page of detail per world. It is the one output that
-draws p. 2's "line connecting the two worlds on the map", which a
-monospace grid has nowhere to put. A booklet is a binary, so `--format
-pdf` needs `-o`, and it reproduces byte for byte from the same record.
+`render` reads either record, a subsector or a sector, and writes the
+Markdown listing by default. `--format pdf` writes the booklet instead: the
+map beside its roster on the first page, then the routes and a page of
+detail per world. It is the one output that draws p. 2's "line connecting
+the two worlds on the map", which a monospace grid has nowhere to put. A
+booklet is a binary, so `--format pdf` needs `-o`, and it reproduces byte
+for byte from the same record.
 
 `--occurrence-dm` takes -1, 0 or +1 and nothing else, and defaults to 0.
 Without `--seed`, a seed is drawn from OS entropy and written into the
@@ -48,9 +83,10 @@ explicit and distinct choice rather than a request for a random one.
 Existing files are never overwritten without `--force`, and flags precede
 any filename.
 
-```sh
-$ go run ./cmd/ctworldgen new --seed 1977 --name Aramis --occurrence-dm -1
-```
+`docs/examples/complete.json` is a full record with every field populated;
+`task regenerate` rewrites it, so it never drifts from what the tool
+writes. `docs/examples/minimal.json` is the smallest record the schema
+admits, and is held by hand.
 
 ### What a seed fixes, and what it does not
 
@@ -108,9 +144,9 @@ consumes every die (E003), so no seed's meaning moves.
 
 ### Writing in the record
 
-The record is the referee's notebook page, so there is a place for him to
-write in it. `notes` on a world, and `notes` on the record as a whole, are
-his: the tool never generates either and never reads them back. Both
+The record is the referee's notebook page, so there is a place to write in
+it. `notes` on a world, and `notes` on the record as a whole, belong to the
+referee: the tool never generates either and never reads them back. Both
 survive re-rendering -- a world's note becomes a line in its detail block
 and the record's becomes a paragraph under the heading, in the listing and
 in the booklet alike.
@@ -127,26 +163,41 @@ Nothing else is admitted. Every other key the record does not define is
 still refused, which is what makes the generated fields worth trusting;
 `notes` is a field the record names rather than a hole in that rule.
 
+## Where the rules come from
+
+Rules come only from the held PDFs of the FFE reprints, never from memory.
+Training-data Traveller is mostly the 1981 revision and later editions, and
+the held © 1977 page governs even where it differs -- most visibly in the
+string of digits, which carries no hyphen (`A867A698`, not `A867A69-8`).
+
+Book 3 pp. 1-12 is the ruleset. Book 1 pp. 2-3 and p. 8 supply the die roll
+conventions and the hexadecimal notation that Book 3 uses without
+restating. Nothing else is in authority: not Books 2 and 4+, not the
+supplements, the Starter Edition, The Traveller Book, JTAS, the
+_Consolidated Errata_, or the rest of Book 3.
+
+Two habits follow, and they are the ones worth knowing from outside:
+
+- **Every table is transcribed from a visual read of the page**, then
+  transcribed a second time inside the table package's tests, so the two
+  must agree. The held PDFs' embedded font maps the em-dash to the glyph
+  `4` and the minus sign to `3`, so a text extraction renders the jump
+  routes table's empty cells as the digit 4 and the size formula `2D − 2`
+  as `2D32`. Both readings are wrong and both look like data.
+- **No ambiguity is resolved in silence.** Where the page does not settle
+  something, the reading goes in `docs/ERRATA.md` with its page cite and
+  the condition under which a record stamps it, and every record carries
+  the stamps that applied to it.
+
 ## The documents
 
-`docs/ERRATA.md` records every reading of an ambiguous or silent page,
-with its page cite and the condition under which a record stamps it.
-`docs/COVERAGE.md` maps the rules to the implementation.
+`docs/ERRATA.md` records every reading of an ambiguous or silent page.
+`docs/COVERAGE.md` maps the rules to the implementation and the tests.
 `docs/record.schema.json` is the record's schema, with a minimal and a
-complete example beside it. `CLAUDE.md` carries the authority model:
-which books and pages govern, and the font trap that makes a text
-extraction of any table unsafe.
-
-`docs/PRD.md` is historical — the contract through `v1.0.0-alpha.1`,
-kept for the reasoning behind the decisions rather than as a statement of
-what may be built. What the tool should do now comes from
-[issue 1](https://github.com/philoserf/ctworldgen/issues/1), the alpha
-report.
-
-Rules come only from the held PDFs of the FFE reprints. Training-data
-Traveller is mostly the 1981 revision and later editions, and the held page
-governs even where it differs — most visibly in the string of digits, which
-carries no hyphen (`A867A698`, not `A867A69-8`).
+complete example beside it. `CLAUDE.md` carries the authority model in
+full, and the traps -- the font, the hex grid parity, the dice-stream
+consumption order -- that a change to this code has to respect.
+`docs/PRD.md` is historical; see above.
 
 ## Development
 
@@ -159,6 +210,9 @@ CI runs exactly `task`. The toolchain is deliberately unpinned: the gate is
 meant to fail when a tool moves rather than drift behind it, so a red gate
 on code you did not touch is the signal working. Answer the finding; do not
 pin a tool or add a linter disable to silence it.
+
+`main` is protected -- pull request, a green gate, linear history, no
+bypass -- so work lands on a branch and merges through CI.
 
 ## Licence
 
