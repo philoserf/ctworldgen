@@ -229,7 +229,10 @@ func TestVersionReportsTheBuildAndTheStamps(t *testing.T) {
 func TestUsage(t *testing.T) {
 	t.Parallel()
 
-	for _, args := range [][]string{{}, {"nonesuch"}, {"generate"}} {
+	// `batch` is among them: it was retired once `sector` covered what it
+	// was for, and a retired subcommand that still ran would be worse than
+	// one that never existed.
+	for _, args := range [][]string{{}, {"nonesuch"}, {"generate"}, {"batch"}} {
 		_, stderr, err := exec(t, args...)
 		if err == nil {
 			t.Errorf("%v was accepted", args)
@@ -240,9 +243,9 @@ func TestUsage(t *testing.T) {
 		}
 	}
 
-	// batch and render are subcommands now, so they must not fall through
-	// to the usage banner; they fail on their own terms instead.
-	for _, args := range [][]string{{"batch"}, {renderVerb}} {
+	// render is a subcommand, so it must not fall through to the usage
+	// banner; it fails on its own terms instead.
+	for _, args := range [][]string{{renderVerb}} {
 		_, stderr, err := exec(t, args...)
 		if err == nil {
 			t.Errorf("%v was accepted", args)
@@ -285,147 +288,6 @@ func TestDirtySuffix(t *testing.T) {
 
 	if got := dirtySuffix(false); got != "" {
 		t.Errorf("dirtySuffix(false) = %q", got)
-	}
-}
-
-// TestBatchMemberZeroIsTheBaseSeed: members are numbered from zero, so
-// `batch --count 1 --seed N` produces exactly what `new --seed N` does.
-func TestBatchMemberZeroIsTheBaseSeed(t *testing.T) {
-	t.Parallel()
-
-	alone, _, err := exec(t, "new", "--seed", "5", "--name", aramis)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	lines, _, err := exec(t, "batch", "--count", "1", "--seed", "5", "--name", aramis)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	member := decode(t, strings.TrimSpace(lines))
-	if member.Seed != 5 {
-		t.Errorf("member 0 carries seed %d, and the base was 5", member.Seed)
-	}
-
-	// The member is JSONL and `new` is indented, so compare the records
-	// rather than the bytes: a subsector is its worlds and its routes.
-	solo := decode(t, alone)
-	if len(solo.Worlds) != len(member.Worlds) || len(solo.Routes) != len(member.Routes) {
-		t.Fatalf("member 0 has %d worlds and %d routes; `new` at the same seed has %d and %d",
-			len(member.Worlds), len(member.Routes), len(solo.Worlds), len(solo.Routes))
-	}
-
-	for index, world := range solo.Worlds {
-		if world.Digits != member.Worlds[index].Digits || world.Hex != member.Worlds[index].Hex {
-			t.Fatalf("member 0 differs from `new` at %s: %s vs %s",
-				world.Hex, world.Digits, member.Worlds[index].Digits)
-		}
-	}
-}
-
-// TestBatchDerivesEachMemberFromTheBase: base + i, and every member is a
-// complete record of its own.
-func TestBatchDerivesEachMemberFromTheBase(t *testing.T) {
-	t.Parallel()
-
-	out, _, err := exec(t, "batch", "--count", "4", "--seed", "100", "--occurrence-dm", "-1")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	lines := strings.Split(strings.TrimSpace(out), "\n")
-	if len(lines) != 4 {
-		t.Fatalf("a batch of 4 emitted %d lines", len(lines))
-	}
-
-	for index, line := range lines {
-		record := decode(t, line)
-		if want := uint64(100 + index); record.Seed != want {
-			t.Errorf("member %d carries seed %d, want %d", index, record.Seed, want)
-		}
-
-		if record.OccurrenceDM != -1 {
-			t.Errorf("member %d carries DM %+d", index, record.OccurrenceDM)
-		}
-	}
-}
-
-func TestBatchWantsACount(t *testing.T) {
-	t.Parallel()
-
-	for _, count := range []string{"0", "-1"} {
-		_, _, err := exec(t, "batch", "--count", count)
-		if err == nil {
-			t.Errorf("--count %s was accepted", count)
-		}
-	}
-
-	_, _, err := exec(t, "batch")
-	if err == nil {
-		t.Error("batch without --count was accepted")
-	}
-}
-
-// TestBatchNamesMembersForTheSubsector: the slug of --name and a
-// zero-padded index, or "subsector" where the name slugs to nothing.
-func TestBatchNamesMembersForTheSubsector(t *testing.T) {
-	t.Parallel()
-
-	for _, want := range []struct {
-		name  string
-		count string
-		first string
-		last  string
-	}{
-		{aramis, "3", "aramis-00.json", "aramis-02.json"},
-		{"Aramis Sector!", "12", "aramis-sector-00.json", "aramis-sector-11.json"},
-		{"", "3", "subsector-00.json", "subsector-02.json"},
-		{"---", "3", "subsector-00.json", "subsector-02.json"},
-		{aramis, "101", "aramis-000.json", "aramis-100.json"},
-	} {
-		t.Run(want.name+"/"+want.count, func(t *testing.T) {
-			t.Parallel()
-
-			dir := t.TempDir()
-
-			_, _, err := exec(t, "batch", "--count", want.count, "--seed", "1",
-				"--name", want.name, "-o", dir+string(os.PathSeparator))
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			entries, err := os.ReadDir(dir)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if entries[0].Name() != want.first || entries[len(entries)-1].Name() != want.last {
-				t.Errorf("the batch is %s ... %s, want %s ... %s",
-					entries[0].Name(), entries[len(entries)-1].Name(), want.first, want.last)
-			}
-		})
-	}
-}
-
-func TestBatchRefusesToOverwriteWithoutForce(t *testing.T) {
-	t.Parallel()
-
-	dir := t.TempDir() + string(os.PathSeparator)
-
-	_, _, err := exec(t, "batch", "--count", "2", "--seed", "1", "-o", dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, _, err = exec(t, "batch", "--count", "2", "--seed", "9", "-o", dir)
-	if err == nil {
-		t.Fatal("a batch overwrote an existing member without --force")
-	}
-
-	_, _, forceErr := exec(t, "batch", "--count", "2", "--seed", "9", "-o", dir, "--force")
-	if forceErr != nil {
-		t.Fatal(forceErr)
 	}
 }
 
@@ -476,29 +338,42 @@ func TestRenderWantsExactlyOneRecord(t *testing.T) {
 	}
 }
 
-// TestRenderRefusesABatch: a record is one document. `batch` writes JSONL,
-// so handing its output to `render` is the easy mistake, and rendering the
-// first member while discarding the rest would be a silent one.
-func TestRenderRefusesABatch(t *testing.T) {
+// TestRenderRefusesMoreThanOneRecord: a record is one document. Two of
+// them in one file -- concatenated by hand, or by any tool that writes a
+// stream of records -- must fail loudly, because listing the first and
+// discarding the rest would be a silent wrong answer.
+func TestRenderRefusesMoreThanOneRecord(t *testing.T) {
 	t.Parallel()
 
-	path := filepath.Join(t.TempDir(), "batch.jsonl")
-
-	_, _, err := exec(t, "batch", "--count", "3", "--seed", "1", "-o", path)
+	first, _, err := exec(t, "new", "--seed", "1")
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	second, _, err := exec(t, "new", "--seed", "2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Marshal ends every record with a newline, so this is two documents
+	// one after the other, which is the shape the mistake takes.
+	path := filepath.Join(t.TempDir(), "two-records.json")
+
+	writeErr := os.WriteFile(path, []byte(first+second), 0o600)
+	if writeErr != nil {
+		t.Fatal(writeErr)
+	}
+
 	_, _, renderErr := exec(t, renderVerb, path)
 	if renderErr == nil {
-		t.Error("render accepted a batch of three records and would have listed only the first")
+		t.Error("render accepted two records and would have listed only the first")
 	}
 }
 
-// TestRenderRefusesARecordFromANewerSchema is the read-time half of the
+// TestRenderRefusesARecordCarryingAnUnknownField is the read-time half of the
 // two obligations: DisallowUnknownFields on the Go side, so a record the
 // current engine could not have written fails loudly.
-func TestRenderRefusesARecordFromANewerSchema(t *testing.T) {
+func TestRenderRefusesARecordCarryingAnUnknownField(t *testing.T) {
 	t.Parallel()
 
 	path := filepath.Join(t.TempDir(), "subsector.json")

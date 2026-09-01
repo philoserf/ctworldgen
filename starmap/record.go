@@ -160,18 +160,27 @@ func (s *Record) Stamp(id string) {
 	}
 }
 
-// Decode reads a record, refusing any field the current schema does not
-// define and anything after the record itself.
+// Decode reads a record and holds it to what record.schema.json states:
+// the three provenance constants, the fields it marks required, the two
+// grids it names, and no field it does not define.
 //
-// Rejecting unknown fields is two obligations: "additionalProperties":
-// false at every level of record.schema.json, and DisallowUnknownFields
-// here. A schema alone rejects nothing at read time. Both are required, so
-// that a record from a newer schema fails loudly rather than silently
-// dropping data.
+// Every one of those is two obligations -- the schema, and a check here --
+// because a schema alone rejects nothing at read time. Rejecting an
+// unknown field is DisallowUnknownFields below and
+// "additionalProperties": false in the schema; the rest are the checks
+// beneath this function.
+//
+// Unknown-field rejection was once the whole of it, on the reasoning that
+// a record from a newer schema would fail loudly. That holds only when the
+// newer schema *added* a field. A record claiming a different schema
+// version, a different ruleset, or a different generator parsed cleanly
+// and rendered, which is the one thing this record cannot afford: it would
+// report a subsector under provenance stamps that are not true of it.
 //
 // A record is one document, and content after it is refused for the same
-// reason: a JSONL batch handed to a reader of records would otherwise
-// decode its first member and discard the rest in silence.
+// reason: a file holding two records -- concatenated by hand, or written
+// by any tool that emits a stream of them -- would otherwise decode the
+// first and discard the rest in silence.
 func Decode(r io.Reader) (*Record, error) {
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
@@ -194,6 +203,16 @@ func Decode(r io.Reader) (*Record, error) {
 	// rejection is two obligations: the schema, and this.
 	if record.Grid != PageThreeGrid() && record.Grid != SectorGrid() {
 		return nil, fmt.Errorf("%w: %dx%d", ErrNotAGrid, record.Grid.Columns, record.Grid.Rows)
+	}
+
+	err = record.carriesThisToolsProvenance()
+	if err != nil {
+		return nil, err
+	}
+
+	err = record.carriesTheFieldsTheSchemaRequires()
+	if err != nil {
+		return nil, err
 	}
 
 	err = record.onItsOwnGrid()
@@ -251,6 +270,107 @@ func (w World) DigitString() (string, error) {
 	}
 
 	return built.String(), nil
+}
+
+// carriesThisToolsProvenance holds the three stamps record.schema.json
+// states as constants against the constants this package defines.
+//
+// These are the fields a referee trusts without checking: they say which
+// pages govern and which generator drew the dice. A record carrying any
+// other value did not come from this engine, and nothing later in the read
+// would notice -- every remaining field would parse and the listing would
+// render.
+//
+// The string of digits is deliberately not checked against the values
+// beside it. A referee adjusts a world to suit his campaign, and the
+// record is his notebook page; the digits are what he reads, so they are
+// carried as written rather than recomputed under him.
+func (s *Record) carriesThisToolsProvenance() error {
+	if s.SchemaVersion != SchemaVersion {
+		return fmt.Errorf("%w: the record says %d and this is schema %d",
+			ErrNotThisSchema, s.SchemaVersion, SchemaVersion)
+	}
+
+	if s.Ruleset != Ruleset {
+		return fmt.Errorf("%w: the record says %q and this tool implements %q",
+			ErrNotThisRuleset, s.Ruleset, Ruleset)
+	}
+
+	if s.RNGAlgorithm != dice.Algorithm {
+		return fmt.Errorf("%w: the record says %q and this tool draws from %q",
+			ErrNotThisRNG, s.RNGAlgorithm, dice.Algorithm)
+	}
+
+	return nil
+}
+
+// carriesTheFieldsTheSchemaRequires holds the record to the ten fields
+// record.schema.json lists as required.
+//
+// Six of them are already held: schema_version, ruleset and rng_algorithm
+// are the constants above, and an absent one reads as a zero that cannot
+// match. The three arrays are checked here, and encoding/json makes that
+// exact rather than approximate -- it leaves an absent array nil and an
+// explicit [] an empty non-nil slice, so the two are distinguishable
+// without a second pass over the document.
+//
+// name, occurrence_dm and seed need no check and get none: "", 0 and 0 are
+// all values the engine legitimately writes. The seed-zero golden is a
+// record with a seed of 0 and no name.
+func (s *Record) carriesTheFieldsTheSchemaRequires() error {
+	if s.EngineVersion == "" {
+		return fmt.Errorf("%w: engine_version, which the schema gives a minimum length of 1", ErrFieldMissing)
+	}
+
+	for _, field := range []struct {
+		name    string
+		present bool
+	}{
+		{"errata", s.Errata != nil},
+		{"worlds", s.Worlds != nil},
+		{"routes", s.Routes != nil},
+	} {
+		if !field.present {
+			return fmt.Errorf("%w: %s", ErrFieldMissing, field.name)
+		}
+	}
+
+	// Two of a world's thirteen fields have an absence the zero value does
+	// not stand for. The seven characteristics are legitimately 0, both
+	// base flags are legitimately false, and a name is legitimately empty;
+	// an absent hex is off every grid and onItsOwnGrid refuses it.
+	//
+	// An absent starport is Starport(0), which is nothing the book prints
+	// -- and the map draws it, at a width no column allows, so the p. 3
+	// grid stops being the p. 3 grid from that hex rightward.
+	//
+	// An absent string of digits is "", and DigitString always writes
+	// eight characters, so the engine never writes one. The roster prints
+	// an empty cell for it and the detail heading trails off after the
+	// hex: a world reported with no characteristics at all, on a record
+	// that carries every one of them in the fields beside it.
+	for _, world := range s.Worlds {
+		if !world.Starport.Valid() {
+			return fmt.Errorf("%w: starport, for the world at %s", ErrFieldMissing, world.Hex)
+		}
+
+		if world.Digits == "" {
+			return fmt.Errorf("%w: digits, for the world at %s", ErrFieldMissing, world.Hex)
+		}
+	}
+
+	// A route's distance is the one field of its three the zero value does
+	// not refuse on its own: an absent end is the zero Hex, which is off
+	// every grid. The schema gives distance a minimum of 1 because one hex
+	// is one parsec (p. 1) and a route joins two worlds, so a distance of 0
+	// would be a world joined to itself.
+	for _, route := range s.Routes {
+		if route.Distance < 1 {
+			return fmt.Errorf("%w: distance, for the route %s to %s", ErrFieldMissing, route.From, route.To)
+		}
+	}
+
+	return nil
 }
 
 // onItsOwnGrid holds every hex the record carries against the grid the

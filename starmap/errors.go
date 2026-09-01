@@ -40,6 +40,20 @@ var (
 	// ErrTrailingContent is the record's own shape: one JSON document.
 	ErrTrailingContent = errors.New("more than one document in the record read; a record is one JSON document")
 
+	// ErrNotThisSchema, ErrNotThisRuleset and ErrNotThisRNG are the three
+	// provenance stamps record.schema.json states as constants. A record
+	// carrying any other value was written by something that is not this
+	// engine, and rendering it would report a subsector this tool cannot
+	// vouch for -- silently, because every field it reads would still parse.
+	ErrNotThisSchema  = errors.New("not a record of this schema version")
+	ErrNotThisRuleset = errors.New("not a record of the ruleset this tool implements")
+	ErrNotThisRNG     = errors.New("not a record of the generator this tool draws from")
+
+	// ErrFieldMissing is the ten fields record.schema.json requires. The
+	// schema alone rejects nothing at read time, so the two obligations are
+	// the schema and this.
+	ErrFieldMissing = errors.New("the record is missing a field the schema requires")
+
 	// ErrNotOneCharacter is the shape the record prints these in.
 	ErrNotOneCharacter = errors.New("not a single character")
 )

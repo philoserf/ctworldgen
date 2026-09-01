@@ -1,7 +1,7 @@
 # Uncovered statements per package. Written by `task ratchet:update`.
 # The gate fails in both directions: gaining uncovered statements is
 # lost coverage, and losing them is coverage the baseline should record.
-github.com/philoserf/ctworldgen/cmd/ctworldgen 44
+github.com/philoserf/ctworldgen/cmd/ctworldgen 28
 github.com/philoserf/ctworldgen/dice 0
 github.com/philoserf/ctworldgen/gen 11
 github.com/philoserf/ctworldgen/internal/audit 7

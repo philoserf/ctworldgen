@@ -35,18 +35,13 @@ func (e *Engine) Sector(inputs Inputs) (*starmap.Record, error) {
 
 	record.Grid = starmap.SectorGrid()
 
-	// member records the band each world came from, so the seam pass can
-	// tell an interior pair -- already examined inside its own member --
-	// from one that straddles two.
-	member := make(map[starmap.Hex]int)
-
 	// The members consume the streams of seeds base through base+15, in
 	// order (ERRATA E006 part 4). Counting the seed alongside the index
 	// keeps the derivation in one place and out of a conversion.
 	seed := inputs.Seed
 
 	for index := range SectorMembers {
-		err := e.member(record, member, inputs, index, seed)
+		err := e.member(record, inputs, index, seed)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +53,7 @@ func (e *Engine) Sector(inputs Inputs) (*starmap.Record, error) {
 	slices.SortFunc(record.Worlds, func(a, b starmap.World) int { return a.Hex.Number() - b.Hex.Number() })
 
 	record.Routes = append(record.Routes,
-		e.seams(dice.NewStream(inputs.Seed+seamSeedOffset), record.Worlds, member)...)
+		e.seams(dice.NewStream(inputs.Seed+seamSeedOffset), record.Worlds)...)
 	slices.SortFunc(record.Routes, routeOrder)
 
 	record.Stamp("E006")
@@ -67,9 +62,7 @@ func (e *Engine) Sector(inputs Inputs) (*starmap.Record, error) {
 }
 
 // member generates one subsector whole and lays it on the sector grid.
-func (e *Engine) member(
-	record *starmap.Record, member map[starmap.Hex]int, inputs Inputs, index int, seed uint64,
-) error {
+func (e *Engine) member(record *starmap.Record, inputs Inputs, index int, seed uint64) error {
 	part, err := e.Generate(Inputs{Seed: seed, Name: inputs.Name, OccurrenceDM: inputs.OccurrenceDM})
 	if err != nil {
 		return fmt.Errorf("member %d of the sector: %w", index, err)
@@ -87,7 +80,6 @@ func (e *Engine) member(
 			return fmt.Errorf("%w: member %d puts a world at %s", starmap.ErrOffGrid, index, world.Hex)
 		}
 
-		member[world.Hex] = index
 		record.Worlds = append(record.Worlds, world)
 	}
 
@@ -107,19 +99,22 @@ func (e *Engine) member(
 // Everything else is E003 unchanged -- the same table, one die against a
 // stated number, no row for an X starport and no throw at a dash cell,
 // and the same order, read now in sector coordinates.
-func (e *Engine) seams(
-	stream *dice.Stream, worlds []starmap.World, member map[starmap.Hex]int,
-) []starmap.Route {
+//
+// Which member a world came from is not remembered: Place puts member i's
+// hexes in band i, so MemberOf reads the band straight back off the hex
+// (ERRATA E006 part 1). That is the same fact the translation states, held
+// in one place rather than two that must agree.
+func (e *Engine) seams(stream *dice.Stream, worlds []starmap.World) []starmap.Route {
 	routes := []starmap.Route{}
 
 	for index, first := range worlds {
 		// Hoisted: the first world's band is fixed for the whole inner
-		// loop, and looking it up per pair is a lookup per pair over the
+		// loop, and deriving it per pair is a division per pair over the
 		// two hundred thousand a sector has.
-		firstMember := member[first.Hex]
+		firstMember := MemberOf(first.Hex)
 
 		for _, second := range worlds[index+1:] {
-			if firstMember == member[second.Hex] {
+			if firstMember == MemberOf(second.Hex) {
 				continue
 			}
 

@@ -317,42 +317,97 @@ const techIndexNote = "The technological index carries its digit and no descript
 func (r *Renderer) world(built *strings.Builder, names map[starmap.Hex]string, world starmap.World) {
 	fmt.Fprintf(built, "### %s &mdash; %s\n\n", named(names, world.Hex), world.Digits)
 
+	for _, line := range bullets(r.charts, world) {
+		built.WriteString(line.markdown())
+	}
+
+	built.WriteString("\n")
+}
+
+// bullet is one line of a world's detail: the label both documents set in
+// bold, and the description the charts give for it. The description is
+// stored trimmed, because it is a value here rather than a fragment of
+// either document's punctuation.
+type bullet struct {
+	label       string
+	description string
+}
+
+// markdown writes one bullet as the listing sets it: the label in bold,
+// then a single space and the description where there is one. A bullet
+// with no description ends at the label, which is what the technological
+// index line has always done.
+func (b bullet) markdown() string {
+	if b.description == "" {
+		return "- **" + b.label + "**\n"
+	}
+
+	return "- **" + b.label + "** " + b.description + "\n"
+}
+
+// bullets is a world's detail lines, in the order the p. 4 Planetary
+// Characteristics box lists them.
+//
+// One list, two typesetters. The Markdown listing sets these as bold
+// labels through markdown() above, and the booklet lays the same slice out
+// as a block of wrapped lines. They were written out twice and had to
+// agree by convention -- two suites checking two copies -- and a change to
+// one was a change the other's tests could not see. Now they agree by
+// construction.
+func bullets(charts *tables.Tables, world starmap.World) []bullet {
 	starport := "no chart row"
 
-	row, err := r.charts.StarportChart.Row(world.Starport)
+	row, err := charts.StarportChart.Row(world.Starport)
 	if err == nil {
 		starport = row.Description
 	}
 
-	fmt.Fprintf(built, "- **Starport %s.** %s\n", world.Starport, starport)
+	// One line for the starport, six for the characteristics of pp. 5-8,
+	// one for the technological index, one for the bases, and one for
+	// every clamp that bound.
+	const fixedLines = 9
+
+	lines := make([]bullet, 0, fixedLines+len(world.Clamps))
+
+	lines = append(lines, bullet{
+		label:       fmt.Sprintf("Starport %s.", world.Starport),
+		description: starport,
+	})
 
 	for _, line := range []struct {
 		name   string
 		value  int
 		labels tables.Labels
 	}{
-		{"Size", world.Size, r.charts.Size},
-		{"Atmosphere", world.Atmosphere, r.charts.Atmosphere},
-		{"Hydrographics", world.Hydrographics, r.charts.Hydrographics},
-		{"Population", world.Population, r.charts.Population},
-		{"Government", world.Government, r.charts.Government},
-		{"Law level", world.LawLevel, r.charts.LawLevels},
+		{"Size", world.Size, charts.Size},
+		{"Atmosphere", world.Atmosphere, charts.Atmosphere},
+		{"Hydrographics", world.Hydrographics, charts.Hydrographics},
+		{"Population", world.Population, charts.Population},
+		{"Government", world.Government, charts.Government},
+		{"Law level", world.LawLevel, charts.LawLevels},
 	} {
-		fmt.Fprintf(built, "- **%s %s.**%s\n", line.name, digit(line.value), described(line.labels, line.value))
+		lines = append(lines, bullet{
+			label:       fmt.Sprintf("%s %s.", line.name, digit(line.value)),
+			description: strings.TrimSpace(described(line.labels, line.value)),
+		})
 	}
 
 	// No description: techIndexNote said once, at the head of the section,
 	// why pp. 10-11 supply none.
-	fmt.Fprintf(built, "- **Technological index %s.**\n", digit(world.TechIndex))
-
-	fmt.Fprintf(built, "- **Bases.** %s\n", bases(world))
+	lines = append(lines,
+		bullet{label: fmt.Sprintf("Technological index %s.", digit(world.TechIndex)), description: ""},
+		bullet{label: "Bases.", description: bases(world)},
+	)
 
 	for _, clamp := range world.Clamps {
-		fmt.Fprintf(built, "- **Clamped.** %s threw %d and is recorded as %d.\n",
-			clamp.Characteristic, clamp.Raw, clamp.Value)
+		lines = append(lines, bullet{
+			label: "Clamped.",
+			description: fmt.Sprintf("%s threw %d and is recorded as %d.",
+				clamp.Characteristic, clamp.Raw, clamp.Value),
+		})
 	}
 
-	built.WriteString("\n")
+	return lines
 }
 
 // described returns a value's label, or the note that the book prints

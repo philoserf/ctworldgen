@@ -13,8 +13,7 @@ scout bases, commercial routes, and the eight characteristics of
 every world -- all from a recorded seed. `render` turns a record into the
 Markdown listing a referee can run from, opening with a text map of the
 p. 3 hex grid, or into a printable PDF booklet with the grid drawn and the
-routes joined; `batch` produces a sector's worth of subsectors at a
-time.
+routes joined; `sector` produces sixteen subsectors on one grid.
 
 `docs/COVERAGE.md` is the current map of rule to code to test.
 
@@ -23,15 +22,9 @@ time.
 ```sh
 ctworldgen new   [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
 ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
-ctworldgen batch --count N [--seed N] [--name X] [--occurrence-dm N] [-o dir|file.jsonl] [--force]
 ctworldgen render [--format markdown|pdf] [-o file] [--force] subsector.json
 ctworldgen version
 ```
-
-`batch` emits JSONL to stdout; given a directory it writes one file per
-subsector, named for the subsector and its index -- `aramis-00.json`.
-Members are numbered from zero, so `batch --count 1 --seed N` produces
-exactly the subsector `new --seed N` produces.
 
 `sector` writes one record covering sixteen subsectors on a single 32x40
 grid, 0101 through 3240, and throws for the commercial routes that cross
@@ -76,11 +69,16 @@ different populations, a different string of digits. "The same subsector, a
 touch sparser" is not available: change the seed for another subsector, and
 hold the DM to keep this one.
 
-**`batch` member seeds are consecutive.** Member _i_ runs on `seed + i`,
-which is what makes `batch --count 1 --seed N` produce exactly `new --seed
-N`. It also means two batches whose base seeds sit closer together than
-their counts share members: `--seed 100 --count 16` and `--seed 110 --count
-16` have six subsectors in common.
+**Separate subsector files are a loop over `new`.** `sector` is the answer
+when the sixteen belong on one grid, because it throws for the routes at
+their seams. When you want them as independent records instead, their
+seeds are simply consecutive:
+
+```sh
+for i in $(seq 0 15); do
+  ctworldgen new --seed $((1977 + i)) --name Aramis -o "aramis-$i.json"
+done
+```
 
 ## The documents
 
