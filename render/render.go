@@ -1,9 +1,9 @@
-// Package render writes the subsector listing: the Markdown a referee can
-// run from.
+// Package render writes a record's listing: the Markdown a referee can run
+// from, for a sub-sector or for a sector alike.
 //
 // It stands in for what p. 4 asks him to keep -- "at least one (and
 // preferably several) pages in a central notebook maintained by the
-// referee" -- so the listing carries the roster, the space lanes, and a
+// referee" -- so the listing carries the roster, the routes, and a
 // page of detail per world with the labels its Book 3 tables give.
 //
 // The JSON record is the source of truth; this is a render of it. Nothing
@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 	"github.com/philoserf/ctworldgen/tables"
 )
 
@@ -35,8 +35,8 @@ func New() (*Renderer, error) {
 	return &Renderer{charts: charts}, nil
 }
 
-// Subsector writes the listing.
-func (r *Renderer) Subsector(out io.Writer, record *subsector.Subsector) error {
+// Listing writes the Markdown listing.
+func (r *Renderer) Listing(out io.Writer, record *starmap.Record) error {
 	var built strings.Builder
 
 	names := namesByHex(record)
@@ -44,7 +44,7 @@ func (r *Renderer) Subsector(out io.Writer, record *subsector.Subsector) error {
 	r.heading(&built, record)
 	r.grid(&built, record)
 	r.roster(&built, record)
-	r.lanes(&built, names, record)
+	r.routes(&built, names, record)
 	r.details(&built, names, record)
 
 	_, err := io.WriteString(out, built.String())
@@ -55,14 +55,14 @@ func (r *Renderer) Subsector(out io.Writer, record *subsector.Subsector) error {
 	return nil
 }
 
-func (r *Renderer) heading(built *strings.Builder, record *subsector.Subsector) {
+func (r *Renderer) heading(built *strings.Builder, record *starmap.Record) {
 	name := record.Name
 	if name == "" {
 		name = untitled(record)
 	}
 
 	fmt.Fprintf(built, "# %s\n\n", name)
-	fmt.Fprintf(built, "%d worlds, %d space lanes. Generated from seed %d at occurrence DM %s.\n\n",
+	fmt.Fprintf(built, "%d worlds, %d routes. Generated from seed %d at occurrence DM %s.\n\n",
 		len(record.Worlds), len(record.Routes), record.Seed, occurrenceDM(record.OccurrenceDM))
 }
 
@@ -70,8 +70,8 @@ func (r *Renderer) heading(built *strings.Builder, record *subsector.Subsector) 
 // what the record is, and a sector is not a subsector: those two grids
 // are the only shapes a record takes (ERRATA E006), and heading a 32x40
 // one "Subsector" is the listing misreporting its own subject.
-func untitled(record *subsector.Subsector) string {
-	if record.Grid == subsector.SectorGrid() {
+func untitled(record *starmap.Record) string {
+	if record.Grid == starmap.SectorGrid() {
 		return "Sector"
 	}
 
@@ -96,8 +96,8 @@ const (
 // either, because the parity it describes is the p. 3 parity in both
 // cases -- which is exactly what makes the sector translation safe
 // (ERRATA E006 part 2).
-func mapNote(record *subsector.Subsector) string {
-	if record.Grid == subsector.SectorGrid() {
+func mapNote(record *starmap.Record) string {
+	if record.Grid == starmap.SectorGrid() {
 		return sectorGridNote + mapNoteTail
 	}
 
@@ -114,18 +114,18 @@ const mapNoteTail = " The odd-numbered columns sit high and the " +
 	"A world carries the letter of its starport -- p. 1 marks the hex with the " +
 	"letter the starports table gives -- and a hex with no world is left blank, " +
 	"which is what p. 1 says to leave it. P. 2 also asks for a line drawn between the " +
-	"worlds a space lane joins; a monospace grid has nowhere to put one, so this map " +
-	"draws none and the lane table below carries them instead. " +
+	"worlds a route joins; a monospace grid has nowhere to put one, so this map " +
+	"draws none and the route table below carries them instead. " +
 	"`render --format pdf` draws them.\n\n"
 
 // grid draws the subsector map. It marks what p. 1 says to mark and
 // nothing else, so it is a render of the record like every other section.
-func (r *Renderer) grid(built *strings.Builder, record *subsector.Subsector) {
+func (r *Renderer) grid(built *strings.Builder, record *starmap.Record) {
 	built.WriteString("## The map\n\n")
 	built.WriteString(mapNote(record))
 	built.WriteString("```text\n")
 
-	marked := make(map[subsector.Hex]subsector.Starport, len(record.Worlds))
+	marked := make(map[starmap.Hex]starmap.Starport, len(record.Worlds))
 	for _, world := range record.Worlds {
 		marked[world.Hex] = world.Starport
 	}
@@ -143,7 +143,7 @@ func (r *Renderer) grid(built *strings.Builder, record *subsector.Subsector) {
 // gridLine draws the columns of one parity across a single row of the
 // record's grid. parity is the remainder that selects them: 1 for the
 // high columns, 0 for the low.
-func gridLine(marked map[subsector.Hex]subsector.Starport, columns, row, parity int) string {
+func gridLine(marked map[starmap.Hex]starmap.Starport, columns, row, parity int) string {
 	var line strings.Builder
 
 	if parity == 0 {
@@ -155,7 +155,7 @@ func gridLine(marked map[subsector.Hex]subsector.Starport, columns, row, parity 
 			continue
 		}
 
-		hex := subsector.Hex{Col: col, Row: row}
+		hex := starmap.Hex{Col: col, Row: row}
 
 		cell := hex.String() + " "
 		if starport, ok := marked[hex]; ok {
@@ -173,7 +173,7 @@ func gridLine(marked map[subsector.Hex]subsector.Starport, columns, row, parity 
 }
 
 // roster is the world roster: hexes, names, and strings of digits.
-func (r *Renderer) roster(built *strings.Builder, record *subsector.Subsector) {
+func (r *Renderer) roster(built *strings.Builder, record *starmap.Record) {
 	built.WriteString("## Worlds\n\n")
 
 	if len(record.Worlds) == 0 {
@@ -220,13 +220,13 @@ func cell(value string) string {
 	return strings.ReplaceAll(oneLine(value), "|", `\|`)
 }
 
-// namesByHex indexes the names the referee wrote in, so the lane table
+// namesByHex indexes the names the referee wrote in, so the route table
 // and the detail headings can carry them too. P. 12 step 3 asks him to
 // name each world and prints no table for it, so the name is his and the
 // hex is the tool's; the listing prints the hex first everywhere, because
 // that is what the map is labelled with.
-func namesByHex(record *subsector.Subsector) map[subsector.Hex]string {
-	names := make(map[subsector.Hex]string, len(record.Worlds))
+func namesByHex(record *starmap.Record) map[starmap.Hex]string {
+	names := make(map[starmap.Hex]string, len(record.Worlds))
 
 	for _, world := range record.Worlds {
 		if world.Name != "" {
@@ -240,7 +240,7 @@ func namesByHex(record *subsector.Subsector) map[subsector.Hex]string {
 // named writes a world where its hex alone was the referee's only handle
 // on it. An unnamed world is still the bare hex, so a record he has not
 // annotated reads exactly as it did.
-func named(names map[subsector.Hex]string, hex subsector.Hex) string {
+func named(names map[starmap.Hex]string, hex starmap.Hex) string {
 	name, ok := names[hex]
 	if !ok {
 		return hex.String()
@@ -251,7 +251,7 @@ func named(names map[subsector.Hex]string, hex subsector.Hex) string {
 
 // bases names the bases a world has, which p. 5 prints throws for at
 // starports A through D and nowhere else.
-func bases(world subsector.World) string {
+func bases(world starmap.World) string {
 	var present []string
 
 	if world.NavalBase {
@@ -269,11 +269,11 @@ func bases(world subsector.World) string {
 	return strings.Join(present, ", ")
 }
 
-func (r *Renderer) lanes(built *strings.Builder, names map[subsector.Hex]string, record *subsector.Subsector) {
-	built.WriteString("## Space lanes\n\n")
+func (r *Renderer) routes(built *strings.Builder, names map[starmap.Hex]string, record *starmap.Record) {
+	built.WriteString("## Routes\n\n")
 
 	if len(record.Routes) == 0 {
-		built.WriteString("No space lane was drawn.\n\n")
+		built.WriteString("No route was drawn.\n\n")
 
 		return
 	}
@@ -288,7 +288,7 @@ func (r *Renderer) lanes(built *strings.Builder, names map[subsector.Hex]string,
 	built.WriteString("\n")
 }
 
-func (r *Renderer) details(built *strings.Builder, names map[subsector.Hex]string, record *subsector.Subsector) {
+func (r *Renderer) details(built *strings.Builder, names map[starmap.Hex]string, record *starmap.Record) {
 	if len(record.Worlds) == 0 {
 		return
 	}
@@ -314,7 +314,7 @@ const techIndexNote = "The technological index carries its digit and no descript
 	"them; p. 11 asks the referee or the players to fill in their holes as " +
 	"play discovers them.\n\n"
 
-func (r *Renderer) world(built *strings.Builder, names map[subsector.Hex]string, world subsector.World) {
+func (r *Renderer) world(built *strings.Builder, names map[starmap.Hex]string, world starmap.World) {
 	fmt.Fprintf(built, "### %s &mdash; %s\n\n", named(names, world.Hex), world.Digits)
 
 	starport := "no chart row"
@@ -384,7 +384,7 @@ const aboveThePrintedRows = " Above the last row its table prints; p. 8 leaves t
 // digit writes a value in the notation of Book 1 p. 8 extended by Book 3
 // p. 2, which is how the string of digits writes it.
 func digit(value int) string {
-	written, err := subsector.NewDigit(value)
+	written, err := starmap.NewDigit(value)
 	if err != nil {
 		return strconv.Itoa(value)
 	}

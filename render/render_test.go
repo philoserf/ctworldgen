@@ -9,7 +9,7 @@ import (
 	"github.com/philoserf/ctworldgen/gen"
 	"github.com/philoserf/ctworldgen/internal/fixture"
 	"github.com/philoserf/ctworldgen/render"
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 	"github.com/philoserf/ctworldgen/tables"
 )
 
@@ -18,7 +18,7 @@ import (
 // rather than about the dice carries.
 const emptyWorldDigits = "A0000000"
 
-func listing(t *testing.T, record *subsector.Subsector) string {
+func listing(t *testing.T, record *starmap.Record) string {
 	t.Helper()
 
 	renderer, err := render.New()
@@ -28,7 +28,7 @@ func listing(t *testing.T, record *subsector.Subsector) string {
 
 	var built strings.Builder
 
-	err = renderer.Subsector(&built, record)
+	err = renderer.Listing(&built, record)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +36,7 @@ func listing(t *testing.T, record *subsector.Subsector) string {
 	return built.String()
 }
 
-func generated(t *testing.T, golden fixture.Golden) *subsector.Subsector {
+func generated(t *testing.T, golden fixture.Golden) *starmap.Record {
 	t.Helper()
 
 	engine, err := gen.New()
@@ -96,10 +96,10 @@ func section(t *testing.T, written, heading string) string {
 	return body
 }
 
-// TestEveryWorldAndLaneReachesTheListing is the check a golden cannot
+// TestEveryWorldAndRouteReachesTheListing is the check a golden cannot
 // make: a golden is regenerated from the code under test, so dropping
 // half the roster would simply produce a shorter golden.
-func TestEveryWorldAndLaneReachesTheListing(t *testing.T) {
+func TestEveryWorldAndRouteReachesTheListing(t *testing.T) {
 	t.Parallel()
 
 	for _, golden := range fixture.Goldens() {
@@ -109,7 +109,7 @@ func TestEveryWorldAndLaneReachesTheListing(t *testing.T) {
 			record := generated(t, golden)
 			written := listing(t, record)
 			roster := section(t, written, "Worlds")
-			lanes := section(t, written, "Space lanes")
+			routes := section(t, written, "Routes")
 			details := section(t, written, "The worlds in detail")
 
 			for _, world := range record.Worlds {
@@ -133,13 +133,13 @@ func TestEveryWorldAndLaneReachesTheListing(t *testing.T) {
 
 			for _, route := range record.Routes {
 				row := "| " + route.From.String() + " | " + route.To.String() + " |"
-				if !strings.Contains(lanes, row) {
-					t.Errorf("the lanes table has no row for %s-%s", route.From, route.To)
+				if !strings.Contains(routes, row) {
+					t.Errorf("the routes table has no row for %s-%s", route.From, route.To)
 				}
 			}
 
-			if rows := tableRows(lanes); rows != len(record.Routes) {
-				t.Errorf("the lanes table has %d rows and the subsector has %d lanes", rows, len(record.Routes))
+			if rows := tableRows(routes); rows != len(record.Routes) {
+				t.Errorf("the routes table has %d rows and the subsector has %d routes", rows, len(record.Routes))
 			}
 		})
 	}
@@ -246,7 +246,7 @@ func TestLabelsComeFromTheTables(t *testing.T) {
 func digitOf(t *testing.T, value int) string {
 	t.Helper()
 
-	written, err := subsector.NewDigit(value)
+	written, err := starmap.NewDigit(value)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -261,15 +261,15 @@ func digitOf(t *testing.T, value int) string {
 func TestARefereesOwnNameStaysInOneCell(t *testing.T) {
 	t.Parallel()
 
-	hex, err := subsector.NewHex(1, 1)
+	hex, err := starmap.NewHex(1, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	record := subsector.New(1, "Aramis", 0)
+	record := starmap.New(1, "Aramis", 0)
 
-	record.Worlds = append(record.Worlds, subsector.World{
-		Hex: hex, Name: "Regina | the\nold capital", Starport: subsector.StarportA,
+	record.Worlds = append(record.Worlds, starmap.World{
+		Hex: hex, Name: "Regina | the\nold capital", Starport: starmap.StarportA,
 		NavalBase: false, ScoutBase: false,
 		Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
 		Government: 0, LawLevel: 0, TechIndex: 0,
@@ -292,44 +292,44 @@ func TestARefereesOwnNameStaysInOneCell(t *testing.T) {
 		t.Errorf("the row divides into %d cells and the table has four columns: %s", columns-1, rows[0])
 	}
 
-	assertTheLaneTableStaysInThreeCells(t, record, hex)
+	assertTheRouteTableStaysInThreeCells(t, record, hex)
 }
 
-// assertTheLaneTableStaysInThreeCells: the lane table carries the same
+// assertTheRouteTableStaysInThreeCells: the route table carries the same
 // name in both of its ends, so it needs the same escape the roster does.
 //
 // It is asserted separately because the escape lives in a different place
 // from the roster's. named() does not escape -- it feeds the PDF booklet
 // too, which has no pipes to escape and drew a backslash the referee
-// never typed while named() did -- so the Markdown lane emitter applies
+// never typed while named() did -- so the Markdown route emitter applies
 // cell() itself, and this is what holds it there.
-func assertTheLaneTableStaysInThreeCells(t *testing.T, record *subsector.Subsector, from subsector.Hex) {
+func assertTheRouteTableStaysInThreeCells(t *testing.T, record *starmap.Record, from starmap.Hex) {
 	t.Helper()
 
-	other, err := subsector.NewHex(1, 2)
+	other, err := starmap.NewHex(1, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	record.Worlds = append(record.Worlds, subsector.World{
-		Hex: other, Name: "Efate", Starport: subsector.StarportA,
+	record.Worlds = append(record.Worlds, starmap.World{
+		Hex: other, Name: "Efate", Starport: starmap.StarportA,
 		NavalBase: false, ScoutBase: false,
 		Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
 		Government: 0, LawLevel: 0, TechIndex: 0,
 		Digits: emptyWorldDigits, Clamps: nil,
 	})
-	record.Routes = append(record.Routes, subsector.Route{From: from, To: other, Distance: 1})
+	record.Routes = append(record.Routes, starmap.Route{From: from, To: other, Distance: 1})
 
 	var rows []string
 
-	for line := range strings.SplitSeq(section(t, listing(t, record), "Space lanes"), "\n") {
+	for line := range strings.SplitSeq(section(t, listing(t, record), "Routes"), "\n") {
 		if strings.HasPrefix(line, "| 0101 ") {
 			rows = append(rows, line)
 		}
 	}
 
 	if len(rows) != 1 {
-		t.Fatalf("the lane from 0101 has %d rows, want 1: %q", len(rows), rows)
+		t.Fatalf("the route from 0101 has %d rows, want 1: %q", len(rows), rows)
 	}
 
 	if columns := strings.Count(rows[0], "|") - strings.Count(rows[0], `\|`); columns != 4 {
@@ -343,9 +343,9 @@ func assertTheLaneTableStaysInThreeCells(t *testing.T, record *subsector.Subsect
 func TestAnEmptySubsectorRenders(t *testing.T) {
 	t.Parallel()
 
-	written := listing(t, subsector.New(7, "", 0))
+	written := listing(t, starmap.New(7, "", 0))
 
-	for _, want := range []string{"# Subsector", "No world was placed", "No space lane was drawn"} {
+	for _, want := range []string{"# Subsector", "No world was placed", "No route was drawn"} {
 		if !strings.Contains(written, want) {
 			t.Errorf("the listing of an empty subsector has no %q:\n%s", want, written)
 		}
@@ -359,22 +359,22 @@ func TestAnEmptySubsectorRenders(t *testing.T) {
 // annotated is a record with names written in on some worlds and not
 // others, which is the state a referee's file is actually in: he names
 // the worlds he has used and leaves the rest as hexes.
-func annotated(t *testing.T) *subsector.Subsector {
+func annotated(t *testing.T) *starmap.Record {
 	t.Helper()
 
-	record := subsector.New(1, "Aramis", 0)
+	record := starmap.New(1, "Aramis", 0)
 
 	for _, world := range []struct {
 		col, row int
 		name     string
 	}{{1, 1, "Regina"}, {1, 2, "Efate"}, {1, 3, ""}} {
-		hex, err := subsector.NewHex(world.col, world.row)
+		hex, err := starmap.NewHex(world.col, world.row)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		record.Worlds = append(record.Worlds, subsector.World{
-			Hex: hex, Name: world.name, Starport: subsector.StarportA,
+		record.Worlds = append(record.Worlds, starmap.World{
+			Hex: hex, Name: world.name, Starport: starmap.StarportA,
 			NavalBase: false, ScoutBase: false,
 			Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
 			Government: 0, LawLevel: 0, TechIndex: 0,
@@ -383,20 +383,20 @@ func annotated(t *testing.T) *subsector.Subsector {
 	}
 
 	record.Routes = append(record.Routes,
-		subsector.Route{From: record.Worlds[0].Hex, To: record.Worlds[1].Hex, Distance: 1},
-		subsector.Route{From: record.Worlds[1].Hex, To: record.Worlds[2].Hex, Distance: 1})
+		starmap.Route{From: record.Worlds[0].Hex, To: record.Worlds[1].Hex, Distance: 1},
+		starmap.Route{From: record.Worlds[1].Hex, To: record.Worlds[2].Hex, Distance: 1})
 
 	return record
 }
 
 // TestARefereesNameReachesEveryPlaceTheHexAppears: a name written into
 // the record reaches the roster, the world's own detail heading, and both
-// columns of the lane table -- a hex the referee has named should not go
+// columns of the route table -- a hex the referee has named should not go
 // on reading as a bare number anywhere he meets it.
 //
 // Every assertion is against one exact line, not against the document.
 // Searching the whole listing for a name is satisfied by the roster alone,
-// and searching a lane table for "Regina" is satisfied by either column;
+// and searching a route table for "Regina" is satisfied by either column;
 // both are the shape of check that has already gone dead here twice.
 func TestARefereesNameReachesEveryPlaceTheHexAppears(t *testing.T) {
 	t.Parallel()
@@ -411,13 +411,13 @@ func TestARefereesNameReachesEveryPlaceTheHexAppears(t *testing.T) {
 		}
 	}
 
-	// Both lane rows are pinned whole. The first names both endpoints;
+	// Both route rows are pinned whole. The first names both endpoints;
 	// the second names only its From, so a change that filled the To
 	// column from the wrong world would show here.
-	lanes := section(t, written, "Space lanes")
+	routes := section(t, written, "Routes")
 	for _, want := range []string{"| 0101 Regina | 0102 Efate | 1 |", "| 0102 Efate | 0103 | 1 |"} {
-		if !strings.Contains(lanes, "\n"+want+"\n") {
-			t.Errorf("the lane table has no row %q:\n%s", want, lanes)
+		if !strings.Contains(routes, "\n"+want+"\n") {
+			t.Errorf("the route table has no row %q:\n%s", want, routes)
 		}
 	}
 
@@ -494,14 +494,14 @@ func mapBlock(t *testing.T, written string) string {
 }
 
 // mapPlaces reads back where every hex label was drawn.
-func mapPlaces(t *testing.T, block string) map[subsector.Hex]hexPlace {
+func mapPlaces(t *testing.T, block string) map[starmap.Hex]hexPlace {
 	t.Helper()
 
-	places := make(map[subsector.Hex]hexPlace)
+	places := make(map[starmap.Hex]hexPlace)
 
 	for number, text := range strings.Split(block, "\n") {
 		for char := 0; char+4 <= len(text); char++ {
-			hex, err := subsector.ParseHex(text[char : char+4])
+			hex, err := starmap.ParseHex(text[char : char+4])
 			if err != nil {
 				continue
 			}
@@ -517,10 +517,10 @@ func mapPlaces(t *testing.T, block string) map[subsector.Hex]hexPlace {
 	return places
 }
 
-func hexOf(t *testing.T, col, row int) subsector.Hex {
+func hexOf(t *testing.T, col, row int) starmap.Hex {
 	t.Helper()
 
-	hex, err := subsector.NewHex(col, row)
+	hex, err := starmap.NewHex(col, row)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -531,7 +531,7 @@ func hexOf(t *testing.T, col, row int) subsector.Hex {
 // mapGeometry measures the drawing's slot and row off the drawing itself,
 // rather than taking the renderer's constants. A check fed the constants
 // the renderer drew with would agree with a map drawn upside down.
-func mapGeometry(t *testing.T, places map[subsector.Hex]hexPlace) (int, int) {
+func mapGeometry(t *testing.T, places map[starmap.Hex]hexPlace) (int, int) {
 	t.Helper()
 
 	// One slot across is two printed columns; one row down is two lines.
@@ -551,8 +551,8 @@ func mapGeometry(t *testing.T, places map[subsector.Hex]hexPlace) (int, int) {
 
 // drawnTouching returns the hexes the drawing puts against this one: half
 // a slot across and half a row down, or squarely one row above or below.
-func drawnTouching(places map[subsector.Hex]hexPlace, hex subsector.Hex, slot, step int) map[subsector.Hex]bool {
-	touching := make(map[subsector.Hex]bool)
+func drawnTouching(places map[starmap.Hex]hexPlace, hex starmap.Hex, slot, step int) map[starmap.Hex]bool {
+	touching := make(map[starmap.Hex]bool)
 	from := places[hex]
 
 	for other, where := range places {
@@ -603,19 +603,19 @@ func TestTheMapIsTheGridPrintedOnPageThree(t *testing.T) {
 	// on the map at all; the goldens carry the starport letters.
 	t.Run("empty", func(t *testing.T) {
 		t.Parallel()
-		assertTheMapIsThePrintedGrid(t, listing(t, subsector.New(1, "Aramis", 0)), subsector.PageThreeGrid())
+		assertTheMapIsThePrintedGrid(t, listing(t, starmap.New(1, "Aramis", 0)), starmap.PageThreeGrid())
 	})
 
 	for _, golden := range fixture.Goldens() {
 		t.Run(golden.File, func(t *testing.T) {
 			t.Parallel()
-			assertTheMapIsThePrintedGrid(t, listing(t, generated(t, golden)), subsector.PageThreeGrid())
+			assertTheMapIsThePrintedGrid(t, listing(t, generated(t, golden)), starmap.PageThreeGrid())
 		})
 	}
 }
 
 // assertTheMapIsThePrintedGrid holds one drawing against Hex.Distance.
-func assertTheMapIsThePrintedGrid(t *testing.T, written string, grid subsector.Grid) {
+func assertTheMapIsThePrintedGrid(t *testing.T, written string, grid starmap.Grid) {
 	t.Helper()
 
 	places := mapPlaces(t, mapBlock(t, written))
@@ -663,7 +663,7 @@ func TestTheMapMarksWhatPageOneSaysToMark(t *testing.T) {
 			places := mapPlaces(t, block)
 			slot, _ := mapGeometry(t, places)
 
-			marked := make(map[subsector.Hex]subsector.Starport, len(record.Worlds))
+			marked := make(map[starmap.Hex]starmap.Starport, len(record.Worlds))
 			for _, world := range record.Worlds {
 				marked[world.Hex] = world.Starport
 			}
@@ -708,14 +708,14 @@ func TestASectorRendersOnItsOwnGrid(t *testing.T) {
 	}
 
 	written := listing(t, record)
-	assertTheMapIsThePrintedGrid(t, written, subsector.SectorGrid())
+	assertTheMapIsThePrintedGrid(t, written, starmap.SectorGrid())
 
 	if rows := tableRows(section(t, written, "Worlds")); rows != len(record.Worlds) {
 		t.Errorf("the roster has %d rows and the sector has %d worlds", rows, len(record.Worlds))
 	}
 
-	if rows := tableRows(section(t, written, "Space lanes")); rows != len(record.Routes) {
-		t.Errorf("the lane table has %d rows and the sector has %d lanes", rows, len(record.Routes))
+	if rows := tableRows(section(t, written, "Routes")); rows != len(record.Routes) {
+		t.Errorf("the route table has %d rows and the sector has %d routes", rows, len(record.Routes))
 	}
 }
 
@@ -749,7 +749,7 @@ func TestTheListingSaysWhichGridItDrew(t *testing.T) {
 		t.Errorf("the map note of a sector does not say which grid was drawn: %q", note)
 	}
 
-	subsectorListing := listing(t, subsector.New(1, "", 0))
+	subsectorListing := listing(t, starmap.New(1, "", 0))
 
 	if !strings.HasPrefix(subsectorListing, "# Subsector\n") {
 		t.Errorf("an unnamed subsector is headed %q", line(subsectorListing))

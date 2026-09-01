@@ -1,10 +1,10 @@
 # Subsector
 
-34 worlds, 65 space lanes. Generated from seed 0 at occurrence DM 0.
+34 worlds, 65 routes. Generated from seed 0 at occurrence DM 0.
 
 ## The map
 
-The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-numbered ones half a hex below them, which is how the page prints it. A world carries the letter of its starport -- p. 1 marks the hex with the letter the starports table gives -- and a hex with no world is left blank, which is what p. 1 says to leave it. P. 2 also asks for a line drawn between the worlds a space lane joins; a monospace grid has nowhere to put one, so this map draws none and the lane table below carries them instead. `render --format pdf` draws them.
+The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-numbered ones half a hex below them, which is how the page prints it. A world carries the letter of its starport -- p. 1 marks the hex with the letter the starports table gives -- and a hex with no world is left blank, which is what p. 1 says to leave it. P. 2 also asks for a line drawn between the worlds a route joins; a monospace grid has nowhere to put one, so this map draws none and the route table below carries them instead. `render --format pdf` draws them.
 
 ```text
 0101      0301      0501 E    0701
@@ -68,7 +68,7 @@ The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-num
 | 0808 |  | E4834049 | -- |
 | 0810 |  | E3425406 | -- |
 
-## Space lanes
+## Routes
 
 | From | To | Parsecs |
 | --- | --- | --- |

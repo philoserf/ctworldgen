@@ -19,7 +19,7 @@ import (
 
 	"github.com/philoserf/ctworldgen/gen"
 	"github.com/philoserf/ctworldgen/render"
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 )
 
 // recordMode is the permission a written record gets: the referee's own
@@ -107,7 +107,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 // pass of the engine fills it, so that is the only thing passed in.
 func singleRecordCmd(
 	subcommand, noun string, args []string, stdout, stderr io.Writer,
-	fill func(*gen.Engine, gen.Inputs) (*subsector.Subsector, error),
+	fill func(*gen.Engine, gen.Inputs) (*starmap.Record, error),
 ) error {
 	flags := flag.NewFlagSet(subcommand, flag.ContinueOnError)
 	flags.SetOutput(stderr)
@@ -165,17 +165,17 @@ func singleRecordCmd(
 // grid.
 func newCmd(args []string, stdout, stderr io.Writer) error {
 	return singleRecordCmd("new", "subsector", args, stdout, stderr,
-		func(e *gen.Engine, in gen.Inputs) (*subsector.Subsector, error) { return e.Generate(in) })
+		func(e *gen.Engine, in gen.Inputs) (*starmap.Record, error) { return e.Generate(in) })
 }
 
 // sectorCmd writes one record covering sixteen subsectors on one grid,
-// with the lanes at their seams thrown for (ERRATA E006). Every member is
+// with the routes at their seams thrown for (ERRATA E006). Every member is
 // the subsector `new --seed base+i` writes, so a sector is the sixteen
-// subsectors a referee could have generated one at a time, plus the lanes
+// subsectors a referee could have generated one at a time, plus the routes
 // that generating them one at a time could not find.
 func sectorCmd(args []string, stdout, stderr io.Writer) error {
 	return singleRecordCmd("sector", "sector", args, stdout, stderr,
-		func(e *gen.Engine, in gen.Inputs) (*subsector.Subsector, error) { return e.Sector(in) })
+		func(e *gen.Engine, in gen.Inputs) (*starmap.Record, error) { return e.Sector(in) })
 }
 
 func isSet(fs *flag.FlagSet, name string) bool {
@@ -201,8 +201,8 @@ func entropySeed() (uint64, error) {
 	return binary.BigEndian.Uint64(seedBytes[:]) & maxSafeSeed, nil
 }
 
-func write(record *subsector.Subsector, path string, force bool, stdout io.Writer) error {
-	encoded, err := subsector.Marshal(record)
+func write(record *starmap.Record, path string, force bool, stdout io.Writer) error {
+	encoded, err := starmap.Marshal(record)
 	if err != nil {
 		return fmt.Errorf("rendering the record: %w", err)
 	}
@@ -265,9 +265,9 @@ func versionCmd(stdout io.Writer) error {
 		fmt.Fprintf(&out, "revision   %s%s\n", revision, dirtySuffix(dirty))
 	}
 
-	fmt.Fprintf(&out, "engine     %s\n", subsector.EngineVersion)
-	fmt.Fprintf(&out, "schema     %d\n", subsector.SchemaVersion)
-	fmt.Fprintf(&out, "ruleset    %s\n", subsector.Ruleset)
+	fmt.Fprintf(&out, "engine     %s\n", starmap.EngineVersion)
+	fmt.Fprintf(&out, "schema     %d\n", starmap.SchemaVersion)
+	fmt.Fprintf(&out, "ruleset    %s\n", starmap.Ruleset)
 
 	_, err := io.WriteString(stdout, out.String())
 	if err != nil {
@@ -374,7 +374,7 @@ func batchCmd(args []string, stdout, stderr io.Writer) error {
 // is seeded with base + i as an unsigned 64-bit addition, wrapping if it
 // overflows, so member 0 carries the base seed itself and reproduces
 // exactly what `new` with that seed produces.
-func batch(count int, base uint64, name string, occurrenceDM int) ([]*subsector.Subsector, error) {
+func batch(count int, base uint64, name string, occurrenceDM int) ([]*starmap.Record, error) {
 	engine, err := gen.New()
 	if err != nil {
 		return nil, fmt.Errorf("building the engine: %w", err)
@@ -384,7 +384,7 @@ func batch(count int, base uint64, name string, occurrenceDM int) ([]*subsector.
 	// straight from an operator's --count, and makeslice panics rather than
 	// erroring on an absurd one. Growing as members are generated bounds
 	// the allocation by the work actually done.
-	var records []*subsector.Subsector
+	var records []*starmap.Record
 
 	for index := range count {
 		derived := base + uint64(index)
@@ -460,14 +460,14 @@ func slugify(name string) string {
 	return slug
 }
 
-func writeMembers(records []*subsector.Subsector, dir, name string, force bool) error {
+func writeMembers(records []*starmap.Record, dir, name string, force bool) error {
 	err := os.MkdirAll(dir, dirMode)
 	if err != nil {
 		return fmt.Errorf("creating %s: %w", dir, err)
 	}
 
 	for index, record := range records {
-		encoded, marshalErr := subsector.Marshal(record)
+		encoded, marshalErr := starmap.Marshal(record)
 		if marshalErr != nil {
 			return fmt.Errorf("member %d: %w", index, marshalErr)
 		}
@@ -485,7 +485,7 @@ func writeMembers(records []*subsector.Subsector, dir, name string, force bool) 
 
 // writeJSONL emits one record per line, which is what a batch is when it
 // is not a directory.
-func writeJSONL(records []*subsector.Subsector, path string, force bool, stdout io.Writer) error {
+func writeJSONL(records []*starmap.Record, path string, force bool, stdout io.Writer) error {
 	var built []byte
 
 	for _, record := range records {
@@ -544,7 +544,7 @@ func renderCmd(args []string, stdout, stderr io.Writer) error {
 
 	defer func() { _ = file.Close() }()
 
-	record, err := subsector.Decode(file)
+	record, err := starmap.Decode(file)
 	if err != nil {
 		return fmt.Errorf("reading %s: %w", flags.Arg(0), err)
 	}
@@ -578,7 +578,7 @@ func holdFormat(format, out string) error {
 
 // writeBooklet writes the printable pages. It is built whole before
 // anything is written, so a render that fails leaves no half a file.
-func writeBooklet(renderer *render.Renderer, record *subsector.Subsector, from, out string, force bool) error {
+func writeBooklet(renderer *render.Renderer, record *starmap.Record, from, out string, force bool) error {
 	var booklet bytes.Buffer
 
 	err := renderer.Booklet(&booklet, record)
@@ -591,11 +591,11 @@ func writeBooklet(renderer *render.Renderer, record *subsector.Subsector, from, 
 
 // writeListing writes the Markdown, to stdout where no file was named.
 func writeListing(
-	renderer *render.Renderer, record *subsector.Subsector, from, out string, force bool, stdout io.Writer,
+	renderer *render.Renderer, record *starmap.Record, from, out string, force bool, stdout io.Writer,
 ) error {
 	var built strings.Builder
 
-	err := renderer.Subsector(&built, record)
+	err := renderer.Listing(&built, record)
 	if err != nil {
 		return fmt.Errorf("rendering %s: %w", from, err)
 	}

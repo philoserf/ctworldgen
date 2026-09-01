@@ -1,12 +1,15 @@
-// Package subsector holds the domain types a record is written in and the
-// record itself.
+// Package starmap holds the domain types a record is written in and the
+// record itself. Book 3 p. 1 heads the procedure STAR MAPPING and p. 2
+// calls what it produces "the star map"; the package is named for that
+// rather than for the sub-sector, because a Record is equally the sector
+// of sixteen sub-sectors ERRATA E006 assembles.
 //
 // The rule dividing the types from the data is that types carry identity,
 // never rule invariants. Hex enforces the eight columns and ten rows of
 // the Book 3 p. 3 grid and Digit enforces the p. 2 alphabet, because an
 // identifier and a notation are identity. A characteristic's value range
 // is not: those stay int.
-package subsector
+package starmap
 
 import (
 	"encoding/json"

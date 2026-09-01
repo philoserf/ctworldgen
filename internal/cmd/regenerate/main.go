@@ -14,7 +14,7 @@ import (
 	"github.com/philoserf/ctworldgen/gen"
 	"github.com/philoserf/ctworldgen/internal/fixture"
 	"github.com/philoserf/ctworldgen/render"
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 )
 
 const (
@@ -70,7 +70,7 @@ func run() error {
 	return writeExample()
 }
 
-// writeSeams pins the one stream a sector adds: the lane pass over pairs
+// writeSeams pins the one stream a sector adds: the route pass over pairs
 // that straddle two members (ERRATA E006). The members themselves are
 // pinned by being identical to the subsectors `new` writes, which is a
 // test rather than a fixture.
@@ -96,7 +96,7 @@ func writeSeams(engine *gen.Engine) error {
 		return fmt.Errorf("writing %s: %w", path, err)
 	}
 
-	_, _ = fmt.Fprintln(os.Stdout, "wrote", path, "--", len(gen.CrossingRoutes(record)), "lanes at the seams")
+	_, _ = fmt.Fprintln(os.Stdout, "wrote", path, "--", len(gen.CrossingRoutes(record)), "routes at the seams")
 
 	return nil
 }
@@ -112,7 +112,7 @@ func writeGolden(
 		return fmt.Errorf("%s: %w", golden.File, err)
 	}
 
-	encoded, err := subsector.Marshal(record)
+	encoded, err := starmap.Marshal(record)
 	if err != nil {
 		return fmt.Errorf("%s: %w", golden.File, err)
 	}
@@ -128,7 +128,7 @@ func writeGolden(
 
 	var built strings.Builder
 
-	err = renderer.Subsector(&built, record)
+	err = renderer.Listing(&built, record)
 	if err != nil {
 		return fmt.Errorf("%s: %w", golden.File, err)
 	}
@@ -160,7 +160,7 @@ func writeExample() error {
 		return fmt.Errorf("%s: %w", fixture.CompleteExamplePath(), err)
 	}
 
-	encoded, err := subsector.Marshal(record)
+	encoded, err := starmap.Marshal(record)
 	if err != nil {
 		return fmt.Errorf("%s: %w", fixture.CompleteExamplePath(), err)
 	}

@@ -28,7 +28,7 @@ linters:
       # "configured or meaningless".
       #
       # Note what is deliberately NOT here: rules against dice importing
-      # subsector, or subsector importing tables, and so on down the PRD's
+      # starmap, or starmap importing tables, and so on down the PRD's
       # layering. Every one of those edges is an import cycle, which the
       # compiler already refuses. A depguard rule for them would read as
       # enforcement and enforce nothing. These two are the constraints that
@@ -45,7 +45,7 @@ linters:
         fixtures-are-test-support:
           files:
             - "**/dice/*.go"
-            - "**/subsector/*.go"
+            - "**/starmap/*.go"
             - "**/tables/*.go"
             - "**/gen/*.go"
             - "**/cmd/ctworldgen/*.go"

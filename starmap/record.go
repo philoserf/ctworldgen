@@ -1,4 +1,4 @@
-package subsector
+package starmap
 
 import (
 	"encoding/json"
@@ -34,13 +34,14 @@ const (
 	EngineVersion = "1"
 )
 
-// Subsector is the record. The JSON record is the source of truth; the
-// Markdown listing is a render of it.
+// Record is one generated map: the p. 3 sub-sector grid, or the sector of
+// sixteen of them (ERRATA E006). Its Grid says which. The JSON record is
+// the source of truth; the Markdown listing is a render of it.
 //
 // Name, OccurrenceDM and Seed are the inputs a run is reproducible from,
 // and the regeneration test in gen reads them back to reproduce each
 // golden.
-type Subsector struct {
+type Record struct {
 	SchemaVersion int      `json:"schema_version"`
 	Ruleset       string   `json:"ruleset"`
 	EngineVersion string   `json:"engine_version"`
@@ -118,10 +119,10 @@ type Clamp struct {
 	Value          int            `json:"value"`
 }
 
-// Route is a commercial space lane between two worlds (p. 2).
+// Route is a commercial route between two worlds (p. 2).
 //
-// From is the lower hex identifier: a lane is not directed, and ordering
-// the pair is what keeps one lane from being written two ways.
+// From is the lower hex identifier: a route is not directed, and ordering
+// the pair is what keeps one route from being written two ways.
 type Route struct {
 	From     Hex     `json:"from"`
 	To       Hex     `json:"to"`
@@ -130,8 +131,8 @@ type Route struct {
 
 // New returns a record stamped with the provenance of the run that is
 // about to fill it.
-func New(seed uint64, name string, occurrenceDM int) *Subsector {
-	return &Subsector{
+func New(seed uint64, name string, occurrenceDM int) *Record {
+	return &Record{
 		SchemaVersion: SchemaVersion,
 		Ruleset:       Ruleset,
 		EngineVersion: EngineVersion,
@@ -148,7 +149,7 @@ func New(seed uint64, name string, occurrenceDM int) *Subsector {
 
 // Stamp records that a reading governed this record, keeping the errata
 // in document order and never repeating one.
-func (s *Subsector) Stamp(id string) {
+func (s *Record) Stamp(id string) {
 	if slices.Contains(s.Errata, id) {
 		return
 	}
@@ -163,7 +164,7 @@ func (s *Subsector) Stamp(id string) {
 // define and anything after the record itself.
 //
 // Rejecting unknown fields is two obligations: "additionalProperties":
-// false at every level of subsector.schema.json, and DisallowUnknownFields
+// false at every level of record.schema.json, and DisallowUnknownFields
 // here. A schema alone rejects nothing at read time. Both are required, so
 // that a record from a newer schema fails loudly rather than silently
 // dropping data.
@@ -171,11 +172,11 @@ func (s *Subsector) Stamp(id string) {
 // A record is one document, and content after it is refused for the same
 // reason: a JSONL batch handed to a reader of records would otherwise
 // decode its first member and discard the rest in silence.
-func Decode(r io.Reader) (*Subsector, error) {
+func Decode(r io.Reader) (*Record, error) {
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
 
-	var record Subsector
+	var record Record
 
 	err := dec.Decode(&record)
 	if err != nil {
@@ -215,7 +216,7 @@ func Decode(r io.Reader) (*Subsector, error) {
 // byte against what it writes: a second definition of this shape anywhere
 // would let a fixture and the command drift apart, and the diff would read
 // as a moved dice stream when the stream had not moved.
-func Marshal(s *Subsector) ([]byte, error) {
+func Marshal(s *Record) ([]byte, error) {
 	b, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("marshaling the record: %w", err)
@@ -258,10 +259,10 @@ func (w World) DigitString() (string, error) {
 // so 0910 parses, and this is the only thing that refuses it on a p. 3
 // record.
 //
-// The lanes are checked as well as the worlds. A lane's two ends are
+// The routes are checked as well as the worlds. A route's two ends are
 // hexes of the same grid, and a record reaching off its own grid is wrong
 // about itself whether the hex it names carries a world or not.
-func (s *Subsector) onItsOwnGrid() error {
+func (s *Record) onItsOwnGrid() error {
 	for _, world := range s.Worlds {
 		err := s.Grid.hold(world.Hex)
 		if err != nil {

@@ -10,14 +10,14 @@ import (
 
 	"github.com/philoserf/ctworldgen/gen"
 	"github.com/philoserf/ctworldgen/internal/fixture"
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 	"github.com/philoserf/ctworldgen/tables"
 )
 
 func schema(t *testing.T, root string) *jsonschema.Schema {
 	t.Helper()
 
-	path := filepath.Join(root, "docs", "subsector.schema.json")
+	path := filepath.Join(root, "docs", "record.schema.json")
 
 	file, err := os.Open(path) //nolint:gosec // a fixed path inside the repository
 	if err != nil {
@@ -33,12 +33,12 @@ func schema(t *testing.T, root string) *jsonschema.Schema {
 
 	compiler := jsonschema.NewCompiler()
 
-	addErr := compiler.AddResource("subsector.schema.json", doc)
+	addErr := compiler.AddResource("record.schema.json", doc)
 	if addErr != nil {
 		t.Fatal(addErr)
 	}
 
-	compiled, compileErr := compiler.Compile("subsector.schema.json")
+	compiled, compileErr := compiler.Compile("record.schema.json")
 	if compileErr != nil {
 		t.Fatal(compileErr)
 	}
@@ -126,7 +126,7 @@ func TestTheCompleteExampleIsAGeneratedRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := subsector.Marshal(generated)
+	got, err := starmap.Marshal(generated)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -183,7 +183,7 @@ func badRecords() []badRecord {
 		}},
 		// Not "off the p. 3 grid": the pattern now spans the sector grid
 		// too, so 0910 is a well-formed identifier and it is
-		// subsector.Decode, not the schema, that refuses it on a p. 3
+		// starmap.Decode, not the schema, that refuses it on a p. 3
 		// record. What the pattern still refuses is a number the grid
 		// never prints at all.
 		{"a hex the grid numbering does not print", func(_, world, _ map[string]any) {
@@ -210,12 +210,12 @@ func badRecords() []badRecord {
 		{"an unknown field on a route", func(_, _, route map[string]any) {
 			route["surprise"] = 1
 		}},
-		{"a lane reaching a hex the grid numbering does not print", func(_, _, route map[string]any) {
+		{"a route reaching a hex the grid numbering does not print", func(_, _, route map[string]any) {
 			route["from"] = "0900"
 		}},
 		// The two dimensions are enumerated separately, so without the
 		// oneOf beside them the schema accepts a pair nothing prints --
-		// and subsector.Decode refuses it, which is the schema and the
+		// and starmap.Decode refuses it, which is the schema and the
 		// reader disagreeing about the same record.
 		{"a grid pair nothing prints", func(record, _, _ map[string]any) {
 			record["grid"] = map[string]any{"columns": 8, "rows": 40}
@@ -228,7 +228,7 @@ func badRecords() []badRecord {
 		// integer type is not a number to it -- it would reject a distance
 		// the schema allows, and this case would pass without the maximum
 		// it means to test.
-		{"a lane longer than the jump routes table states", func(_, _, route map[string]any) {
+		{"a route longer than the jump routes table states", func(_, _, route map[string]any) {
 			route["distance"] = int(tables.MaxJump) + 1
 		}},
 	}
@@ -318,12 +318,12 @@ func TestASectorRecordValidates(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if record.Grid != subsector.SectorGrid() {
+	if record.Grid != starmap.SectorGrid() {
 		t.Fatalf("the record under test is on a %dx%d grid, so it is not the shape this test means to hold",
 			record.Grid.Columns, record.Grid.Rows)
 	}
 
-	encoded, err := subsector.Marshal(record)
+	encoded, err := starmap.Marshal(record)
 	if err != nil {
 		t.Fatal(err)
 	}

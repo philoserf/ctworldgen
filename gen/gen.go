@@ -14,7 +14,7 @@ import (
 	"math"
 
 	"github.com/philoserf/ctworldgen/dice"
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 	"github.com/philoserf/ctworldgen/tables"
 )
 
@@ -79,13 +79,13 @@ func New() (*Engine, error) {
 }
 
 // Generate produces a subsector.
-func (e *Engine) Generate(inputs Inputs) (*subsector.Subsector, error) {
+func (e *Engine) Generate(inputs Inputs) (*starmap.Record, error) {
 	err := inputs.Validate()
 	if err != nil {
 		return nil, err
 	}
 
-	record := subsector.New(inputs.Seed, inputs.Name, inputs.OccurrenceDM)
+	record := starmap.New(inputs.Seed, inputs.Name, inputs.OccurrenceDM)
 	stream := dice.NewStream(inputs.Seed)
 
 	// The order of the passes, and of the hexes within them, is a reading.
@@ -107,9 +107,12 @@ func (e *Engine) Generate(inputs Inputs) (*subsector.Subsector, error) {
 		return nil, err
 	}
 
-	// 1.C. Determine space lanes; check all possible jump routes
-	// (pp. 2, 12).
-	record.Routes = e.lanes(stream, record.Worlds)
+	// 1.C. "Determine space lanes; check all possible jump routes"
+	// (pp. 2, 12). Quoted from the p. 12 checklist, which is why this one
+	// says "space lanes" where the rest of the code says routes: the page
+	// prints both words and the code picked one, but a quotation keeps the
+	// page's.
+	record.Routes = e.routes(stream, record.Worlds)
 
 	// A pair is the thing the reading governs, so it takes two worlds to
 	// have governed anything.
@@ -128,7 +131,7 @@ func (e *Engine) Generate(inputs Inputs) (*subsector.Subsector, error) {
 
 // createWorlds is pass 2: each world finished before the next is begun
 // (p. 12, ERRATA E002).
-func (e *Engine) createWorlds(stream *dice.Stream, record *subsector.Subsector) error {
+func (e *Engine) createWorlds(stream *dice.Stream, record *starmap.Record) error {
 	for index := range record.Worlds {
 		err := e.detail(stream, &record.Worlds[index])
 		if err != nil {
@@ -162,15 +165,15 @@ const uncapped = math.MaxInt
 // detail is pass 2: the six characteristics of pp. 4-8 and then the
 // technological index of p. 9, in the order the p. 12 checklist lists them
 // at 2.B through 2.H.
-func (e *Engine) detail(stream *dice.Stream, world *subsector.World) error {
+func (e *Engine) detail(stream *dice.Stream, world *starmap.World) error {
 	// 2.B. Planetary size. 2D-2 (pp. 4, 12).
-	world.Size = clamp(world, subsector.Size, stream.D2()-automaticMinusTwo, uncapped)
+	world.Size = clamp(world, starmap.Size, stream.D2()-automaticMinusTwo, uncapped)
 
 	// 2.C. Planetary atmosphere. 2D-7 + planetary size. A planet of size
 	// zero automatically has an atmosphere of zero, and no die is thrown:
 	// rolling and dropping one would shift every later world (R13).
 	if world.Size > 0 {
-		world.Atmosphere = clamp(world, subsector.Atmosphere, stream.D2()-automaticMinusSeven+world.Size, uncapped)
+		world.Atmosphere = clamp(world, starmap.Atmosphere, stream.D2()-automaticMinusSeven+world.Size, uncapped)
 	}
 
 	// 2.D. Hydrographic percentage. 2D-7 + planetary size, with a further
@@ -182,18 +185,18 @@ func (e *Engine) detail(stream *dice.Stream, world *subsector.World) error {
 			raw -= dryAtmosphereDM
 		}
 
-		world.Hydrographics = clamp(world, subsector.Hydrographics, raw, uncapped)
+		world.Hydrographics = clamp(world, starmap.Hydrographics, raw, uncapped)
 	}
 
 	// 2.E. Population. 2D-2, an exponent of 10 (pp. 8, 12).
-	world.Population = clamp(world, subsector.Population, stream.D2()-automaticMinusTwo, uncapped)
+	world.Population = clamp(world, starmap.Population, stream.D2()-automaticMinusTwo, uncapped)
 
 	// 2.F. Planetary government. 2D-7 + the population digit (pp. 8, 12).
-	world.Government = clamp(world, subsector.Government, stream.D2()-automaticMinusSeven+world.Population, uncapped)
+	world.Government = clamp(world, starmap.Government, stream.D2()-automaticMinusSeven+world.Population, uncapped)
 
 	// 2.G. Law level. 2D-7 + the government type (pp. 8, 12). Government
 	// feeds this already floored: a clamped value is the value.
-	world.LawLevel = clamp(world, subsector.LawLevel, stream.D2()-automaticMinusSeven+world.Government, uncapped)
+	world.LawLevel = clamp(world, starmap.LawLevel, stream.D2()-automaticMinusSeven+world.Government, uncapped)
 
 	// 2.H. Technological index. One die, modified by the sum of the DMs the
 	// matrix gives for the starport, size, atmosphere, hydrographics,
@@ -208,7 +211,7 @@ func (e *Engine) detail(stream *dice.Stream, world *subsector.World) error {
 		matrix.DM(tables.ColGovernment, world.Government),
 	)
 
-	world.TechIndex = clamp(world, subsector.TechIndex, stream.Die()+modifier, maxTechIndex)
+	world.TechIndex = clamp(world, starmap.TechIndex, stream.Die()+modifier, maxTechIndex)
 
 	digits, err := world.DigitString()
 	if err != nil {
@@ -226,11 +229,11 @@ func (e *Engine) detail(stream *dice.Stream, world *subsector.World) error {
 // The floor at 0 is forced rather than chosen: R15 requires one character
 // per characteristic, and neither Book 1 p. 8's hexadecimal nor Book 3
 // p. 2's letters has a character for a negative number (ERRATA E004).
-func clamp(world *subsector.World, which subsector.Characteristic, raw, high int) int {
+func clamp(world *starmap.World, which starmap.Characteristic, raw, high int) int {
 	value := min(max(raw, 0), high)
 
 	if value != raw {
-		world.Clamps = append(world.Clamps, subsector.Clamp{Characteristic: which, Raw: raw, Value: value})
+		world.Clamps = append(world.Clamps, starmap.Clamp{Characteristic: which, Raw: raw, Value: value})
 	}
 
 	return value
@@ -238,8 +241,8 @@ func clamp(world *subsector.World, which subsector.Characteristic, raw, high int
 
 // starports is pass 1.B: a starport type for every world found, each
 // followed at once by its base throws, naval then scout (ERRATA E001).
-func (e *Engine) starports(stream *dice.Stream, record *subsector.Subsector, hexes []subsector.Hex) error {
-	record.Worlds = make([]subsector.World, 0, len(hexes))
+func (e *Engine) starports(stream *dice.Stream, record *starmap.Record, hexes []starmap.Hex) error {
+	record.Worlds = make([]starmap.World, 0, len(hexes))
 
 	basesThrown := false
 
@@ -249,7 +252,7 @@ func (e *Engine) starports(stream *dice.Stream, record *subsector.Subsector, hex
 			return fmt.Errorf("starport for the world at %s: %w", hex, err)
 		}
 
-		world := subsector.World{
+		world := starmap.World{
 			Hex: hex, Name: "", Starport: port,
 			NavalBase: false, ScoutBase: false,
 			Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
@@ -277,7 +280,7 @@ func (e *Engine) starports(stream *dice.Stream, record *subsector.Subsector, hex
 	return nil
 }
 
-// lanes is pass 1.C: every pair of worlds, once, in ascending hex number
+// routes is pass 1.C: every pair of worlds, once, in ascending hex number
 // of the first world and then of the second (ERRATA E003).
 //
 // A die is thrown only where the jump routes table states a number. A pair
@@ -285,8 +288,8 @@ func (e *Engine) starports(stream *dice.Stream, record *subsector.Subsector, hex
 // is examined -- p. 2 describes the throw as being made against a stated
 // number, and neither states one. Consuming a die there would shift every
 // throw after it.
-func (e *Engine) lanes(stream *dice.Stream, worlds []subsector.World) []subsector.Route {
-	routes := []subsector.Route{}
+func (e *Engine) routes(stream *dice.Stream, worlds []starmap.World) []starmap.Route {
+	routes := []starmap.Route{}
 
 	for i, first := range worlds {
 		for _, second := range worlds[i+1:] {
@@ -298,7 +301,7 @@ func (e *Engine) lanes(stream *dice.Stream, worlds []subsector.World) []subsecto
 			}
 
 			if target.Met(stream.Die()) {
-				routes = append(routes, subsector.Route{From: first.Hex, To: second.Hex, Distance: distance})
+				routes = append(routes, starmap.Route{From: first.Hex, To: second.Hex, Distance: distance})
 			}
 		}
 	}
@@ -309,12 +312,12 @@ func (e *Engine) lanes(stream *dice.Stream, worlds []subsector.World) []subsecto
 // scan is pass 1.A: every hex of the grid in ascending grid number, one
 // die each. A hex that fails the throw is left blank and consumes its die
 // like any other.
-func scan(stream *dice.Stream, occurrenceDM int) ([]subsector.Hex, error) {
-	var found []subsector.Hex
+func scan(stream *dice.Stream, occurrenceDM int) ([]starmap.Hex, error) {
+	var found []starmap.Hex
 
-	for col := 1; col <= subsector.Columns; col++ {
-		for row := 1; row <= subsector.Rows; row++ {
-			hex, err := subsector.NewHex(col, row)
+	for col := 1; col <= starmap.Columns; col++ {
+		for row := 1; row <= starmap.Rows; row++ {
+			hex, err := starmap.NewHex(col, row)
 			if err != nil {
 				return nil, fmt.Errorf("hex %d,%d: %w", col, row, err)
 			}

@@ -1,10 +1,10 @@
 # Aramis
 
-51 worlds, 150 space lanes. Generated from seed 1 at occurrence DM +1.
+51 worlds, 150 routes. Generated from seed 1 at occurrence DM +1.
 
 ## The map
 
-The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-numbered ones half a hex below them, which is how the page prints it. A world carries the letter of its starport -- p. 1 marks the hex with the letter the starports table gives -- and a hex with no world is left blank, which is what p. 1 says to leave it. P. 2 also asks for a line drawn between the worlds a space lane joins; a monospace grid has nowhere to put one, so this map draws none and the lane table below carries them instead. `render --format pdf` draws them.
+The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-numbered ones half a hex below them, which is how the page prints it. A world carries the letter of its starport -- p. 1 marks the hex with the letter the starports table gives -- and a hex with no world is left blank, which is what p. 1 says to leave it. P. 2 also asks for a line drawn between the worlds a route joins; a monospace grid has nowhere to put one, so this map draws none and the route table below carries them instead. `render --format pdf` draws them.
 
 ```text
 0101 B    0301      0501 A    0701
@@ -85,7 +85,7 @@ The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-num
 | 0807 |  | D3424206 | -- |
 | 0810 |  | C6546746 | scout |
 
-## Space lanes
+## Routes
 
 | From | To | Parsecs |
 | --- | --- | --- |

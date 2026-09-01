@@ -1,4 +1,3 @@
-//nolint:testpackage // clip is tested by width; why not from outside is on the test below
 package render
 
 import (
@@ -9,7 +8,9 @@ import (
 
 // TestClipCutsWholeCharacters is an internal test because clip's rule
 // cannot be reached from the booklet at a width the test chooses, and the
-// width is the whole of the question.
+// width is the whole of the question. That is also why this file is not
+// part of pdf_test.go, where the rest of pdf.go's tests live: a package
+// clause is per file, and that one is package render_test.
 //
 // The rule: a name trimmed to its column is trimmed a character at a
 // time. Cutting inside a multi-byte character leaves invalid UTF-8, which

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 )
 
 const (
@@ -26,10 +26,10 @@ func exec(t *testing.T, args ...string) (string, string, error) {
 	return out.String(), errs.String(), err
 }
 
-func decode(t *testing.T, out string) *subsector.Subsector {
+func decode(t *testing.T, out string) *starmap.Record {
 	t.Helper()
 
-	s, err := subsector.Decode(strings.NewReader(out))
+	s, err := starmap.Decode(strings.NewReader(out))
 	if err != nil {
 		t.Fatalf("decoding the output: %v", err)
 	}
@@ -216,8 +216,8 @@ func TestVersionReportsTheBuildAndTheStamps(t *testing.T) {
 
 	want := []string{
 		"ctworldgen",
-		"engine     " + subsector.EngineVersion,
-		"ruleset    " + subsector.Ruleset,
+		"engine     " + starmap.EngineVersion,
+		"ruleset    " + starmap.Ruleset,
 	}
 	for _, want := range want {
 		if !strings.Contains(out, want) {
@@ -309,10 +309,10 @@ func TestBatchMemberZeroIsTheBaseSeed(t *testing.T) {
 	}
 
 	// The member is JSONL and `new` is indented, so compare the records
-	// rather than the bytes: a subsector is its worlds and its lanes.
+	// rather than the bytes: a subsector is its worlds and its routes.
 	solo := decode(t, alone)
 	if len(solo.Worlds) != len(member.Worlds) || len(solo.Routes) != len(member.Routes) {
-		t.Fatalf("member 0 has %d worlds and %d lanes; `new` at the same seed has %d and %d",
+		t.Fatalf("member 0 has %d worlds and %d routes; `new` at the same seed has %d and %d",
 			len(member.Worlds), len(member.Routes), len(solo.Worlds), len(solo.Routes))
 	}
 
@@ -446,7 +446,7 @@ func TestRenderReadsARecordAndWritesTheListing(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, want := range []string{"# Aramis", "## Worlds", "## Space lanes", "## The worlds in detail"} {
+	for _, want := range []string{"# Aramis", "## Worlds", "## Routes", "## The worlds in detail"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("the listing has no %q", want)
 		}
@@ -539,14 +539,14 @@ func TestSectorWritesOneRecordOnTheSectorGrid(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record, err := subsector.Decode(bytes.NewReader(out.Bytes()))
+	record, err := starmap.Decode(bytes.NewReader(out.Bytes()))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if record.Grid != subsector.SectorGrid() {
+	if record.Grid != starmap.SectorGrid() {
 		t.Errorf("the record is on a %dx%d grid, want %dx%d",
-			record.Grid.Columns, record.Grid.Rows, subsector.SectorColumns, subsector.SectorRows)
+			record.Grid.Columns, record.Grid.Rows, starmap.SectorColumns, starmap.SectorRows)
 	}
 
 	if !slices.Contains(record.Errata, "E006") {

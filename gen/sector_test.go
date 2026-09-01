@@ -9,10 +9,10 @@ import (
 
 	"github.com/philoserf/ctworldgen/gen"
 	"github.com/philoserf/ctworldgen/internal/fixture"
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 )
 
-func sector(t *testing.T, golden fixture.Golden) *subsector.Subsector {
+func sector(t *testing.T, golden fixture.Golden) *starmap.Record {
 	t.Helper()
 
 	engine, err := gen.New()
@@ -34,11 +34,11 @@ func sector(t *testing.T, golden fixture.Golden) *subsector.Subsector {
 // arithmetic. A test that re-derived the translation would assert only
 // that its own copy is self-consistent, and would pass while the engine
 // laid the members out any way at all.
-func placed(t *testing.T, index int, hex subsector.Hex) subsector.Hex {
+func placed(t *testing.T, index int, hex starmap.Hex) starmap.Hex {
 	t.Helper()
 
 	on := gen.Place(index, hex)
-	if !subsector.SectorGrid().Contains(on) {
+	if !starmap.SectorGrid().Contains(on) {
 		t.Fatalf("member %d puts %s at %s, off the sector grid", index, hex, on)
 	}
 
@@ -64,7 +64,7 @@ func TestASectorsMembersAreTheSubsectorsNewWrites(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	inSector := make(map[subsector.Hex]subsector.World, len(record.Worlds))
+	inSector := make(map[starmap.Hex]starmap.World, len(record.Worlds))
 	for _, world := range record.Worlds {
 		inSector[world.Hex] = world
 	}
@@ -104,17 +104,17 @@ func TestASectorsMembersAreTheSubsectorsNewWrites(t *testing.T) {
 	}
 }
 
-// TestLanesCrossTheSeams is the invariant a sector exists for. Sixteen
+// TestRoutesCrossTheSeams is the invariant a sector exists for. Sixteen
 // independent subsectors have hard borders -- the alpha report's words --
 // and the seam pass is the whole of the difference.
-func TestLanesCrossTheSeams(t *testing.T) {
+func TestRoutesCrossTheSeams(t *testing.T) {
 	t.Parallel()
 
 	record := sector(t, fixture.SectorGolden())
 
 	crossing := gen.CrossingRoutes(record)
 	if len(crossing) == 0 {
-		t.Fatal("no lane crosses a member border, so the sector is sixteen subsectors in a trench coat")
+		t.Fatal("no route crosses a member border, so the sector is sixteen subsectors in a trench coat")
 	}
 
 	for _, route := range crossing {
@@ -124,7 +124,7 @@ func TestLanesCrossTheSeams(t *testing.T) {
 		}
 
 		if route.Distance < 1 || route.Distance > 4 {
-			t.Errorf("the seam lane %s-%s is %d parsecs, and p. 2 examines pairs within four hexes",
+			t.Errorf("the seam route %s-%s is %d parsecs, and p. 2 examines pairs within four hexes",
 				route.From, route.To, route.Distance)
 		}
 
@@ -142,17 +142,17 @@ func TestEveryPairIsExaminedOnce(t *testing.T) {
 
 	record := sector(t, fixture.SectorGolden())
 
-	seen := make(map[[2]subsector.Hex]bool, len(record.Routes))
+	seen := make(map[[2]starmap.Hex]bool, len(record.Routes))
 
 	for _, route := range record.Routes {
-		pair := [2]subsector.Hex{route.From, route.To}
+		pair := [2]starmap.Hex{route.From, route.To}
 		if seen[pair] {
-			t.Errorf("the pair %s-%s carries two lanes", route.From, route.To)
+			t.Errorf("the pair %s-%s carries two routes", route.From, route.To)
 		}
 
 		seen[pair] = true
 
-		if reversed := ([2]subsector.Hex{route.To, route.From}); seen[reversed] {
+		if reversed := ([2]starmap.Hex{route.To, route.From}); seen[reversed] {
 			t.Errorf("the pair %s-%s is recorded in both directions", route.From, route.To)
 		}
 	}
@@ -169,8 +169,8 @@ func TestTranslationKeepsThePageThreeParity(t *testing.T) {
 	t.Parallel()
 
 	for index := range gen.SectorMembers {
-		for aCol := 1; aCol <= subsector.Columns; aCol++ {
-			for aRow := 1; aRow <= subsector.Rows; aRow++ {
+		for aCol := 1; aCol <= starmap.Columns; aCol++ {
+			for aRow := 1; aRow <= starmap.Rows; aRow++ {
 				assertOneHexKeepsItsDistances(t, index, aCol, aRow)
 			}
 		}
@@ -180,14 +180,14 @@ func TestTranslationKeepsThePageThreeParity(t *testing.T) {
 func assertOneHexKeepsItsDistances(t *testing.T, index, col, row int) {
 	t.Helper()
 
-	from, err := subsector.NewHex(col, row)
+	from, err := starmap.NewHex(col, row)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	for bCol := 1; bCol <= subsector.Columns; bCol++ {
-		for bRow := 1; bRow <= subsector.Rows; bRow++ {
-			other, hexErr := subsector.NewHex(bCol, bRow)
+	for bCol := 1; bCol <= starmap.Columns; bCol++ {
+		for bRow := 1; bRow <= starmap.Rows; bRow++ {
+			other, hexErr := starmap.NewHex(bCol, bRow)
 			if hexErr != nil {
 				t.Fatal(hexErr)
 			}
@@ -212,7 +212,7 @@ func TestTheSeamsGolden(t *testing.T) {
 		t.Fatalf("%v (run `task regenerate` to create it)", err)
 	}
 
-	var want []subsector.Route
+	var want []starmap.Route
 
 	err = json.Unmarshal(encoded, &want)
 	if err != nil {
@@ -222,13 +222,13 @@ func TestTheSeamsGolden(t *testing.T) {
 	got := gen.CrossingRoutes(sector(t, fixture.SectorGolden()))
 
 	if len(got) != len(want) {
-		t.Fatalf("the seam pass drew %d lanes and the golden has %d.\n"+
+		t.Fatalf("the seam pass drew %d routes and the golden has %d.\n"+
 			"If this change was intended, run `task regenerate` and read the diff.", len(got), len(want))
 	}
 
 	for i := range want {
 		if got[i] != want[i] {
-			t.Fatalf("seam lane %d is %s-%s and the golden has %s-%s.\n"+
+			t.Fatalf("seam route %d is %s-%s and the golden has %s-%s.\n"+
 				"If this change was intended, run `task regenerate` and read the diff.",
 				i, got[i].From, got[i].To, want[i].From, want[i].To)
 		}
@@ -244,13 +244,13 @@ func TestSameSeedSameSector(t *testing.T) {
 	first, second := sector(t, golden), sector(t, golden)
 
 	if len(first.Worlds) != len(second.Worlds) || len(first.Routes) != len(second.Routes) {
-		t.Fatalf("two runs of seed %d gave %d/%d worlds and %d/%d lanes",
+		t.Fatalf("two runs of seed %d gave %d/%d worlds and %d/%d routes",
 			golden.Seed, len(first.Worlds), len(second.Worlds), len(first.Routes), len(second.Routes))
 	}
 
 	for i := range first.Routes {
 		if first.Routes[i] != second.Routes[i] {
-			t.Fatalf("two runs of seed %d differ at lane %d", golden.Seed, i)
+			t.Fatalf("two runs of seed %d differ at route %d", golden.Seed, i)
 		}
 	}
 }

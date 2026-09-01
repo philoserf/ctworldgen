@@ -39,13 +39,13 @@ func Goldens() []Golden {
 // the whole 670-world record: at 351K it would be larger than every other
 // fixture together, and it would pin almost nothing new. A sector's
 // members are the subsectors `new --seed base+i` already writes, which a
-// test compares directly, so the only thing a sector adds is the lane
+// test compares directly, so the only thing a sector adds is the route
 // pass at the seams -- and that is what SeamsPath pins.
 func SectorGolden() Golden {
 	return Golden{File: "sector-seams", Seed: 1, Name: aramis, OccurrenceDM: 0}
 }
 
-// SeamsPath is the golden of the lanes that cross a member border,
+// SeamsPath is the golden of the routes that cross a member border,
 // relative to the repository root. The name comes from SectorGolden so
 // that the writer and the test that reads it cannot come to name two
 // different files.

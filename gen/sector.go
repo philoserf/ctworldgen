@@ -5,40 +5,40 @@ import (
 	"slices"
 
 	"github.com/philoserf/ctworldgen/dice"
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 )
 
 // SectorMembers is how many subsectors a sector is: four across and four
 // down (ERRATA E006).
-const SectorMembers = subsector.SectorAcross * subsector.SectorAcross
+const SectorMembers = starmap.SectorAcross * starmap.SectorAcross
 
 // seamSeedOffset is the seventeenth stream, after the sixteen the members
 // consume (ERRATA E006 part 4).
 const seamSeedOffset = SectorMembers
 
 // Sector assembles sixteen subsectors on one grid and throws for the
-// lanes at their seams.
+// routes at their seams.
 //
-// The book charts a subsector and stops, but its lane rule speaks of a
+// The book charts a subsector and stops, but its route rule speaks of a
 // world's "neighbors" rather than of a subsector, so the border is an
 // artifact of generating one subsector at a time (ERRATA E006). Every
 // member is generated whole and unchanged -- member i of a sector is the
 // subsector `new --seed base+i` writes -- and the only throws made here
 // are for pairs that straddle two members.
-func (e *Engine) Sector(inputs Inputs) (*subsector.Subsector, error) {
+func (e *Engine) Sector(inputs Inputs) (*starmap.Record, error) {
 	err := inputs.Validate()
 	if err != nil {
 		return nil, err
 	}
 
-	record := subsector.New(inputs.Seed, inputs.Name, inputs.OccurrenceDM)
+	record := starmap.New(inputs.Seed, inputs.Name, inputs.OccurrenceDM)
 
-	record.Grid = subsector.SectorGrid()
+	record.Grid = starmap.SectorGrid()
 
 	// member records the band each world came from, so the seam pass can
 	// tell an interior pair -- already examined inside its own member --
 	// from one that straddles two.
-	member := make(map[subsector.Hex]int)
+	member := make(map[starmap.Hex]int)
 
 	// The members consume the streams of seeds base through base+15, in
 	// order (ERRATA E006 part 4). Counting the seed alongside the index
@@ -55,7 +55,7 @@ func (e *Engine) Sector(inputs Inputs) (*subsector.Subsector, error) {
 	}
 
 	// E002's order, now read across the whole grid.
-	slices.SortFunc(record.Worlds, func(a, b subsector.World) int { return a.Hex.Number() - b.Hex.Number() })
+	slices.SortFunc(record.Worlds, func(a, b starmap.World) int { return a.Hex.Number() - b.Hex.Number() })
 
 	record.Routes = append(record.Routes,
 		e.seams(dice.NewStream(inputs.Seed+seamSeedOffset), record.Worlds, member)...)
@@ -68,7 +68,7 @@ func (e *Engine) Sector(inputs Inputs) (*subsector.Subsector, error) {
 
 // member generates one subsector whole and lays it on the sector grid.
 func (e *Engine) member(
-	record *subsector.Subsector, member map[subsector.Hex]int, inputs Inputs, index int, seed uint64,
+	record *starmap.Record, member map[starmap.Hex]int, inputs Inputs, index int, seed uint64,
 ) error {
 	part, err := e.Generate(Inputs{Seed: seed, Name: inputs.Name, OccurrenceDM: inputs.OccurrenceDM})
 	if err != nil {
@@ -84,7 +84,7 @@ func (e *Engine) member(
 	for _, world := range part.Worlds {
 		world.Hex = Place(index, world.Hex)
 		if !record.Grid.Contains(world.Hex) {
-			return fmt.Errorf("%w: member %d puts a world at %s", subsector.ErrOffGrid, index, world.Hex)
+			return fmt.Errorf("%w: member %d puts a world at %s", starmap.ErrOffGrid, index, world.Hex)
 		}
 
 		member[world.Hex] = index
@@ -92,7 +92,7 @@ func (e *Engine) member(
 	}
 
 	for _, route := range part.Routes {
-		record.Routes = append(record.Routes, subsector.Route{
+		record.Routes = append(record.Routes, starmap.Route{
 			From: Place(index, route.From), To: Place(index, route.To), Distance: route.Distance,
 		})
 	}
@@ -108,9 +108,9 @@ func (e *Engine) member(
 // stated number, no row for an X starport and no throw at a dash cell,
 // and the same order, read now in sector coordinates.
 func (e *Engine) seams(
-	stream *dice.Stream, worlds []subsector.World, member map[subsector.Hex]int,
-) []subsector.Route {
-	routes := []subsector.Route{}
+	stream *dice.Stream, worlds []starmap.World, member map[starmap.Hex]int,
+) []starmap.Route {
+	routes := []starmap.Route{}
 
 	for index, first := range worlds {
 		// Hoisted: the first world's band is fixed for the whole inner
@@ -131,7 +131,7 @@ func (e *Engine) seams(
 			}
 
 			if target.Met(stream.Die()) {
-				routes = append(routes, subsector.Route{From: first.Hex, To: second.Hex, Distance: distance})
+				routes = append(routes, starmap.Route{From: first.Hex, To: second.Hex, Distance: distance})
 			}
 		}
 	}
@@ -139,10 +139,10 @@ func (e *Engine) seams(
 	return routes
 }
 
-// routeOrder puts the lanes in E003's order over the whole grid, so the
-// listing reads the same way whether a lane was thrown inside a member or
+// routeOrder puts the routes in E003's order over the whole grid, so the
+// listing reads the same way whether a route was thrown inside a member or
 // at a seam.
-func routeOrder(a, b subsector.Route) int {
+func routeOrder(a, b starmap.Route) int {
 	if a.From != b.From {
 		return a.From.Number() - b.From.Number()
 	}
@@ -160,28 +160,28 @@ func routeOrder(a, b subsector.Route) int {
 // It is exported because that property is worth asserting against the
 // translation the engine actually uses, rather than against a second copy
 // of the arithmetic written in a test.
-func Place(index int, hex subsector.Hex) subsector.Hex {
-	across := index % subsector.SectorAcross
-	down := index / subsector.SectorAcross
+func Place(index int, hex starmap.Hex) starmap.Hex {
+	across := index % starmap.SectorAcross
+	down := index / starmap.SectorAcross
 
-	return subsector.Hex{Col: across*subsector.Columns + hex.Col, Row: down*subsector.Rows + hex.Row}
+	return starmap.Hex{Col: across*starmap.Columns + hex.Col, Row: down*starmap.Rows + hex.Row}
 }
 
 // MemberOf returns which of a sector's sixteen subsectors a hex fell in,
 // numbered left to right and then down (ERRATA E006 part 1).
-func MemberOf(hex subsector.Hex) int {
-	across := (hex.Col - 1) / subsector.Columns
-	down := (hex.Row - 1) / subsector.Rows
+func MemberOf(hex starmap.Hex) int {
+	across := (hex.Col - 1) / starmap.Columns
+	down := (hex.Row - 1) / starmap.Rows
 
-	return down*subsector.SectorAcross + across
+	return down*starmap.SectorAcross + across
 }
 
-// CrossingRoutes returns the lanes whose two ends sit in different
+// CrossingRoutes returns the routes whose two ends sit in different
 // members: the ones a referee generating sixteen subsectors one at a time
 // could never have found. It is exported because it is what the sector
 // golden pins and what the listing would highlight.
-func CrossingRoutes(record *subsector.Subsector) []subsector.Route {
-	crossing := []subsector.Route{}
+func CrossingRoutes(record *starmap.Record) []starmap.Route {
+	crossing := []starmap.Route{}
 
 	for _, route := range record.Routes {
 		if MemberOf(route.From) != MemberOf(route.To) {

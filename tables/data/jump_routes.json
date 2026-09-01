@@ -1,7 +1,7 @@
 {
   "table": "JUMP ROUTES",
   "page": 2,
-  "comment": "targets are indexed by jump distance 1 through 4; null is the em-dash the page prints, at which no lane is possible and no die is thrown (ERRATA E003)",
+  "comment": "targets are indexed by jump distance 1 through 4; null is the em-dash the page prints, at which no route is possible and no die is thrown (ERRATA E003)",
   "rows": [
     { "pair": "A-A", "targets": [1, 2, 4, 5] },
     { "pair": "A-B", "targets": [1, 3, 4, 5] },

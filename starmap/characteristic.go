@@ -1,4 +1,4 @@
-package subsector
+package starmap
 
 import (
 	"encoding/json"

@@ -1,10 +1,10 @@
-package subsector_test
+package starmap_test
 
 import (
 	"encoding/json"
 	"testing"
 
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 )
 
 // TestDistanceAgainstPrintedGrid measures against the sub-sector hex grid
@@ -22,7 +22,7 @@ func TestDistanceAgainstPrintedGrid(t *testing.T) {
 	// Distances taken by hand off the printed p. 3 grid.
 	cases := []struct {
 		a, b string
-		want subsector.Parsecs
+		want starmap.Parsecs
 		note string
 	}{
 		{"0101", "0101", 0, "a hex is no distance from itself"},
@@ -44,12 +44,12 @@ func TestDistanceAgainstPrintedGrid(t *testing.T) {
 		t.Run(testCase.a+"-"+testCase.b, func(t *testing.T) {
 			t.Parallel()
 
-			first, err := subsector.ParseHex(testCase.a)
+			first, err := starmap.ParseHex(testCase.a)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			second, err := subsector.ParseHex(testCase.b)
+			second, err := starmap.ParseHex(testCase.b)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -73,10 +73,10 @@ func TestNewHexRejectsOffGrid(t *testing.T) {
 	t.Parallel()
 
 	for _, c := range []struct{ col, row int }{{0, 1}, {1, 0}, {33, 1}, {1, 41}, {-1, -1}} {
-		_, err := subsector.NewHex(c.col, c.row)
+		_, err := starmap.NewHex(c.col, c.row)
 		if err == nil {
 			t.Errorf("NewHex(%d, %d) succeeded; the sector grid is %d columns of %d rows",
-				c.col, c.row, subsector.SectorColumns, subsector.SectorRows)
+				c.col, c.row, starmap.SectorColumns, starmap.SectorRows)
 		}
 	}
 }
@@ -91,16 +91,16 @@ func TestAGridHoldsOnlyItsOwnHexes(t *testing.T) {
 		col, row int
 		onPage3  bool
 	}{{1, 1, true}, {8, 10, true}, {9, 1, false}, {1, 11, false}, {32, 40, false}} {
-		hex, err := subsector.NewHex(testCase.col, testCase.row)
+		hex, err := starmap.NewHex(testCase.col, testCase.row)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if got := subsector.PageThreeGrid().Contains(hex); got != testCase.onPage3 {
+		if got := starmap.PageThreeGrid().Contains(hex); got != testCase.onPage3 {
 			t.Errorf("the p. 3 grid contains %s: %v, want %v", hex, got, testCase.onPage3)
 		}
 
-		if !subsector.SectorGrid().Contains(hex) {
+		if !starmap.SectorGrid().Contains(hex) {
 			t.Errorf("the sector grid does not contain %s, and every hex is on it", hex)
 		}
 	}
@@ -109,7 +109,7 @@ func TestAGridHoldsOnlyItsOwnHexes(t *testing.T) {
 func TestParseHex(t *testing.T) {
 	t.Parallel()
 
-	hex, err := subsector.ParseHex("0810")
+	hex, err := starmap.ParseHex("0810")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,18 +121,18 @@ func TestParseHex(t *testing.T) {
 	// 3240 is the last hex of the sector grid, and 0111 -- off the p. 3
 	// grid but on that one -- is a hex the identifier accepts and a
 	// subsector record does not carry (TestAGridHoldsOnlyItsOwnHexes).
-	corner, err := subsector.ParseHex("3240")
+	corner, err := starmap.ParseHex("3240")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if corner.Col != subsector.SectorColumns || corner.Row != subsector.SectorRows {
+	if corner.Col != starmap.SectorColumns || corner.Row != starmap.SectorRows {
 		t.Errorf("ParseHex(3240) = %d,%d, want %d,%d",
-			corner.Col, corner.Row, subsector.SectorColumns, subsector.SectorRows)
+			corner.Col, corner.Row, starmap.SectorColumns, starmap.SectorRows)
 	}
 
 	for _, bad := range []string{"", "101", "01011", "0900", "3341", "0141", "abcd", "01 1", "0000"} {
-		_, err := subsector.ParseHex(bad)
+		_, err := starmap.ParseHex(bad)
 		if err == nil {
 			t.Errorf("ParseHex(%q) succeeded", bad)
 		}
@@ -142,9 +142,9 @@ func TestParseHex(t *testing.T) {
 func TestHexRoundTripsThroughJSON(t *testing.T) {
 	t.Parallel()
 
-	for col := 1; col <= subsector.Columns; col++ {
-		for row := 1; row <= subsector.Rows; row++ {
-			hex, err := subsector.NewHex(col, row)
+	for col := 1; col <= starmap.Columns; col++ {
+		for row := 1; row <= starmap.Rows; row++ {
+			hex, err := starmap.NewHex(col, row)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -154,7 +154,7 @@ func TestHexRoundTripsThroughJSON(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			var back subsector.Hex
+			var back starmap.Hex
 
 			err = json.Unmarshal(encoded, &back)
 			if err != nil {
@@ -171,12 +171,12 @@ func TestHexRoundTripsThroughJSON(t *testing.T) {
 func TestZeroHexIsNotAHex(t *testing.T) {
 	t.Parallel()
 
-	_, err := json.Marshal(subsector.Hex{Col: 0, Row: 0})
+	_, err := json.Marshal(starmap.Hex{Col: 0, Row: 0})
 	if err == nil {
 		t.Error("marshaling the zero Hex succeeded; it is outside the grid")
 	}
 
-	var hex subsector.Hex
+	var hex starmap.Hex
 
 	err = json.Unmarshal([]byte(`"0900"`), &hex)
 	if err == nil {
@@ -196,12 +196,12 @@ func TestNumberOrdersHexesTheWayTheGridNumbersThem(t *testing.T) {
 
 	ordered := []string{"0101", "0102", "0110", "0201", "0210", "0801", "0810"}
 	for index := 1; index < len(ordered); index++ {
-		earlier, err := subsector.ParseHex(ordered[index-1])
+		earlier, err := starmap.ParseHex(ordered[index-1])
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		later, err := subsector.ParseHex(ordered[index])
+		later, err := starmap.ParseHex(ordered[index])
 		if err != nil {
 			t.Fatal(err)
 		}

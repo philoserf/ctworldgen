@@ -18,15 +18,15 @@ with a test named in it.
 
 | Rule                                                   | Page | Implementation                                                      | Test                                                                                                                | Status |
 | ------------------------------------------------------ | ---- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------ |
-| R1 The subsector grid, 0101-0810, one hex one parsec   | 1, 3 | `subsector.Hex`, `subsector.Columns`/`Rows`                         | `TestNewHexRejectsOffGrid`, `TestParseHex`, `TestHexRoundTripsThroughJSON`                                          | done   |
-| R1 Hex distance, even columns half a hex lower         | 3    | `subsector.Hex.cube`, `Hex.Distance`                                | `TestDistanceAgainstPrintedGrid` -- measured by hand off the printed grid                                           | done   |
+| R1 The subsector grid, 0101-0810, one hex one parsec   | 1, 3 | `starmap.Hex`, `starmap.Columns`/`Rows`                         | `TestNewHexRejectsOffGrid`, `TestParseHex`, `TestHexRoundTripsThroughJSON`                                          | done   |
+| R1 Hex distance, even columns half a hex lower         | 3    | `starmap.Hex.cube`, `Hex.Distance`                                | `TestDistanceAgainstPrintedGrid` -- measured by hand off the printed grid                                           | done   |
 | R1 The grid drawn: the map in the listing              | 1, 3 | `render.Renderer.grid`, `render.gridLine`                           | `TestTheMapIsTheGridPrintedOnPageThree` -- held against the page-anchored distance, `TestTheMapMarksWhatPageOneSaysToMark` | done   |
 | R1 The grid drawn: the map in the booklet              | 1, 3 | `render.fitMap`, `render.mapFit.hexCenter`, `render.Renderer.Booklet` | `TestTheDrawnMapIsTheGridPrintedOnPageThree` -- measured off the drawing, `TestEveryWorldIsDrawnInItsOwnHex`               | done   |
-| R1a The line drawn between the worlds a lane joins     | 2    | `render.booklet.drawLanes`                                          | `TestEveryLaneIsDrawn`                                                                                                    | done   |
+| R1a The line drawn between the worlds a route joins     | 2    | `render.booklet.drawRoutes`                                          | `TestEveryRouteIsDrawn`                                                                                                    | done   |
 | R2 World occurrence, one die at 4+, DM -1/0/+1         | 1    | `gen.occurrenceTarget`, `gen.scan`                                  | `TestOccurrenceDMChangesTheStream`, `TestRejectsDMsTheBookDoesNotOffer`, `TestInvariantsOverManySeeds`              | done   |
 | R3 Starport type, two dice against the starports table | 1    | `tables.Starports.Type`, `gen.Generate`                             | `TestStarportsTable`, `TestStarportDistributionFollowsThePage`                                                      | done   |
 | R4 Naval and scout base throws                         | 5    | `tables.StarportChart.NavalBase`/`ScoutBase`, `gen.Engine.Generate` | `TestStarportChartBaseThrows`, `TestBaseThrowsFollowTheChart`, `assertBasesFollowTheChart`                          | done   |
-| R5 Space lanes, one die against the jump routes table  | 2    | `tables.JumpRoutes.Target`, `tables.MaxJump`, `gen.Engine.lanes`    | `TestJumpRoutesTable`, `TestJumpRoutesHasNoRowForX`, `assertLanesFollowTheTable`, `assertLanesTheTableMakesCertain` | done   |
+| R5 Routes, one die against the jump routes table  | 2    | `tables.JumpRoutes.Target`, `tables.MaxJump`, `gen.Engine.routes`    | `TestJumpRoutesTable`, `TestJumpRoutesHasNoRowForX`, `assertRoutesFollowTheTable`, `assertRoutesTheTableMakesCertain` | done   |
 
 ## World creation (pp. 4-9)
 
@@ -40,8 +40,8 @@ with a test named in it.
 | R11 Law level, 2D-7+government                           | 8, 12   | `gen.Engine.detail`                           | `assertWithinFormula`                                              | done   |
 | R12 Technological index, one die plus the matrix DMs     | 9       | `gen.Engine.detail`, `tables.TechIndexMatrix` | `TestTechnologicalIndexMatrix`, `assertTechIndexIsTheMatrix`       | done   |
 | R13 The two throws not made                              | 4       | `gen.Engine.detail`                           | `assertAutomaticZeros`                                             | done   |
-| R14 Floored at 0; the technological index capped at 18   | 4-9     | `gen.clamp`, `subsector.Clamp`                | `assertClampsAreHonest`, `TestTheClampsThatBindAreTheOnesR14Names` | done   |
-| R15 The string of digits, eight characters, no separator | 4, B1 8 | `subsector.World.DigitString`                 | `TestDigitAlphabet`, `assertDigitsSpellTheWorld`                   | done   |
+| R14 Floored at 0; the technological index capped at 18   | 4-9     | `gen.clamp`, `starmap.Clamp`                | `assertClampsAreHonest`, `TestTheClampsThatBindAreTheOnesR14Names` | done   |
+| R15 The string of digits, eight characters, no separator | 4, B1 8 | `starmap.World.DigitString`                 | `TestDigitAlphabet`, `assertDigitsSpellTheWorld`                   | done   |
 | R16 The descriptive tables                               | 5-7     | `tables.Labels`, `render.Renderer.world`      | `TestEveryPrintedValueHasALabel`, `TestLabelsComeFromTheTables`    | done   |
 
 ## Technological levels (pp. 10-11)
@@ -74,10 +74,10 @@ the referee at the table, not by the tool.
 | Rule                                                          | Page   | Implementation                                                                                   | Test                                                                                                                                 | Status                    |
 | ------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
 | R17 Dice engine, one and two dice, cumulative DMs, N+ targets | B1 2-3 | `dice.Stream.Die`/`D2`, `dice.Sum`, `dice.Target`                                                | `TestDieIsOneDie`, `TestD2ConsumesTwoDiceInOrder`, `TestTargetIsNPlus`, `TestSumIsCumulative`                                        | done                      |
-| R18 The subsector record and its provenance                   | --     | `subsector.Subsector`, `subsector.World`, `subsector.Route`, `subsector.New`, `subsector.Decode` | `TestNewRecordCarriesItsProvenance`, `TestGoldensValidate`, `TestDecodeRejectsUnknownFields`, `TestDecodeRejectsMoreThanOneDocument`, `TestDecodeRejectsAHexOffTheRecordsGrid`, `TestDecodeRejectsALaneEndOffTheRecordsGrid` | done                      |
+| R18 The record and its provenance                             | --     | `starmap.Record`, `starmap.World`, `starmap.Route`, `starmap.New`, `starmap.Decode` | `TestNewRecordCarriesItsProvenance`, `TestGoldensValidate`, `TestDecodeRejectsUnknownFields`, `TestDecodeRejectsMoreThanOneDocument`, `TestDecodeRejectsAHexOffTheRecordsGrid`, `TestDecodeRejectsARouteEndOffTheRecordsGrid` | done                      |
 | R19 Batch                                                     | --     | `cmd/ctworldgen.batchCmd`, `batch`, `memberName`                                                 | `TestBatchMemberZeroIsTheBaseSeed`, `TestBatchDerivesEachMemberFromTheBase`, `TestBatchNamesMembersForTheSubsector`                  | done                      |
-| R20 The subsector listing                                     | 4      | `render.Renderer`                                                                                | `TestListings`, `TestEveryWorldAndLaneReachesTheListing`, `TestLabelsComeFromTheTables`, `TestARefereesNameReachesEveryPlaceTheHexAppears`, `TestAnEmptySubsectorRenders`               | done                      |
-| R21 Sector: sixteen subsectors on one grid, lanes at the seams | 1-2 | `gen.Engine.Sector`, `gen.Place`, `gen.MemberOf`, `cmd/ctworldgen.sectorCmd` | `TestASectorsMembersAreTheSubsectorsNewWrites`, `TestLanesCrossTheSeams`, `TestTranslationKeepsThePageThreeParity`, `TestEveryPairIsExaminedOnce`, `TestTheSeamsGolden`, `TestASectorRendersOnItsOwnGrid`, `TestTheListingSaysWhichGridItDrew`, `TestASectorRecordValidates` | done |
+| R20 The listing                                               | 4      | `render.Renderer`                                                                                | `TestListings`, `TestEveryWorldAndRouteReachesTheListing`, `TestLabelsComeFromTheTables`, `TestARefereesNameReachesEveryPlaceTheHexAppears`, `TestAnEmptySubsectorRenders`               | done                      |
+| R21 Sector: sixteen subsectors on one grid, routes at the seams | 1-2 | `gen.Engine.Sector`, `gen.Place`, `gen.MemberOf`, `cmd/ctworldgen.sectorCmd` | `TestASectorsMembersAreTheSubsectorsNewWrites`, `TestRoutesCrossTheSeams`, `TestTranslationKeepsThePageThreeParity`, `TestEveryPairIsExaminedOnce`, `TestTheSeamsGolden`, `TestASectorRendersOnItsOwnGrid`, `TestTheListingSaysWhichGridItDrew`, `TestASectorRecordValidates` | done |
 
 ## Determinism and provenance
 
@@ -88,8 +88,8 @@ the referee at the table, not by the tool.
 | Consumption order is pinned                        | `gen.Generate`                                   | `TestGoldens`                                                      |
 | A seed is always recorded                          | `cmd/ctworldgen.newCmd`                          | `TestASeedIsAlwaysRecorded`, `TestSeedZeroIsAChoice`               |
 | A record reproduces from its own seed and inputs   | --                                               | `TestRegenerationRoundTrip`                                        |
-| The shipped example is a record the engine wrote   | `subsector.Marshal`, `internal/cmd/regenerate`   | `TestTheCompleteExampleIsAGeneratedRecord`                         |
-| Unknown fields are rejected on both sides          | `subsector.Decode`, `docs/subsector.schema.json` | `TestDecodeRejectsUnknownFields`, `TestSchemaRejectsUnknownFields` |
+| The shipped example is a record the engine wrote   | `starmap.Marshal`, `internal/cmd/regenerate`   | `TestTheCompleteExampleIsAGeneratedRecord`                         |
+| Unknown fields are rejected on both sides          | `starmap.Decode`, `docs/record.schema.json` | `TestDecodeRejectsUnknownFields`, `TestSchemaRejectsUnknownFields` |
 | Coverage does not drift                            | `internal/cmd/ratchet`                           | `TestCompareFailsInBothDirections`                                 |
 
 ## Readings
@@ -101,11 +101,11 @@ reading is stamped only once the engine implements the step it governs.
 | Reading | Governs                                                       | Cited in                                             | Stamped                                      |
 | ------- | ------------------------------------------------------------- | ------------------------------------------- | -------------------------------------------- |
 | E001    | Where the base throws sit in the procedure                    | `gen/gen.go`, `tables/tables.go`                     | where any base throw was made, now           |
-| E002    | The order of the passes, hexes and characteristics            | `gen/gen.go`, `subsector/hex.go`                     | every record, now                            |
+| E002    | The order of the passes, hexes and characteristics            | `gen/gen.go`, `starmap/hex.go`                     | every record, now                            |
 | E003    | Which pairs are examined, when a die is thrown, in what order | `gen/gen.go`, `tables/tables.go`                     | records with two or more worlds, now         |
 | E004    | Floored at 0, capped only at the technological index          | `gen/gen.go`, `tables/tables.go`, `render/render.go` | where a floor or the cap actually bound, now |
-| E005    | The string of digits: order, alphabet, no separator           | `subsector/record.go`, `subsector/digit.go`          | records with at least one world, now         |
-| E006 | Sixteen subsectors on one grid, and the lane pass at their seams | `gen/sector.go`, `subsector/hex.go`, `subsector/record.go` | every sector record |
+| E005    | The string of digits: order, alphabet, no separator           | `starmap/record.go`, `starmap/digit.go`          | records with at least one world, now         |
+| E006 | Sixteen subsectors on one grid, and the route pass at their seams | `gen/sector.go`, `starmap/hex.go`, `starmap/record.go` | every sector record |
 
 Both directions are checked by `internal/audit`: every `E00N` cited in the
 code or the documents resolves to a heading in `ERRATA.md`, and every

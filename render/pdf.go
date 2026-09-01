@@ -11,7 +11,7 @@ import (
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/charmap"
 
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 	"github.com/philoserf/ctworldgen/tables"
 )
 
@@ -53,12 +53,12 @@ const (
 )
 
 // The inks. Grey rather than black for everything the worlds are read
-// over: the grid and the lanes are the paper a referee writes on, and a
-// dense subsector draws a hundred and fifty lanes across it.
+// over: the grid and the routes are the paper a referee writes on, and a
+// dense subsector draws a hundred and fifty routes across it.
 const (
 	inkBlack = 0
 	inkNote  = 95
-	inkLane  = 125
+	inkRoute = 125
 	inkGrid  = 185
 	white    = 255
 )
@@ -75,9 +75,9 @@ const (
 
 // Line weights.
 const (
-	gridWeight = 0.4
-	laneWeight = 0.6
-	ruleWeight = 0.8
+	gridWeight  = 0.4
+	routeWeight = 0.6
+	ruleWeight  = 0.8
 )
 
 // two is the divisor that halves a measure: a centred string starts half
@@ -97,13 +97,13 @@ const two = 2.0
 func epoch() time.Time { return time.Unix(0, 0).UTC() }
 
 // Booklet writes the record as the pages a referee prints: the map beside
-// its roster, then the space lanes, then a block per world.
+// its roster, then the routes, then a block per world.
 //
 // It renders the same record the Markdown listing renders, from the same
 // charts, and it decides nothing the listing does not. The one thing it
 // adds is the line p. 2 asks for -- "a line connecting the two worlds on
 // the map" -- which a monospace grid has nowhere to put.
-func (r *Renderer) Booklet(out io.Writer, record *subsector.Subsector) error {
+func (r *Renderer) Booklet(out io.Writer, record *starmap.Record) error {
 	book := &booklet{
 		pdf:    newPDF(),
 		charts: r.charts,
@@ -114,7 +114,7 @@ func (r *Renderer) Booklet(out io.Writer, record *subsector.Subsector) error {
 	}
 
 	book.firstPage()
-	book.lanesSection()
+	book.routesSection()
 	book.detailsSection()
 
 	err := book.pdf.Output(out)
@@ -128,7 +128,7 @@ func (r *Renderer) Booklet(out io.Writer, record *subsector.Subsector) error {
 // newPDF returns a document pinned to reproduce byte for byte.
 //
 // Compression is off for the same reason: an uncompressed content stream
-// is plain text, so the checks that every world and lane reaches the page
+// is plain text, so the checks that every world and route reaches the page
 // can read the drawn strings straight out of the bytes rather than
 // bringing in a PDF parser to answer one question.
 func newPDF() *fpdf.Fpdf {
@@ -195,8 +195,8 @@ func (b *booklet) encode(text string) string {
 type booklet struct {
 	pdf    *fpdf.Fpdf
 	charts *tables.Tables
-	record *subsector.Subsector
-	names  map[subsector.Hex]string
+	record *starmap.Record
+	names  map[starmap.Hex]string
 	latin  *encoding.Encoder
 	y      float64
 }
@@ -247,7 +247,7 @@ func (b *booklet) firstPage() {
 	// A sector is thirty-two columns across (ERRATA E006). Fitted into
 	// half the page it draws hexes too small to carry a starport letter,
 	// so it takes the whole width and the roster begins overleaf.
-	beside := b.record.Grid == subsector.PageThreeGrid()
+	beside := b.record.Grid == starmap.PageThreeGrid()
 
 	rosterX, rosterWidth, rosterTop := pageMargin, columnWidth, b.y
 
@@ -265,16 +265,16 @@ func (b *booklet) firstPage() {
 
 // summary is the sentence the Markdown listing opens with, so that the
 // two documents report the same record in the same words.
-func summary(record *subsector.Subsector) string {
-	return fmt.Sprintf("%d worlds, %d space lanes. Generated from seed %d at occurrence DM %s.",
+func summary(record *starmap.Record) string {
+	return fmt.Sprintf("%d worlds, %d routes. Generated from seed %d at occurrence DM %s.",
 		len(record.Worlds), len(record.Routes), record.Seed, occurrenceDM(record.OccurrenceDM))
 }
 
 // drawMap draws the p. 3 grid inside a box: the hexes and their numbers,
-// then the lanes over them, then the worlds over those.
+// then the routes over them, then the worlds over those.
 //
 // The order is the order a referee draws it in and the order that stays
-// legible: a lane crossing a hex must not black out the starport letter
+// legible: a route crossing a hex must not black out the starport letter
 // at either end of it.
 func (b *booklet) drawMap(within box) {
 	fit := fitMap(b.record.Grid, within)
@@ -286,7 +286,7 @@ func (b *booklet) drawMap(within box) {
 
 	for col := 1; col <= b.record.Grid.Columns; col++ {
 		for row := 1; row <= b.record.Grid.Rows; row++ {
-			hex := subsector.Hex{Col: col, Row: row}
+			hex := starmap.Hex{Col: col, Row: row}
 			center := fit.hexCenter(hex)
 
 			b.pdf.Polygon(polygon(hexOutline(center, fit.Side)), "D")
@@ -301,16 +301,16 @@ func (b *booklet) drawMap(within box) {
 		}
 	}
 
-	b.drawLanes(fit)
+	b.drawRoutes(fit)
 	b.drawWorlds(fit)
 }
 
-// drawLanes draws p. 2's line between the two worlds a lane joins. The
+// drawRoutes draws p. 2's line between the two worlds a route joins. The
 // text map draws none and says so; this is the one thing the drawn map
 // exists for.
-func (b *booklet) drawLanes(fit mapFit) {
-	b.pdf.SetLineWidth(laneWeight)
-	b.pdf.SetDrawColor(inkLane, inkLane, inkLane)
+func (b *booklet) drawRoutes(fit mapFit) {
+	b.pdf.SetLineWidth(routeWeight)
+	b.pdf.SetDrawColor(inkRoute, inkRoute, inkRoute)
 
 	for _, route := range b.record.Routes {
 		from := fit.hexCenter(route.From)
@@ -407,7 +407,7 @@ func (b *booklet) rosterHead(left, width float64) {
 }
 
 // rosterRow writes one world.
-func (b *booklet) rosterRow(left, width float64, world subsector.World) {
+func (b *booklet) rosterRow(left, width float64, world starmap.World) {
 	b.pdf.SetFont("Helvetica", "", rosterSize)
 	b.pdf.SetTextColor(inkBlack, inkBlack, inkBlack)
 
@@ -456,39 +456,39 @@ func (b *booklet) clip(value string, width float64) string {
 	return ""
 }
 
-// lanesSection writes the lane table, which carries every lane whether or
+// routesSection writes the route table, which carries every route whether or
 // not the map above it drew a line a reader can follow.
-func (b *booklet) lanesSection() {
-	b.heading("Space lanes")
+func (b *booklet) routesSection() {
+	b.heading("Routes")
 
 	if len(b.record.Routes) == 0 {
-		b.body("No space lane was drawn.")
+		b.body("No route was drawn.")
 
 		return
 	}
 
-	b.laneHead()
+	b.routeHead()
 
 	for _, route := range b.record.Routes {
 		// The head goes on every page the table reaches, as the roster's
-		// does. A subsector at DM +1 carries a hundred and fifty lanes and
+		// does. A subsector at DM +1 carries a hundred and fifty routes and
 		// a sector carries hundreds, so a table without this prints pages
 		// of unlabelled columns.
 		if b.y+rosterLead > contentBottom {
 			b.newPage()
-			b.laneHead()
+			b.routeHead()
 		}
 
 		b.pdf.SetFont("Helvetica", "", rosterSize)
-		b.laneCells(named(b.names, route.From), named(b.names, route.To), fmt.Sprint(route.Distance))
+		b.routeCells(named(b.names, route.From), named(b.names, route.To), fmt.Sprint(route.Distance))
 	}
 }
 
-// laneHead writes the lane table's column headings and the rule beneath
+// routeHead writes the route table's column headings and the rule beneath
 // them, as rosterHead does for the roster.
-func (b *booklet) laneHead() {
+func (b *booklet) routeHead() {
 	b.pdf.SetFont("Helvetica", "B", rosterSize)
-	b.laneCells("From", "To", "Parsecs")
+	b.routeCells("From", "To", "Parsecs")
 
 	b.y += blockGap
 	b.rule(pageMargin, contentRight)
@@ -496,17 +496,17 @@ func (b *booklet) laneHead() {
 	b.y += blockGap / two
 }
 
-// laneColumnWidth is what one end of a lane is written in: a hex and the
+// routeColumnWidth is what one end of a route is written in: a hex and the
 // name the referee gave it.
-const laneColumnWidth = 200.0
+const routeColumnWidth = 200.0
 
-func (b *booklet) laneCells(from, to, parsecs string) {
+func (b *booklet) routeCells(from, to, parsecs string) {
 	baseline := b.y + rosterSize
 
 	b.pdf.SetTextColor(inkBlack, inkBlack, inkBlack)
-	b.text(pageMargin, baseline, b.clip(from, laneColumnWidth))
-	b.text(pageMargin+laneColumnWidth, baseline, b.clip(to, laneColumnWidth))
-	b.text(pageMargin+laneColumnWidth*two, baseline, parsecs)
+	b.text(pageMargin, baseline, b.clip(from, routeColumnWidth))
+	b.text(pageMargin+routeColumnWidth, baseline, b.clip(to, routeColumnWidth))
+	b.text(pageMargin+routeColumnWidth*two, baseline, parsecs)
 
 	b.y += rosterLead
 }
@@ -533,7 +533,7 @@ type bullet struct {
 	description string
 }
 
-func (b *booklet) worldBlock(world subsector.World) {
+func (b *booklet) worldBlock(world starmap.World) {
 	lines := b.bullets(world)
 
 	// The heading and its first line stay together: a world whose name is
@@ -599,7 +599,7 @@ func (b *booklet) bulletLine(line bullet) {
 // bullets is the world's lines, in the order the p. 4 Planetary
 // Characteristics box lists them, which is the order the Markdown listing
 // writes them in.
-func (b *booklet) bullets(world subsector.World) []bullet {
+func (b *booklet) bullets(world starmap.World) []bullet {
 	starport := "no chart row"
 
 	row, err := b.charts.StarportChart.Row(world.Starport)

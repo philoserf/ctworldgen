@@ -25,9 +25,9 @@ backlog items.
 
 **Status.** The engine walks the whole of pp. 1-12; `render` writes the
 listing, which opens with a text map of the p. 3 grid, or a printable PDF
-booklet (`--format pdf`) with the grid drawn and p. 2's lane lines joined;
+booklet (`--format pdf`) with the grid drawn and p. 2's route lines joined;
 `batch` produces N independent subsectors; and `sector` lays sixteen of
-them on one 32x40 grid and throws for the lanes at their seams (E006). A sector's members
+them on one 32x40 grid and throws for the routes at their seams (E006). A sector's members
 are unchanged -- member *i* of `sector --seed N` is the subsector `new
 --seed N+i` writes -- which is the property that keeps a sector
 trustworthy and is tested directly.
@@ -133,7 +133,7 @@ it.
   change the conversion without re-measuring there.
 
   The parity now lives in **three** places, and they must agree:
-  `subsector.Hex.cube`, the text map's `render.gridLine`, and the drawn
+  `starmap.Hex.cube`, the text map's `render.gridLine`, and the drawn
   map's `render.mapFit.hexCenter`. Each has its own measurement against
   the page, because each can be flipped without the other two noticing.
   The drawn one is measured off the PDF it produced rather than off its
@@ -151,8 +151,8 @@ it.
 This has bitten five times now, and never once showed up as a failing
 suite:
 
-- The base and lane throws could have their sense inverted and every
-  invariant still passed, because the checks only asked whether the lanes
+- The base and route throws could have their sense inverted and every
+  invariant still passed, because the checks only asked whether the routes
   and bases that exist are legal.
 - Five world-creation assertions were written, and the edit meant to call
   them from the sweep silently matched nothing. They sat in the file,

@@ -3,7 +3,7 @@ package tables_test
 import (
 	"testing"
 
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 	"github.com/philoserf/ctworldgen/tables"
 )
 
@@ -88,15 +88,15 @@ func jumpRoutesTranscription() map[string][4]*int {
 }
 
 // pairStarports splits a transcription key such as "A-C".
-func pairStarports(t *testing.T, pair string) (subsector.Starport, subsector.Starport) {
+func pairStarports(t *testing.T, pair string) (starmap.Starport, starmap.Starport) {
 	t.Helper()
 
-	first, err := subsector.ParseStarport(pair[0:1])
+	first, err := starmap.ParseStarport(pair[0:1])
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	b, err := subsector.ParseStarport(pair[2:3])
+	b, err := starmap.ParseStarport(pair[2:3])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +121,7 @@ func TestJumpRoutesTable(t *testing.T) {
 		a, b := pairStarports(t, pair)
 
 		for i, cell := range cells {
-			distance := subsector.Parsecs(i + 1)
+			distance := starmap.Parsecs(i + 1)
 
 			got, stated := routes.Target(a, b, distance)
 
@@ -180,21 +180,21 @@ func TestJumpRoutesHasNoRowForX(t *testing.T) {
 
 	routes := load(t).JumpRoutes
 
-	for _, port := range subsector.Starports() {
-		for distance := subsector.Parsecs(1); distance <= tables.MaxJump; distance++ {
-			if _, stated := routes.Target(subsector.StarportX, port, distance); stated {
+	for _, port := range starmap.Starports() {
+		for distance := starmap.Parsecs(1); distance <= tables.MaxJump; distance++ {
+			if _, stated := routes.Target(starmap.StarportX, port, distance); stated {
 				t.Errorf("X-%s at jump-%d states a target; the table prints no row for X", port, distance)
 			}
 
-			if _, stated := routes.Target(port, subsector.StarportX, distance); stated {
+			if _, stated := routes.Target(port, starmap.StarportX, distance); stated {
 				t.Errorf("%s-X at jump-%d states a target; the table prints no row for X", port, distance)
 			}
 		}
 	}
 
 	// Nothing is stated beyond the four columns the page prints.
-	for _, distance := range []subsector.Parsecs{0, 5, 6, -1} {
-		if _, stated := routes.Target(subsector.StarportA, subsector.StarportA, distance); stated {
+	for _, distance := range []starmap.Parsecs{0, 5, 6, -1} {
+		if _, stated := routes.Target(starmap.StarportA, starmap.StarportA, distance); stated {
 			t.Errorf("A-A at jump-%d states a target; the page prints four distance columns", distance)
 		}
 	}
@@ -221,7 +221,7 @@ func TestStarportChartBaseThrows(t *testing.T) {
 	chart := load(t).StarportChart
 
 	for _, wantRow := range want {
-		port, err := subsector.ParseStarport(wantRow.typ)
+		port, err := starmap.ParseStarport(wantRow.typ)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -276,7 +276,7 @@ func TestTechnologicalIndexMatrix(t *testing.T) {
 	matrix := load(t).TechIndexMatrix
 
 	for value, cells := range want {
-		digit, err := subsector.ParseDigit(value)
+		digit, err := starmap.ParseDigit(value)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -297,7 +297,7 @@ func TestTechnologicalIndexMatrix(t *testing.T) {
 
 	starportDMs := map[string]int{"A": 6, "B": 4, "C": 2, "D": 0, "E": 0, "X": -4}
 	for typ, wantDM := range starportDMs {
-		p, err := subsector.ParseStarport(typ)
+		p, err := starmap.ParseStarport(typ)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -316,7 +316,7 @@ func TestMatrixMaximumBinds(t *testing.T) {
 
 	matrix := load(t).TechIndexMatrix
 
-	sum := matrix.StarportDM(subsector.StarportA) +
+	sum := matrix.StarportDM(starmap.StarportA) +
 		matrix.DM(tables.ColSize, 0) +
 		matrix.DM(tables.ColAtmosphere, 0) +
 		matrix.DM(tables.ColHydrographics, 0) +
@@ -399,7 +399,7 @@ func TestStarportChartDescriptions(t *testing.T) {
 	t.Parallel()
 
 	chart := load(t).StarportChart
-	for _, port := range subsector.Starports() {
+	for _, port := range starmap.Starports() {
 		row, err := chart.Row(port)
 		if err != nil {
 			t.Fatalf("starport %s: %v", port, err)
@@ -410,16 +410,16 @@ func TestStarportChartDescriptions(t *testing.T) {
 		}
 	}
 
-	_, err := chart.Row(subsector.Starport('Q'))
+	_, err := chart.Row(starmap.Starport('Q'))
 	if err == nil {
 		t.Error("the chart returned a row for a starport the book does not print")
 	}
 
-	if _, ok := chart.NavalBase(subsector.Starport('Q')); ok {
+	if _, ok := chart.NavalBase(starmap.Starport('Q')); ok {
 		t.Error("the chart returned a naval throw for a starport the book does not print")
 	}
 
-	if _, ok := chart.ScoutBase(subsector.Starport('Q')); ok {
+	if _, ok := chart.ScoutBase(starmap.Starport('Q')); ok {
 		t.Error("the chart returned a scout throw for a starport the book does not print")
 	}
 }

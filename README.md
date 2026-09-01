@@ -9,11 +9,11 @@ referee can run from.
 
 All four milestones are complete. The engine walks the whole of Book 3
 pp. 1-12 -- the eighty-hex occurrence scan, starport types, naval and
-scout bases, commercial space lanes, and the eight characteristics of
+scout bases, commercial routes, and the eight characteristics of
 every world -- all from a recorded seed. `render` turns a record into the
 Markdown listing a referee can run from, opening with a text map of the
 p. 3 hex grid, or into a printable PDF booklet with the grid drawn and the
-space lanes joined; `batch` produces a sector's worth of subsectors at a
+routes joined; `batch` produces a sector's worth of subsectors at a
 time.
 
 `docs/COVERAGE.md` is the current map of rule to code to test.
@@ -34,8 +34,8 @@ Members are numbered from zero, so `batch --count 1 --seed N` produces
 exactly the subsector `new --seed N` produces.
 
 `sector` writes one record covering sixteen subsectors on a single 32x40
-grid, 0101 through 3240, and throws for the commercial lanes that cross
-between them -- the lanes sixteen independent subsectors can never have.
+grid, 0101 through 3240, and throws for the commercial routes that cross
+between them -- the routes sixteen independent subsectors can never have.
 Every member is unchanged: member _i_ of `sector --seed N` is exactly the
 subsector `new --seed N+i` writes, so the subsector you read is the
 subsector you get. The seams are one further reading (`ERRATA.md` E006),
@@ -43,7 +43,7 @@ stamped on every sector record.
 
 `render` writes the Markdown listing by default. `--format pdf` writes the
 booklet instead: the map beside its roster on the first page, then the
-space lanes and a page of detail per world. It is the one output that
+routes and a page of detail per world. It is the one output that
 draws p. 2's "line connecting the two worlds on the map", which a
 monospace grid has nowhere to put. A booklet is a binary, so `--format
 pdf` needs `-o`, and it reproduces byte for byte from the same record.
@@ -87,7 +87,7 @@ their counts share members: `--seed 100 --count 16` and `--seed 110 --count
 `docs/ERRATA.md` records every reading of an ambiguous or silent page,
 with its page cite and the condition under which a record stamps it.
 `docs/COVERAGE.md` maps the rules to the implementation.
-`docs/subsector.schema.json` is the record's schema, with a minimal and a
+`docs/record.schema.json` is the record's schema, with a minimal and a
 complete example beside it. `CLAUDE.md` carries the authority model:
 which books and pages govern, and the font trap that makes a text
 extraction of any table unsafe.

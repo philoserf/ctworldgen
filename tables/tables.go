@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/philoserf/ctworldgen/dice"
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 )
 
 // The charts state these rules, so each error carries its cite here
@@ -109,10 +109,10 @@ const (
 
 // Starports is the starports table of p. 1: two dice for each world, read
 // against a distribution of starport types.
-type Starports struct{ types map[int]subsector.Starport }
+type Starports struct{ types map[int]starmap.Starport }
 
 // Type returns the starport for a two-dice throw.
-func (s *Starports) Type(throw int) (subsector.Starport, error) {
+func (s *Starports) Type(throw int) (starmap.Starport, error) {
 	p, ok := s.types[throw]
 	if !ok {
 		return 0, fmt.Errorf("%w: %d", ErrNoStarportForThrow, throw)
@@ -134,9 +134,9 @@ func (s *Starports) load(data []byte) error {
 		return fmt.Errorf("reading the starports table: %w", err)
 	}
 
-	s.types = make(map[int]subsector.Starport, len(doc.Rows))
+	s.types = make(map[int]starmap.Starport, len(doc.Rows))
 	for _, row := range doc.Rows {
-		port, err := subsector.ParseStarport(row.Type)
+		port, err := starmap.ParseStarport(row.Type)
 		if err != nil {
 			return fmt.Errorf("die %d: %w", row.Die, err)
 		}
@@ -162,8 +162,8 @@ func (s *Starports) load(data []byte) error {
 }
 
 // MaxJump is the greatest distance the jump routes table states a target
-// for, and so the greatest distance at which a space lane is possible.
-const MaxJump subsector.Parsecs = 4
+// for, and so the greatest distance at which a route is possible.
+const MaxJump starmap.Parsecs = 4
 
 // JumpRoutes is the jump routes table of p. 2. Its rows run A-A through
 // E-E and there is none for X; twenty-nine of its sixty cells print an
@@ -171,7 +171,7 @@ const MaxJump subsector.Parsecs = 4
 // neither is thrown against and neither consumes a die (ERRATA E003).
 type JumpRoutes struct{ targets map[string][4]*int }
 
-func pairKey(a, b subsector.Starport) string {
+func pairKey(a, b starmap.Starport) string {
 	if b < a {
 		a, b = b, a
 	}
@@ -183,7 +183,7 @@ func pairKey(a, b subsector.Starport) string {
 // distance, and whether the table states one at all. It states none for a
 // pair involving X, which has no row, and none at a dash cell; in both
 // cases no die is thrown.
-func (j *JumpRoutes) Target(a, b subsector.Starport, distance subsector.Parsecs) (dice.Target, bool) {
+func (j *JumpRoutes) Target(a, b starmap.Starport, distance starmap.Parsecs) (dice.Target, bool) {
 	if distance < 1 || distance > MaxJump {
 		return 0, false
 	}
@@ -236,13 +236,13 @@ func (j *JumpRoutes) load(data []byte) error {
 // page prints one for, and no others. There is deliberately no row for X.
 func (j *JumpRoutes) verify() error {
 	pairs := 0
-	lane := []subsector.Starport{
-		subsector.StarportA, subsector.StarportB, subsector.StarportC,
-		subsector.StarportD, subsector.StarportE,
+	ports := []starmap.Starport{
+		starmap.StarportA, starmap.StarportB, starmap.StarportC,
+		starmap.StarportD, starmap.StarportE,
 	}
 
-	for i, a := range lane {
-		for _, b := range lane[i:] {
+	for i, a := range ports {
+		for _, b := range ports[i:] {
 			key := pairKey(a, b)
 			if _, ok := j.targets[key]; !ok {
 				return fmt.Errorf("%w: for the pair %s", errMissingRow, key)
@@ -262,7 +262,7 @@ func (j *JumpRoutes) verify() error {
 // StarportChart is the starport chart of p. 5: the description of each
 // starport type, and the base throws the p. 12 checklist omits.
 type StarportChart struct {
-	rows map[subsector.Starport]ChartRow
+	rows map[starmap.Starport]ChartRow
 }
 
 // ChartRow is one starport type's line of the p. 5 chart. NavalBase and
@@ -275,7 +275,7 @@ type ChartRow struct {
 }
 
 // Row returns a starport type's line of the chart.
-func (s *StarportChart) Row(p subsector.Starport) (ChartRow, error) {
+func (s *StarportChart) Row(p starmap.Starport) (ChartRow, error) {
 	row, ok := s.rows[p]
 	if !ok {
 		return ChartRow{}, fmt.Errorf("%w: %s", ErrNoChartRow, p)
@@ -286,7 +286,7 @@ func (s *StarportChart) Row(p subsector.Starport) (ChartRow, error) {
 
 // NavalBase returns the throw a naval base is present on, and whether the
 // chart prints one for this starport type at all.
-func (s *StarportChart) NavalBase(p subsector.Starport) (dice.Target, bool) {
+func (s *StarportChart) NavalBase(p starmap.Starport) (dice.Target, bool) {
 	row, ok := s.rows[p]
 	if !ok || row.NavalBase == nil {
 		return 0, false
@@ -297,7 +297,7 @@ func (s *StarportChart) NavalBase(p subsector.Starport) (dice.Target, bool) {
 
 // ScoutBase returns the throw a scout base is present on, and whether the
 // chart prints one for this starport type at all.
-func (s *StarportChart) ScoutBase(p subsector.Starport) (dice.Target, bool) {
+func (s *StarportChart) ScoutBase(p starmap.Starport) (dice.Target, bool) {
 	row, ok := s.rows[p]
 	if !ok || row.ScoutBase == nil {
 		return 0, false
@@ -321,10 +321,10 @@ func (s *StarportChart) load(data []byte) error {
 		return fmt.Errorf("reading the starport chart: %w", err)
 	}
 
-	s.rows = make(map[subsector.Starport]ChartRow, len(doc.Rows))
+	s.rows = make(map[starmap.Starport]ChartRow, len(doc.Rows))
 
 	for _, row := range doc.Rows {
-		port, err := subsector.ParseStarport(row.Type)
+		port, err := starmap.ParseStarport(row.Type)
 		if err != nil {
 			return fmt.Errorf("starport chart row %q: %w", row.Type, err)
 		}
@@ -341,7 +341,7 @@ func (s *StarportChart) load(data []byte) error {
 		s.rows[port] = ChartRow{Description: row.Description, NavalBase: row.NavalBase, ScoutBase: row.ScoutBase}
 	}
 
-	for _, p := range subsector.Starports() {
+	for _, p := range starmap.Starports() {
 		if _, ok := s.rows[p]; !ok {
 			return fmt.Errorf("%w: for starport %s", errMissingRow, p)
 		}
@@ -392,7 +392,7 @@ const (
 // nothing -- which is what the printed dashes already mean (ERRATA E004).
 type TechIndexMatrix struct {
 	byValue    map[int][5]*int
-	byStarport map[subsector.Starport]*int
+	byStarport map[starmap.Starport]*int
 }
 
 // DM returns the modifier a characteristic's value contributes. A value
@@ -411,7 +411,7 @@ func (m *TechIndexMatrix) DM(col Column, value int) int {
 }
 
 // StarportDM returns the modifier a starport type contributes.
-func (m *TechIndexMatrix) StarportDM(p subsector.Starport) int {
+func (m *TechIndexMatrix) StarportDM(p starmap.Starport) int {
 	if dm, ok := m.byStarport[p]; ok && dm != nil {
 		return *dm
 	}
@@ -438,7 +438,7 @@ func (m *TechIndexMatrix) load(data []byte) error {
 	}
 
 	m.byValue = make(map[int][5]*int, len(doc.Rows))
-	m.byStarport = make(map[subsector.Starport]*int, len(doc.Rows))
+	m.byStarport = make(map[starmap.Starport]*int, len(doc.Rows))
 
 	seen := make(map[string]bool, len(doc.Rows))
 	for _, row := range doc.Rows {
@@ -447,20 +447,20 @@ func (m *TechIndexMatrix) load(data []byte) error {
 		}
 
 		seen[row.Value] = true
-		if row.Value == subsector.StarportX.String() {
-			m.byStarport[subsector.StarportX] = row.Starport
+		if row.Value == starmap.StarportX.String() {
+			m.byStarport[starmap.StarportX] = row.Starport
 
 			continue
 		}
 
-		d, err := subsector.ParseDigit(row.Value)
+		d, err := starmap.ParseDigit(row.Value)
 		if err != nil {
 			return fmt.Errorf("matrix row %q: %w", row.Value, err)
 		}
 
 		m.byValue[d.Value()] = [5]*int{row.Size, row.Atmosphere, row.Hydrographics, row.Population, row.Government}
 
-		p, err := subsector.ParseStarport(row.Value)
+		p, err := starmap.ParseStarport(row.Value)
 		if err == nil {
 			m.byStarport[p] = row.Starport
 		}
@@ -482,7 +482,7 @@ func (m *TechIndexMatrix) verify() error {
 		}
 	}
 
-	for _, p := range subsector.Starports() {
+	for _, p := range starmap.Starports() {
 		if _, ok := m.byStarport[p]; !ok {
 			return fmt.Errorf("%w: for starport %s", errMissingRow, p)
 		}

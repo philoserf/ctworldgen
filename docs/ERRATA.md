@@ -47,10 +47,10 @@ throw consumes which die.
 1. **The passes.** The p. 12 checklist fixes the boundaries and this tool
    follows them exactly: 1.A throws for every hex in the subsector, then
    1.B determines a starport type for every world found, then 1.C
-   determines the space lanes, and only then does 2 generate the specific
+   determines the routes, and only then does 2 generate the specific
    worlds. Each is a complete pass over the whole subsector before the
    next begins; nothing is interleaved. The base throws sit inside the
-   starport pass (E001), and the lane pass has an order of its own (E003).
+   starport pass (E001), and the route pass has an order of its own (E003).
 
 2. **Hexes and worlds within a pass.** Ascending hex number — the p. 3
    grid's own numbering, column by column and row within column: 0101,
@@ -66,7 +66,7 @@ throw consumes which die.
 
 _Stamped on every record._
 
-## E003 — Which pairs of worlds are examined for lanes, when a die is thrown, and in what order (p. 2)
+## E003 — Which pairs of worlds are examined for routes, when a die is thrown, and in what order (p. 2)
 
 P. 2 says to note the starport type "for it and for its neighbors," to
 consult the jump routes table "throwing one die," that "each specific
@@ -91,7 +91,7 @@ Four things are unfixed, and all four decide the dice stream.
    and none for X, and p. 5 gives starport X "no provision … for any
    starship landings." The reading: a pair with an X starport at either
    end has no row, is not examined, and consumes no die. A commercial
-   space lane needs a starport at both ends.
+   route needs a starport at both ends.
 
 3. **A dash cell.** Twenty-nine of the table's sixty cells print an
    em-dash rather than a number — A–C at jump-4, A–D at jump-3 and
@@ -100,7 +100,7 @@ Four things are unfixed, and all four decide the dice stream.
    of the distance column and the world pair row, a number is stated. If
    the one die throw is equal to, or greater than the number, a space
    lane exists." Where a dash is printed no number is stated, so there is
-   no target to throw against and no lane is possible at that distance.
+   no target to throw against and no route is possible at that distance.
    The alternative reading — that "Consult the jump routes table,
    throwing one die" makes the throw unconditional, the die thrown and
    discarded — is answered by that sentence: the die is thrown against a
@@ -236,7 +236,7 @@ loses nothing.
 
 _Stamped on records with at least one world._
 
-## E006 — A sector: sixteen subsectors on one grid, and the lanes at the seams (pp. 1–2)
+## E006 — A sector: sixteen subsectors on one grid, and the routes at the seams (pp. 1–2)
 
 The book charts a subsector and stops. P. 1 maps "in convenient segments,
 called subsectors", takes "a convenient size" from the p. 3 grid sheet,
@@ -245,7 +245,7 @@ unknown areas and additional subsectors will have to be charted." It
 prints no sector grid and no procedure that crosses one subsector into
 the next.
 
-But the lane rule has no border in it. P. 2 says "For each world, note the
+But the route rule has no border in it. P. 2 says "For each world, note the
 starport type for it and for its neighbors", and "This procedure is
 followed for most worlds within four hexes of each other." The jump routes
 table is read on the starport pair and the distance, and neither knows
@@ -253,14 +253,14 @@ where a subsector ends. The border is an artifact of generating one
 subsector at a time, not a term in the rule.
 
 So a sector is the book's own two halves put together: its subsectors,
-charted one at a time as p. 1 charts them, and its lane rule applied to
+charted one at a time as p. 1 charts them, and its route rule applied to
 neighbours as p. 2 states it. **The reading, in four parts.**
 
 ### 1. Sixteen subsectors, each generated whole
 
 Four across and four down. Member *i* is generated exactly as a lone
 subsector is — the same eighty occurrence throws, the same starports, the
-same bases, the same interior lane pass, the same world creation — on
+same bases, the same interior route pass, the same world creation — on
 seed `base + i`, which is the derivation `batch` already uses. So every
 member of a sector reproduces on its own: member 5 of `sector --seed N` is
 `new --seed N+5`, and nothing about being in a sector changes a world.
@@ -287,7 +287,7 @@ would have flipped the parity of every second band and quietly changed
 interior distances — which is the trap `Hex.cube` already carries, arriving
 by a second road.
 
-### 3. One more lane pass, at the seams only
+### 3. One more route pass, at the seams only
 
 P. 2 says "Each specific pair of worlds should be examined for jump routes
 only once." An interior pair was examined inside its own member, so the

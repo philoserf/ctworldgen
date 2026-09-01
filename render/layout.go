@@ -1,7 +1,7 @@
 package render
 
 import (
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 )
 
 // The geometry of the sub-sector hex grid printed on Book 3 p. 3, read
@@ -12,7 +12,7 @@ import (
 // even-numbered columns pushed half a hex down. The four-digit grid
 // number is printed small inside the upper-left of every hex.
 //
-// That parity is the same one subsector.Hex.cube encodes, arrived at by a
+// That parity is the same one starmap.Hex.cube encodes, arrived at by a
 // second road, and it is the trap CLAUDE.md names: draw the odd columns
 // low instead of the even ones and every hex still lands in a tidy grid,
 // while half the map disagrees with Hex.Distance. Never change this
@@ -63,7 +63,7 @@ type mapFit struct {
 // root3*(R + 0.5) sides down -- the half a row being the step the
 // even-numbered columns are pushed by, which hangs below the last odd
 // column's bottom edge.
-func fitMap(grid subsector.Grid, within box) mapFit {
+func fitMap(grid starmap.Grid, within box) mapFit {
 	side := min(
 		within.Width/(columnStep*float64(grid.Columns)+halfColumn),
 		within.Height/(root3*(float64(grid.Rows)+halfColumn)),
@@ -79,7 +79,7 @@ func fitMap(grid subsector.Grid, within box) mapFit {
 
 // hexCenter is where a hex is drawn. This is the whole of the p. 3
 // parity, in one expression, in one place.
-func (f mapFit) hexCenter(hex subsector.Hex) Point {
+func (f mapFit) hexCenter(hex starmap.Hex) Point {
 	center := Point{
 		X: f.Origin.X + float64(hex.Col-1)*columnStep*f.Side,
 		Y: f.Origin.Y + float64(hex.Row-1)*root3*f.Side,

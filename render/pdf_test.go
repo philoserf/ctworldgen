@@ -12,7 +12,7 @@ import (
 	"github.com/philoserf/ctworldgen/gen"
 	"github.com/philoserf/ctworldgen/internal/fixture"
 	"github.com/philoserf/ctworldgen/render"
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 )
 
 // The booklet is checked by reading the drawing back out of the PDF and
@@ -47,7 +47,7 @@ type segment struct {
 	ToX, ToY     float64
 }
 
-func drawn(t *testing.T, record *subsector.Subsector) []byte {
+func drawn(t *testing.T, record *starmap.Record) []byte {
 	t.Helper()
 
 	renderer, err := render.New()
@@ -179,8 +179,8 @@ var hexLabel = regexp.MustCompile(`^\d{4}$`)
 // about the page rather than a geometry constant: if it were wrong, the
 // count assertion in mapLabels would fail rather than quietly reading the
 // roster's hex column as if it were the map.
-func mapRegion(record *subsector.Subsector) float64 {
-	if record.Grid == subsector.PageThreeGrid() {
+func mapRegion(record *starmap.Record) float64 {
+	if record.Grid == starmap.PageThreeGrid() {
 		return 300
 	}
 
@@ -193,18 +193,18 @@ func mapRegion(record *subsector.Subsector) float64 {
 // it. That count is what makes the region filter safe: picking up the
 // roster's hex column instead would find only the worlds, and picking up
 // both would find too many.
-func mapLabels(t *testing.T, record *subsector.Subsector, page string) map[subsector.Hex]stamp {
+func mapLabels(t *testing.T, record *starmap.Record, page string) map[starmap.Hex]stamp {
 	t.Helper()
 
 	left := mapRegion(record)
-	places := map[subsector.Hex]stamp{}
+	places := map[starmap.Hex]stamp{}
 
 	for _, found := range stamps(t, page) {
 		if found.X < left || !hexLabel.MatchString(found.Text) {
 			continue
 		}
 
-		hex, err := subsector.ParseHex(found.Text)
+		hex, err := starmap.ParseHex(found.Text)
 		if err != nil {
 			t.Fatalf("the map drew %q, which is not a hex: %v", found.Text, err)
 		}
@@ -280,7 +280,7 @@ func TestTheDrawnMapIsTheGridPrintedOnPageThree(t *testing.T) {
 // The drawn neighbours are found by measure -- the six places a hex's own
 // spacing puts against it -- rather than by asking the renderer where it
 // thinks they are.
-func assertDrawnNeighboursAreOneParsec(t *testing.T, places map[subsector.Hex]stamp) {
+func assertDrawnNeighboursAreOneParsec(t *testing.T, places map[starmap.Hex]stamp) {
 	t.Helper()
 
 	first := places[hexOf(t, 1, 1)]
@@ -310,11 +310,11 @@ func assertDrawnNeighboursAreOneParsec(t *testing.T, places map[subsector.Hex]st
 }
 
 // nearest returns the hex whose drawn label is closest to a place, which
-// is how a starport letter and a lane end are attributed back to a hex
+// is how a starport letter and a route end are attributed back to a hex
 // without asking the renderer where it drew them.
-func nearest(places map[subsector.Hex]stamp, atX, atY float64) subsector.Hex {
+func nearest(places map[starmap.Hex]stamp, atX, atY float64) starmap.Hex {
 	var (
-		found subsector.Hex
+		found starmap.Hex
 		best  = math.Inf(1)
 	)
 
@@ -342,7 +342,7 @@ func TestEveryWorldIsDrawnInItsOwnHex(t *testing.T) {
 			places := mapLabels(t, record, page)
 			left := mapRegion(record)
 
-			marked := map[subsector.Hex]string{}
+			marked := map[starmap.Hex]string{}
 
 			for _, found := range stamps(t, page) {
 				if found.X < left || len(found.Text) != 1 {
@@ -371,10 +371,10 @@ func TestEveryWorldIsDrawnInItsOwnHex(t *testing.T) {
 	}
 }
 
-// TestEveryLaneIsDrawn: p. 2 asks for "a line connecting the two worlds
+// TestEveryRouteIsDrawn: p. 2 asks for "a line connecting the two worlds
 // on the map", which the Markdown listing says outright that it draws
 // none of. This is the one thing the drawn map exists for.
-func TestEveryLaneIsDrawn(t *testing.T) {
+func TestEveryRouteIsDrawn(t *testing.T) {
 	t.Parallel()
 
 	for _, golden := range fixture.Goldens() {
@@ -409,7 +409,7 @@ func TestEveryLaneIsDrawn(t *testing.T) {
 			for _, route := range record.Routes {
 				key := route.From.String() + "-" + route.To.String()
 				if joined[key] == 0 {
-					t.Fatalf("the lane %s to %s was not drawn", route.From, route.To)
+					t.Fatalf("the route %s to %s was not drawn", route.From, route.To)
 				}
 
 				joined[key]--
@@ -419,16 +419,16 @@ func TestEveryLaneIsDrawn(t *testing.T) {
 			}
 
 			if len(joined) != 0 {
-				t.Fatalf("the map drew lines no lane accounts for: %v", joined)
+				t.Fatalf("the map drew lines no route accounts for: %v", joined)
 			}
 		})
 	}
 }
 
-// TestEveryWorldAndLaneReachesTheBooklet is the check a drawing cannot
+// TestEveryWorldAndRouteReachesTheBooklet is the check a drawing cannot
 // make: the map marks a world's hex and the roster names it, and dropping
 // half the roster would leave the map untouched.
-func TestEveryWorldAndLaneReachesTheBooklet(t *testing.T) {
+func TestEveryWorldAndRouteReachesTheBooklet(t *testing.T) {
 	t.Parallel()
 
 	for _, golden := range fixture.Goldens() {
@@ -464,14 +464,14 @@ func TestEveryWorldAndLaneReachesTheBooklet(t *testing.T) {
 				}
 			}
 
-			assertLaneTableIsWhole(t, record, written)
+			assertRouteTableIsWhole(t, record, written)
 		})
 	}
 }
 
-// assertLaneTableIsWhole counts the lane table's rows by their Parsecs
+// assertRouteTableIsWhole counts the route table's rows by their Parsecs
 // column, which is the one column of the booklet nothing else writes in.
-func assertLaneTableIsWhole(t *testing.T, record *subsector.Subsector, written []stamp) {
+func assertRouteTableIsWhole(t *testing.T, record *starmap.Record, written []stamp) {
 	t.Helper()
 
 	// The column is placed by the renderer, and this reads it back: the x
@@ -490,7 +490,7 @@ func assertLaneTableIsWhole(t *testing.T, record *subsector.Subsector, written [
 	}
 
 	if best != len(record.Routes) {
-		t.Fatalf("the lane table has %d rows; the record has %d lanes", best, len(record.Routes))
+		t.Fatalf("the route table has %d rows; the record has %d routes", best, len(record.Routes))
 	}
 }
 
@@ -582,17 +582,17 @@ func TestAFullSubsectorPaginates(t *testing.T) {
 // It is built by hand rather than generated because no seed is worth
 // hunting for one: the record is legal, the page has to hold it, and what
 // is on each world does not matter to the question.
-func everyHexAWorld(t *testing.T) *subsector.Subsector {
+func everyHexAWorld(t *testing.T) *starmap.Record {
 	t.Helper()
 
-	record := subsector.New(1, "Aramis", 0)
+	record := starmap.New(1, "Aramis", 0)
 
-	for col := 1; col <= subsector.Columns; col++ {
-		for row := 1; row <= subsector.Rows; row++ {
+	for col := 1; col <= starmap.Columns; col++ {
+		for row := 1; row <= starmap.Rows; row++ {
 			hex := hexOf(t, col, row)
 
-			world := subsector.World{
-				Hex: hex, Name: "Regina Aleph", Starport: subsector.StarportB,
+			world := starmap.World{
+				Hex: hex, Name: "Regina Aleph", Starport: starmap.StarportB,
 				NavalBase: true, ScoutBase: true,
 				Size: 7, Atmosphere: 5, Hydrographics: 5,
 				Population: 6, Government: 6, LawLevel: 6, TechIndex: 9,
@@ -667,7 +667,7 @@ func TestABookletHoldsARefereesOwnName(t *testing.T) {
 	// wide, so the trim can only land inside one.
 	accentedAndOverlong := strings.Repeat("é", 60)
 
-	record := subsector.New(1, "Aramis", 0)
+	record := starmap.New(1, "Aramis", 0)
 
 	for index, name := range []string{accented, unwriteable, overlong, piped, accentedAndOverlong} {
 		record.Worlds = append(record.Worlds, world(t, hexOf(t, 1, index+1), name))
@@ -699,7 +699,7 @@ func TestABookletHoldsARefereesOwnName(t *testing.T) {
 
 	// A pipe is Markdown's syntax and no document here has any. Escaping
 	// it stamped a backslash the referee never typed, and stamped it in
-	// the lane table and the detail heading only -- so the same booklet
+	// the route table and the detail heading only -- so the same booklet
 	// spelled one world two ways.
 	if anyStampWith(written, `\|`) {
 		t.Error("a name was drawn with Markdown's pipe escape in it")
@@ -748,12 +748,12 @@ func assertTrimmingKeepsWholeCharacters(t *testing.T, written []stamp) {
 	}
 }
 
-// TestTheLaneTableIsLabelledOnEveryPageItReaches: a subsector at DM +1
-// carries a hundred and fifty lanes and a sector carries hundreds, so the
+// TestTheRouteTableIsLabelledOnEveryPageItReaches: a subsector at DM +1
+// carries a hundred and fifty routes and a sector carries hundreds, so the
 // table runs past one page. The roster beside it repeats its head; this
-// is the check that the lane table does too, rather than printing pages
+// is the check that the route table does too, rather than printing pages
 // of unlabelled columns.
-func TestTheLaneTableIsLabelledOnEveryPageItReaches(t *testing.T) {
+func TestTheRouteTableIsLabelledOnEveryPageItReaches(t *testing.T) {
 	t.Parallel()
 
 	record := generated(t, fixture.Golden{File: "dm-plus-one", Seed: 1, Name: "Aramis", OccurrenceDM: 1})
@@ -764,12 +764,12 @@ func TestTheLaneTableIsLabelledOnEveryPageItReaches(t *testing.T) {
 	for number, page := range sheets {
 		written := stamps(t, page)
 
-		if !carriesALaneRow(written) {
+		if !carriesARouteRow(written) {
 			continue
 		}
 
 		if !anyStamp(written, "Parsecs") {
-			t.Errorf("page %d carries lane rows and no column heading", number+1)
+			t.Errorf("page %d carries route rows and no column heading", number+1)
 		}
 
 		labelled++
@@ -779,13 +779,13 @@ func TestTheLaneTableIsLabelledOnEveryPageItReaches(t *testing.T) {
 	const atLeast = 2
 
 	if labelled < atLeast {
-		t.Fatalf("the lane table reached %d pages; the check needs at least %d to mean anything", labelled, atLeast)
+		t.Fatalf("the route table reached %d pages; the check needs at least %d to mean anything", labelled, atLeast)
 	}
 }
 
-// carriesALaneRow reports whether a page has a row of the lane table on
+// carriesARouteRow reports whether a page has a row of the route table on
 // it, which is a bare distance written in the table's third column.
-func carriesALaneRow(written []stamp) bool {
+func carriesARouteRow(written []stamp) bool {
 	const parsecsColumn = 440.0
 
 	for _, found := range written {
@@ -803,13 +803,13 @@ func carriesALaneRow(written []stamp) bool {
 func TestAnEmptyBookletSaysSo(t *testing.T) {
 	t.Parallel()
 
-	record := subsector.New(1, "Aramis", 0)
+	record := starmap.New(1, "Aramis", 0)
 
 	written := everyStamp(t, drawn(t, record))
 
 	for _, want := range []string{
 		"No world was placed. An empty subsector is a result.",
-		"No space lane was drawn.",
+		"No route was drawn.",
 	} {
 		if !anyStamp(written, want) {
 			t.Errorf("the booklet does not say %q", want)
@@ -824,11 +824,11 @@ func TestAnEmptyBookletSaysSo(t *testing.T) {
 }
 
 // world is a named world at a hex, for a record built by hand.
-func world(t *testing.T, hex subsector.Hex, name string) subsector.World {
+func world(t *testing.T, hex starmap.Hex, name string) starmap.World {
 	t.Helper()
 
-	built := subsector.World{
-		Hex: hex, Name: name, Starport: subsector.StarportB,
+	built := starmap.World{
+		Hex: hex, Name: name, Starport: starmap.StarportB,
 		NavalBase: false, ScoutBase: false,
 		Size: 7, Atmosphere: 5, Hydrographics: 5,
 		Population: 6, Government: 6, LawLevel: 6, TechIndex: 9,

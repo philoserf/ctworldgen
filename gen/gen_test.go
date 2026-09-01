@@ -11,7 +11,7 @@ import (
 	"github.com/philoserf/ctworldgen/dice"
 	"github.com/philoserf/ctworldgen/gen"
 	"github.com/philoserf/ctworldgen/internal/fixture"
-	"github.com/philoserf/ctworldgen/subsector"
+	"github.com/philoserf/ctworldgen/starmap"
 	"github.com/philoserf/ctworldgen/tables"
 )
 
@@ -29,7 +29,7 @@ func newEngine(t *testing.T) *gen.Engine {
 	return engine
 }
 
-func generate(t *testing.T, engine *gen.Engine, in gen.Inputs) *subsector.Subsector {
+func generate(t *testing.T, engine *gen.Engine, in gen.Inputs) *starmap.Record {
 	t.Helper()
 
 	s, err := engine.Generate(in)
@@ -40,10 +40,10 @@ func generate(t *testing.T, engine *gen.Engine, in gen.Inputs) *subsector.Subsec
 	return s
 }
 
-func marshal(t *testing.T, s *subsector.Subsector) []byte {
+func marshal(t *testing.T, s *starmap.Record) []byte {
 	t.Helper()
 
-	b, err := subsector.Marshal(s)
+	b, err := starmap.Marshal(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +100,7 @@ func TestRegenerationRoundTrip(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			recorded, err := subsector.Decode(bytes.NewReader(encoded))
+			recorded, err := starmap.Decode(bytes.NewReader(encoded))
 			if err != nil {
 				t.Fatalf("decoding %s: %v", golden.File, err)
 			}
@@ -164,7 +164,7 @@ func TestRejectsDMsTheBookDoesNotOffer(t *testing.T) {
 }
 
 // TestInvariantsOverManySeeds sweeps the book's invariants for everything
-// the engine generates: the occurrence scan, starports, bases, lanes, and
+// the engine generates: the occurrence scan, starports, bases, routes, and
 // the eight characteristics of every world.
 func TestInvariantsOverManySeeds(t *testing.T) {
 	t.Parallel()
@@ -186,9 +186,9 @@ func TestInvariantsOverManySeeds(t *testing.T) {
 			assertWorldsWellFormed(t, record, seed)
 			assertRecordCarriesItsInputs(t, record, seed, dm)
 			assertBasesFollowTheChart(t, record, seed)
-			assertLanesFollowTheTable(t, charts, record, seed)
+			assertRoutesFollowTheTable(t, charts, record, seed)
 
-			certain += assertLanesTheTableMakesCertain(t, charts, record, seed)
+			certain += assertRoutesTheTableMakesCertain(t, charts, record, seed)
 
 			for _, world := range record.Worlds {
 				assertAutomaticZeros(t, world, seed)
@@ -200,26 +200,26 @@ func TestInvariantsOverManySeeds(t *testing.T) {
 		}
 	}
 
-	// The certain-lane check is the only one of these that can pass by
+	// The certain-route check is the only one of these that can pass by
 	// finding nothing to look at, so say how much it looked at.
 	if certain == 0 {
-		t.Error("no pair in the sweep sat on a cell stating 1, so the certain-lane direction proved nothing")
+		t.Error("no pair in the sweep sat on a cell stating 1, so the certain-route direction proved nothing")
 	}
 }
 
 // assertWorldsWellFormed: every world sits on the p. 3 grid, once, in
 // ascending hex number (ERRATA E002), with a starport the book prints and
 // no name (p. 12 prints no naming table).
-func assertWorldsWellFormed(t *testing.T, record *subsector.Subsector, seed uint64) {
+func assertWorldsWellFormed(t *testing.T, record *starmap.Record, seed uint64) {
 	t.Helper()
 
-	if len(record.Worlds) > subsector.Columns*subsector.Rows {
+	if len(record.Worlds) > starmap.Columns*starmap.Rows {
 		t.Fatalf("seed %d: %d worlds in an eighty-hex subsector", seed, len(record.Worlds))
 	}
 
-	seen := map[subsector.Hex]bool{}
+	seen := map[starmap.Hex]bool{}
 
-	var previous subsector.Hex
+	var previous starmap.Hex
 
 	for index, world := range record.Worlds {
 		assertWorldWellFormed(t, world, seed)
@@ -239,7 +239,7 @@ func assertWorldsWellFormed(t *testing.T, record *subsector.Subsector, seed uint
 }
 
 // assertWorldWellFormed holds one world to what the pages allow.
-func assertWorldWellFormed(t *testing.T, world subsector.World, seed uint64) {
+func assertWorldWellFormed(t *testing.T, world starmap.World, seed uint64) {
 	t.Helper()
 
 	if !onTheGrid(world.Hex) {
@@ -257,14 +257,14 @@ func assertWorldWellFormed(t *testing.T, world subsector.World, seed uint64) {
 
 // onTheGrid reports whether a hex is one of the eighty the p. 3 grid
 // prints.
-func onTheGrid(h subsector.Hex) bool {
-	return h.Col >= 1 && h.Col <= subsector.Columns && h.Row >= 1 && h.Row <= subsector.Rows
+func onTheGrid(h starmap.Hex) bool {
+	return h.Col >= 1 && h.Col <= starmap.Columns && h.Row >= 1 && h.Row <= starmap.Rows
 }
 
 // assertRecordCarriesItsInputs: the seed and inputs a run is reproducible
 // from, and the readings that governed it. E002 governs every record and
 // is the only reading milestone 1 implements a step for.
-func assertRecordCarriesItsInputs(t *testing.T, record *subsector.Subsector, seed uint64, occurrenceDM int) {
+func assertRecordCarriesItsInputs(t *testing.T, record *starmap.Record, seed uint64, occurrenceDM int) {
 	t.Helper()
 
 	assertErrataStamped(t, record, seed)
@@ -276,7 +276,7 @@ func assertRecordCarriesItsInputs(t *testing.T, record *subsector.Subsector, see
 
 // assertErrataStamped: each entry of ERRATA.md states the condition under
 // which a record stamps it, and those statements are the specification.
-func assertErrataStamped(t *testing.T, record *subsector.Subsector, seed uint64) {
+func assertErrataStamped(t *testing.T, record *starmap.Record, seed uint64) {
 	t.Helper()
 
 	// E002 governs every record. E001 is stamped where any base throw was
@@ -286,7 +286,7 @@ func assertErrataStamped(t *testing.T, record *subsector.Subsector, seed uint64)
 	want := []string{"E002"}
 
 	for _, world := range record.Worlds {
-		if world.Starport != subsector.StarportE && world.Starport != subsector.StarportX {
+		if world.Starport != starmap.StarportE && world.Starport != starmap.StarportX {
 			want = append(want, "E001")
 
 			break
@@ -329,7 +329,7 @@ func TestStarportDistributionFollowsThePage(t *testing.T) {
 
 	engine := newEngine(t)
 
-	counts := map[subsector.Starport]int{}
+	counts := map[starmap.Starport]int{}
 
 	for i := range 300 {
 		seed := uint64(i)
@@ -338,34 +338,34 @@ func TestStarportDistributionFollowsThePage(t *testing.T) {
 		}
 	}
 
-	if counts[subsector.StarportX] == 0 {
+	if counts[starmap.StarportX] == 0 {
 		t.Error("no starport X in 300 subsectors; a throw of 12 gives one")
 	}
 
-	if counts[subsector.StarportC] <= counts[subsector.StarportD] {
+	if counts[starmap.StarportC] <= counts[starmap.StarportD] {
 		t.Errorf("starport C (%d) is no more common than D (%d); the page gives C two throws and D one",
-			counts[subsector.StarportC], counts[subsector.StarportD])
+			counts[starmap.StarportC], counts[starmap.StarportD])
 	}
 
-	if counts[subsector.StarportD] <= counts[subsector.StarportX] {
-		t.Errorf("starport D (%d) is no more common than X (%d)", counts[subsector.StarportD], counts[subsector.StarportX])
+	if counts[starmap.StarportD] <= counts[starmap.StarportX] {
+		t.Errorf("starport D (%d) is no more common than X (%d)", counts[starmap.StarportD], counts[starmap.StarportX])
 	}
 }
 
 // assertBasesFollowTheChart: the p. 5 chart prints a naval base throw at
 // starports A and B only and a scout base throw at A through D, so a base
 // anywhere else was never thrown for and must be absent (ERRATA E001).
-func assertBasesFollowTheChart(t *testing.T, record *subsector.Subsector, seed uint64) {
+func assertBasesFollowTheChart(t *testing.T, record *starmap.Record, seed uint64) {
 	t.Helper()
 
 	for _, world := range record.Worlds {
-		navalPossible := world.Starport == subsector.StarportA || world.Starport == subsector.StarportB
+		navalPossible := world.Starport == starmap.StarportA || world.Starport == starmap.StarportB
 		if world.NavalBase && !navalPossible {
 			t.Fatalf("seed %d: naval base at %s, a starport %s, and the chart prints no throw for one",
 				seed, world.Hex, world.Starport)
 		}
 
-		scoutPossible := world.Starport != subsector.StarportE && world.Starport != subsector.StarportX
+		scoutPossible := world.Starport != starmap.StarportE && world.Starport != starmap.StarportX
 		if world.ScoutBase && !scoutPossible {
 			t.Fatalf("seed %d: scout base at %s, a starport %s, and the chart prints no throw for one",
 				seed, world.Hex, world.Starport)
@@ -373,13 +373,13 @@ func assertBasesFollowTheChart(t *testing.T, record *subsector.Subsector, seed u
 	}
 }
 
-// assertLanesFollowTheTable: every lane is four parsecs or fewer, between
+// assertRoutesFollowTheTable: every route is four parsecs or fewer, between
 // two worlds whose starport pair has a row and whose cell states a number,
 // written lower hex first, and examined only once (R5, ERRATA E003).
-func assertLanesFollowTheTable(t *testing.T, charts *tables.Tables, record *subsector.Subsector, seed uint64) {
+func assertRoutesFollowTheTable(t *testing.T, charts *tables.Tables, record *starmap.Record, seed uint64) {
 	t.Helper()
 
-	worlds := map[subsector.Hex]subsector.Starport{}
+	worlds := map[starmap.Hex]starmap.Starport{}
 	for _, world := range record.Worlds {
 		worlds[world.Hex] = world.Starport
 	}
@@ -388,7 +388,7 @@ func assertLanesFollowTheTable(t *testing.T, charts *tables.Tables, record *subs
 
 	for _, route := range record.Routes {
 		if !route.From.Less(route.To) {
-			t.Fatalf("seed %d: lane %s-%s is not written lower hex first", seed, route.From, route.To)
+			t.Fatalf("seed %d: route %s-%s is not written lower hex first", seed, route.From, route.To)
 		}
 
 		key := route.From.String() + route.To.String()
@@ -402,59 +402,59 @@ func assertLanesFollowTheTable(t *testing.T, charts *tables.Tables, record *subs
 		toPort, okTo := worlds[route.To]
 
 		if !okFrom || !okTo {
-			t.Fatalf("seed %d: lane %s-%s reaches a hex with no world", seed, route.From, route.To)
+			t.Fatalf("seed %d: route %s-%s reaches a hex with no world", seed, route.From, route.To)
 		}
 
-		if fromPort == subsector.StarportX || toPort == subsector.StarportX {
-			t.Fatalf("seed %d: lane %s-%s touches a starport X, which p. 5 gives no starship landings",
+		if fromPort == starmap.StarportX || toPort == starmap.StarportX {
+			t.Fatalf("seed %d: route %s-%s touches a starport X, which p. 5 gives no starship landings",
 				seed, route.From, route.To)
 		}
 
-		assertLaneHasACell(t, charts, route, fromPort, toPort, seed)
+		assertRouteHasACell(t, charts, route, fromPort, toPort, seed)
 	}
 }
 
-// assertLaneHasACell: the distance is the one the p. 3 grid gives, within
+// assertRouteHasACell: the distance is the one the p. 3 grid gives, within
 // the four columns the jump routes table prints, at a cell that states a
 // number rather than an em-dash.
-func assertLaneHasACell(
-	t *testing.T, charts *tables.Tables, route subsector.Route,
-	fromPort, toPort subsector.Starport, seed uint64,
+func assertRouteHasACell(
+	t *testing.T, charts *tables.Tables, route starmap.Route,
+	fromPort, toPort starmap.Starport, seed uint64,
 ) {
 	t.Helper()
 
 	if route.Distance != route.From.Distance(route.To) {
-		t.Fatalf("seed %d: lane %s-%s records %d parsecs, and the grid gives %d",
+		t.Fatalf("seed %d: route %s-%s records %d parsecs, and the grid gives %d",
 			seed, route.From, route.To, route.Distance, route.From.Distance(route.To))
 	}
 
 	if route.Distance < 1 || route.Distance > tables.MaxJump {
-		t.Fatalf("seed %d: lane %s-%s is %d parsecs, beyond the four the table states targets for",
+		t.Fatalf("seed %d: route %s-%s is %d parsecs, beyond the four the table states targets for",
 			seed, route.From, route.To, route.Distance)
 	}
 
 	if _, stated := charts.JumpRoutes.Target(fromPort, toPort, route.Distance); !stated {
-		t.Fatalf("seed %d: lane %s-%s sits at a cell the page prints an em-dash in", seed, route.From, route.To)
+		t.Fatalf("seed %d: route %s-%s sits at a cell the page prints an em-dash in", seed, route.From, route.To)
 	}
 }
 
 // certainTarget is the one-die target a throw cannot miss: every face of
 // one die is equal to or greater than 1, so a jump routes cell stating it
-// draws a lane without fail (p. 2).
+// draws a route without fail (p. 2).
 const certainTarget dice.Target = 1
 
-// assertLanesTheTableMakesCertain is R5 in the direction the other checks
-// cannot see. assertLanesFollowTheTable holds the lanes that exist to the
-// page, so it passes for a record with no lanes at all -- and a target
-// read backwards produces exactly that kind of record: every lane it
+// assertRoutesTheTableMakesCertain is R5 in the direction the other checks
+// cannot see. assertRoutesFollowTheTable holds the routes that exist to the
+// page, so it passes for a record with no routes at all -- and a target
+// read backwards produces exactly that kind of record: every route it
 // draws still sits at a stated cell, four parsecs or fewer, away from an
-// X. The cells stating 1 are the ones that settle it, because a lane
+// X. The cells stating 1 are the ones that settle it, because a route
 // there is not a matter of the throw.
 //
 // It returns the number of certain pairs it examined, so that the sweep
 // can say the check had something to check.
-func assertLanesTheTableMakesCertain(
-	t *testing.T, charts *tables.Tables, record *subsector.Subsector, seed uint64,
+func assertRoutesTheTableMakesCertain(
+	t *testing.T, charts *tables.Tables, record *starmap.Record, seed uint64,
 ) int {
 	t.Helper()
 
@@ -477,7 +477,7 @@ func assertLanesTheTableMakesCertain(
 			examined++
 
 			if !drawn[first.Hex.String()+second.Hex.String()] {
-				t.Fatalf("seed %d: no lane %s-%s, and the table states 1 for %s-%s at jump-%d, which one die always meets",
+				t.Fatalf("seed %d: no route %s-%s, and the table states 1 for %s-%s at jump-%d, which one die always meets",
 					seed, first.Hex, second.Hex, first.Starport, second.Starport, distance)
 			}
 		}
@@ -521,9 +521,9 @@ func TestBaseThrowsFollowTheChart(t *testing.T) {
 
 	engine := newEngine(t)
 
-	worlds := map[subsector.Starport]int{}
-	naval := map[subsector.Starport]int{}
-	scout := map[subsector.Starport]int{}
+	worlds := map[starmap.Starport]int{}
+	naval := map[starmap.Starport]int{}
+	scout := map[starmap.Starport]int{}
 
 	for i := range baseSweepSubsectors {
 		for _, world := range generate(t, engine, gen.Inputs{Seed: uint64(i), Name: "", OccurrenceDM: 1}).Worlds {
@@ -539,7 +539,7 @@ func TestBaseThrowsFollowTheChart(t *testing.T) {
 		}
 	}
 
-	for _, port := range subsector.Starports() {
+	for _, port := range starmap.Starports() {
 		if worlds[port] == 0 {
 			t.Errorf("no starport %s in %d subsectors, so its base throws were never sampled", port, baseSweepSubsectors)
 
@@ -560,7 +560,7 @@ func TestBaseThrowsFollowTheChart(t *testing.T) {
 // the chart's own target predicts, counted over the thirty-six two-dice
 // outcomes rather than written down as a number.
 func assertRateFollowsTheThrow(
-	t *testing.T, what string, port subsector.Starport, target dice.Target, got, worlds int,
+	t *testing.T, what string, port starmap.Starport, target dice.Target, got, worlds int,
 ) {
 	t.Helper()
 
@@ -594,7 +594,7 @@ func twoDiceOdds(target dice.Target) int {
 // automatic, so they are zero -- and nothing clamped them, because there
 // was no throw to clamp. A clamp on one is proof a die was thrown that
 // should not have been.
-func assertAutomaticZeros(t *testing.T, world subsector.World, seed uint64) {
+func assertAutomaticZeros(t *testing.T, world starmap.World, seed uint64) {
 	t.Helper()
 
 	if world.Size == 0 && world.Atmosphere != 0 {
@@ -607,8 +607,8 @@ func assertAutomaticZeros(t *testing.T, world subsector.World, seed uint64) {
 	}
 
 	for _, clamp := range world.Clamps {
-		automatic := (world.Size == 0 && clamp.Characteristic == subsector.Atmosphere) ||
-			(world.Size <= 1 && clamp.Characteristic == subsector.Hydrographics)
+		automatic := (world.Size == 0 && clamp.Characteristic == starmap.Atmosphere) ||
+			(world.Size <= 1 && clamp.Characteristic == starmap.Hydrographics)
 		if automatic {
 			t.Fatalf("seed %d: %s records a %s clamp, so a die was thrown for a value p. 4 makes automatic",
 				seed, world.Hex, clamp.Characteristic)
@@ -625,7 +625,7 @@ func assertAutomaticZeros(t *testing.T, world subsector.World, seed uint64) {
 // p. 4 ties the automatic zero to planetary size and gives atmosphere a
 // DM of -4 instead, so the combination is legal and about one world in
 // sixty has it (ERRATA.md, Noted discrepancies).
-func assertWithinFormula(t *testing.T, world subsector.World, seed uint64) {
+func assertWithinFormula(t *testing.T, world starmap.World, seed uint64) {
 	t.Helper()
 
 	inRange(t, seed, world, "size", world.Size, 0, 10)
@@ -648,7 +648,7 @@ func assertWithinFormula(t *testing.T, world subsector.World, seed uint64) {
 	inRange(t, seed, world, "law level", world.LawLevel, max(world.Government-5, 0), world.Government+5)
 }
 
-func inRange(t *testing.T, seed uint64, world subsector.World, name string, value, low, high int) {
+func inRange(t *testing.T, seed uint64, world starmap.World, name string, value, low, high int) {
 	t.Helper()
 
 	if value < low || value > high {
@@ -659,7 +659,7 @@ func inRange(t *testing.T, seed uint64, world subsector.World, name string, valu
 // assertTechIndexIsTheMatrix recomputes the DM total from the p. 9 matrix
 // and asserts the recorded index is one a single die could have produced.
 // This is exact: six outcomes, and the record must be one of them.
-func assertTechIndexIsTheMatrix(t *testing.T, charts *tables.Tables, world subsector.World, seed uint64) {
+func assertTechIndexIsTheMatrix(t *testing.T, charts *tables.Tables, world starmap.World, seed uint64) {
 	t.Helper()
 
 	matrix := charts.TechIndexMatrix
@@ -684,7 +684,7 @@ func assertTechIndexIsTheMatrix(t *testing.T, charts *tables.Tables, world subse
 // assertDigitsSpellTheWorld decodes the string of digits rather than
 // re-encoding it, so it cannot agree with the writer by sharing its code.
 // Eight characters, starport first, nothing between them (ERRATA E005).
-func assertDigitsSpellTheWorld(t *testing.T, world subsector.World, seed uint64) {
+func assertDigitsSpellTheWorld(t *testing.T, world starmap.World, seed uint64) {
 	t.Helper()
 
 	const digitsInTheString = 8
@@ -703,7 +703,7 @@ func assertDigitsSpellTheWorld(t *testing.T, world subsector.World, seed uint64)
 	}
 
 	for position, value := range values {
-		digit, err := subsector.ParseDigit(world.Digits[position+1 : position+2])
+		digit, err := starmap.ParseDigit(world.Digits[position+1 : position+2])
 		if err != nil {
 			t.Fatalf("seed %d: %s spells %q: %v", seed, world.Hex, world.Digits, err)
 		}
@@ -718,14 +718,14 @@ func assertDigitsSpellTheWorld(t *testing.T, world subsector.World, seed uint64)
 // assertClampsAreHonest: a clamp is recorded only where one bound, its
 // kept value is the one the world carries, and only the technological
 // index is ever capped from above (R14, ERRATA E004).
-func assertClampsAreHonest(t *testing.T, world subsector.World, seed uint64) {
+func assertClampsAreHonest(t *testing.T, world starmap.World, seed uint64) {
 	t.Helper()
 
-	carried := map[subsector.Characteristic]int{
-		subsector.Size: world.Size, subsector.Atmosphere: world.Atmosphere,
-		subsector.Hydrographics: world.Hydrographics, subsector.Population: world.Population,
-		subsector.Government: world.Government, subsector.LawLevel: world.LawLevel,
-		subsector.TechIndex: world.TechIndex,
+	carried := map[starmap.Characteristic]int{
+		starmap.Size: world.Size, starmap.Atmosphere: world.Atmosphere,
+		starmap.Hydrographics: world.Hydrographics, starmap.Population: world.Population,
+		starmap.Government: world.Government, starmap.LawLevel: world.LawLevel,
+		starmap.TechIndex: world.TechIndex,
 	}
 
 	for _, clamp := range world.Clamps {
@@ -733,7 +733,7 @@ func assertClampsAreHonest(t *testing.T, world subsector.World, seed uint64) {
 			t.Fatalf("seed %d: %s records a %s clamp that did not bind", seed, world.Hex, clamp.Characteristic)
 		}
 
-		if clamp.Raw > clamp.Value && clamp.Characteristic != subsector.TechIndex {
+		if clamp.Raw > clamp.Value && clamp.Characteristic != starmap.TechIndex {
 			t.Fatalf("seed %d: %s caps %s at %d; only the technological index has a printed cap",
 				seed, world.Hex, clamp.Characteristic, clamp.Value)
 		}
@@ -760,8 +760,8 @@ func TestTheClampsThatBindAreTheOnesR14Names(t *testing.T) {
 	t.Parallel()
 
 	engine := newEngine(t)
-	floors := map[subsector.Characteristic]int{}
-	caps := map[subsector.Characteristic]int{}
+	floors := map[starmap.Characteristic]int{}
+	caps := map[starmap.Characteristic]int{}
 	highest := 0
 
 	for index := range 3000 {
@@ -786,19 +786,19 @@ func TestTheClampsThatBindAreTheOnesR14Names(t *testing.T) {
 // assertFloorsMatchE004: "Atmosphere, hydrographics, government, law level
 // and the technological index can all go negative; planetary size and
 // population cannot.".
-func assertFloorsMatchE004(t *testing.T, floors, caps map[subsector.Characteristic]int) {
+func assertFloorsMatchE004(t *testing.T, floors, caps map[starmap.Characteristic]int) {
 	t.Helper()
 
-	for _, characteristic := range []subsector.Characteristic{
-		subsector.Atmosphere, subsector.Hydrographics,
-		subsector.Government, subsector.LawLevel, subsector.TechIndex,
+	for _, characteristic := range []starmap.Characteristic{
+		starmap.Atmosphere, starmap.Hydrographics,
+		starmap.Government, starmap.LawLevel, starmap.TechIndex,
 	} {
 		if floors[characteristic] == 0 {
 			t.Errorf("%s never floored, and E004 says it can fall below zero", characteristic)
 		}
 	}
 
-	for _, characteristic := range []subsector.Characteristic{subsector.Size, subsector.Population} {
+	for _, characteristic := range []starmap.Characteristic{starmap.Size, starmap.Population} {
 		if floors[characteristic] != 0 || caps[characteristic] != 0 {
 			t.Errorf("%s was clamped, and 2D-2 has a floor of 0 already", characteristic)
 		}
@@ -807,15 +807,15 @@ func assertFloorsMatchE004(t *testing.T, floors, caps map[subsector.Characterist
 
 // assertOnlyTheIndexIsCapped: the cap is rare -- an asteroid belt with a
 // first class starport and ten billion inhabitants -- and still reachable.
-func assertOnlyTheIndexIsCapped(t *testing.T, caps map[subsector.Characteristic]int, highest int) {
+func assertOnlyTheIndexIsCapped(t *testing.T, caps map[starmap.Characteristic]int, highest int) {
 	t.Helper()
 
-	if caps[subsector.TechIndex] == 0 {
+	if caps[starmap.TechIndex] == 0 {
 		t.Error("the technological index cap never bound, and E004 says it is reachable")
 	}
 
 	for characteristic, count := range caps {
-		if characteristic != subsector.TechIndex {
+		if characteristic != starmap.TechIndex {
 			t.Errorf("%s was capped %d times; p. 9 prints a range for the technological index alone",
 				characteristic, count)
 		}
