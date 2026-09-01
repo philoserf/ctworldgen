@@ -258,6 +258,77 @@ func digitOf(t *testing.T, value int) string {
 // referee writes in himself (p. 12 step 3 prints no table for it), so the
 // roster escapes what would otherwise break its row into columns the
 // table does not have.
+// TestTheRefereesNotesReachBothDocuments: the record is his notebook page,
+// so what he writes in it has to come back out when he re-renders (issue 1
+// #6). Both documents are asserted in one test because they are required
+// to carry the same lines, and checking only one is how the characteristic
+// labels came to be held on the Markdown side and by nothing on the
+// booklet's.
+//
+// The awkward text is deliberate. A pipe would break a Markdown table row,
+// so the roster escapes it -- but a note is not in a table, and the escape
+// must not reach a document with no pipes to escape. A line break would end
+// the bullet list. And the booklet draws Windows-1252, which has no
+// character for the arrow, so encode promises a question mark rather than a
+// silent deletion.
+func TestTheRefereesNotesReachBothDocuments(t *testing.T) {
+	t.Parallel()
+
+	const (
+		onTheMap   = "The rift campaign | players start at 0602"
+		onTheWorld = "dust storms;\nask about the yard → 0704"
+	)
+
+	hex, err := starmap.NewHex(1, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	record := starmap.New(1, "Aramis", 0)
+
+	record.Notes = onTheMap
+	record.Worlds = append(record.Worlds, starmap.World{
+		Hex: hex, Name: "Regina", Notes: onTheWorld, Starport: starmap.StarportA,
+		NavalBase: false, ScoutBase: false,
+		Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
+		Government: 0, LawLevel: 0, TechIndex: 0,
+		Digits: emptyWorldDigits, Clamps: nil,
+	})
+
+	// The Markdown listing.
+	written := listing(t, record)
+
+	if !strings.Contains(written, "\n"+onTheMap+"\n") {
+		t.Errorf("the listing does not carry the map's note:\n%s", written)
+	}
+
+	if strings.Contains(written, `\|`) {
+		t.Error("the listing escaped a pipe outside a table; that escape belongs to Markdown's table syntax alone")
+	}
+
+	if !strings.Contains(written, "- **Notes.** dust storms; ask about the yard → 0704\n") {
+		t.Errorf("the listing does not carry the world's note on one line:\n%s", written)
+	}
+
+	// The booklet, from the same record.
+	drawnStamps := everyStamp(t, drawn(t, record))
+
+	if !anyStampWith(drawnStamps, "The rift campaign | players start at 0602") {
+		t.Error("the booklet does not carry the map's note")
+	}
+
+	if !anyStamp(drawnStamps, "Notes.") {
+		t.Error("the booklet does not carry the world's note bullet")
+	}
+
+	// The arrow has no Windows-1252 character, so it is drawn as a question
+	// mark rather than dropped -- the note keeps the shape he gave it.
+	if !anyStampWith(drawnStamps, "ask about the yard ? 0704") {
+		t.Errorf("the booklet did not draw the world's note as one line with the unmappable character kept:\n%v",
+			drawnStamps)
+	}
+}
+
 func TestARefereesOwnNameStaysInOneCell(t *testing.T) {
 	t.Parallel()
 
@@ -269,7 +340,7 @@ func TestARefereesOwnNameStaysInOneCell(t *testing.T) {
 	record := starmap.New(1, "Aramis", 0)
 
 	record.Worlds = append(record.Worlds, starmap.World{
-		Hex: hex, Name: "Regina | the\nold capital", Starport: starmap.StarportA,
+		Hex: hex, Name: "Regina | the\nold capital", Notes: "", Starport: starmap.StarportA,
 		NavalBase: false, ScoutBase: false,
 		Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
 		Government: 0, LawLevel: 0, TechIndex: 0,
@@ -312,7 +383,7 @@ func assertTheRouteTableStaysInThreeCells(t *testing.T, record *starmap.Record, 
 	}
 
 	record.Worlds = append(record.Worlds, starmap.World{
-		Hex: other, Name: "Efate", Starport: starmap.StarportA,
+		Hex: other, Name: "Efate", Notes: "", Starport: starmap.StarportA,
 		NavalBase: false, ScoutBase: false,
 		Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
 		Government: 0, LawLevel: 0, TechIndex: 0,
@@ -374,7 +445,7 @@ func annotated(t *testing.T) *starmap.Record {
 		}
 
 		record.Worlds = append(record.Worlds, starmap.World{
-			Hex: hex, Name: world.name, Starport: starmap.StarportA,
+			Hex: hex, Name: world.name, Notes: "", Starport: starmap.StarportA,
 			NavalBase: false, ScoutBase: false,
 			Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
 			Government: 0, LawLevel: 0, TechIndex: 0,

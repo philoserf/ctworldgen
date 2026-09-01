@@ -253,7 +253,7 @@ func (e *Engine) starports(stream *dice.Stream, record *starmap.Record, hexes []
 		}
 
 		world := starmap.World{
-			Hex: hex, Name: "", Starport: port,
+			Hex: hex, Name: "", Notes: "", Starport: port,
 			NavalBase: false, ScoutBase: false,
 			Size: 0, Atmosphere: 0, Hydrographics: 0, Population: 0,
 			Government: 0, LawLevel: 0, TechIndex: 0,

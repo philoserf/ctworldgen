@@ -51,6 +51,10 @@
     "name": {
       "type": "string"
     },
+    "notes": {
+      "description": "The referee's own note about the map as a whole. Never generated and never read back; absent from a record that has none (issue 1 #6).",
+      "type": "string"
+    },
     "occurrence_dm": {
       "description": "The referee's world occurrence DM, applied to the whole subsector (p. 1).",
       "type": "integer",
@@ -98,6 +102,10 @@
         },
         "name": {
           "description": "Always empty: p. 12 step 3 says to name each world and prints no table, so the hex identifies it.",
+          "type": "string"
+        },
+        "notes": {
+          "description": "The referee's own note about this world. Never generated and never read back; absent from a world that has none (issue 1 #6).",
           "type": "string"
         },
         "starport": {

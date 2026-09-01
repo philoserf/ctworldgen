@@ -593,7 +593,7 @@ func everyHexAWorld(t *testing.T) *starmap.Record {
 			hex := hexOf(t, col, row)
 
 			world := starmap.World{
-				Hex: hex, Name: "Regina Aleph", Starport: starmap.StarportB,
+				Hex: hex, Name: "Regina Aleph", Notes: "", Starport: starmap.StarportB,
 				NavalBase: true, ScoutBase: true,
 				Size: 7, Atmosphere: 5, Hydrographics: 5,
 				Population: 6, Government: 6, LawLevel: 6, TechIndex: 9,
@@ -978,7 +978,7 @@ func world(t *testing.T, hex starmap.Hex, name string) starmap.World {
 	t.Helper()
 
 	built := starmap.World{
-		Hex: hex, Name: name, Starport: starmap.StarportB,
+		Hex: hex, Name: name, Notes: "", Starport: starmap.StarportB,
 		NavalBase: false, ScoutBase: false,
 		Size: 7, Atmosphere: 5, Hydrographics: 5,
 		Population: 6, Government: 6, LawLevel: 6, TechIndex: 9,
