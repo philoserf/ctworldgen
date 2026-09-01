@@ -50,7 +50,7 @@ func run() error {
 		return fmt.Errorf("building the engine: %w", err)
 	}
 
-	renderer, err := render.New()
+	renderer, err := render.New(render.LegibleLanes)
 	if err != nil {
 		return fmt.Errorf("building the renderer: %w", err)
 	}

@@ -1,6 +1,6 @@
 # Aramis
 
-40 worlds, 72 routes. Generated from seed 1 at occurrence DM 0.
+40 worlds, 72 routes, 46 drawn. Generated from seed 1 at occurrence DM 0.
 
 ## The map
 
@@ -76,6 +76,8 @@ The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-num
 
 ## Routes
 
+26 of these 72 lanes are not listed: each joins two worlds already joined by shorter lanes, which p. 2 says may be ignored in the drawing (ERRATA E007). The record carries every one of them, and `render --lanes=all` lists them.
+
 | From | To | Parsecs |
 | --- | --- | --- |
 | 0101 | 0104 | 3 |
@@ -87,55 +89,30 @@ The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-num
 | 0106 | 0206 | 1 |
 | 0107 | 0109 | 2 |
 | 0107 | 0206 | 1 |
-| 0107 | 0405 | 3 |
-| 0107 | 0406 | 3 |
 | 0202 | 0303 | 1 |
 | 0302 | 0303 | 1 |
 | 0302 | 0401 | 1 |
-| 0303 | 0401 | 2 |
-| 0303 | 0405 | 3 |
-| 0303 | 0406 | 4 |
 | 0306 | 0406 | 1 |
 | 0309 | 0409 | 1 |
-| 0309 | 0509 | 2 |
-| 0309 | 0607 | 3 |
 | 0401 | 0502 | 1 |
-| 0401 | 0602 | 2 |
-| 0401 | 0704 | 4 |
 | 0405 | 0406 | 1 |
-| 0405 | 0605 | 2 |
-| 0405 | 0606 | 2 |
-| 0406 | 0409 | 3 |
 | 0406 | 0506 | 1 |
-| 0406 | 0508 | 2 |
-| 0406 | 0605 | 2 |
-| 0406 | 0606 | 2 |
-| 0406 | 0707 | 3 |
 | 0409 | 0509 | 1 |
 | 0502 | 0601 | 1 |
 | 0502 | 0602 | 1 |
 | 0505 | 0506 | 1 |
-| 0506 | 0508 | 2 |
 | 0506 | 0605 | 1 |
 | 0506 | 0606 | 1 |
 | 0508 | 0509 | 1 |
-| 0508 | 0605 | 3 |
 | 0508 | 0607 | 1 |
-| 0508 | 0707 | 2 |
-| 0508 | 0708 | 2 |
 | 0509 | 0608 | 1 |
 | 0509 | 0710 | 2 |
 | 0601 | 0602 | 1 |
 | 0601 | 0702 | 1 |
-| 0602 | 0605 | 3 |
-| 0602 | 0606 | 4 |
 | 0602 | 0702 | 1 |
 | 0602 | 0704 | 2 |
-| 0602 | 0802 | 2 |
 | 0605 | 0606 | 1 |
 | 0605 | 0704 | 2 |
-| 0605 | 0707 | 2 |
-| 0605 | 0802 | 4 |
 | 0606 | 0607 | 1 |
 | 0606 | 0707 | 1 |
 | 0607 | 0608 | 1 |
@@ -146,7 +123,6 @@ The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-num
 | 0704 | 0802 | 2 |
 | 0706 | 0707 | 1 |
 | 0707 | 0708 | 1 |
-| 0707 | 0710 | 3 |
 | 0708 | 0710 | 2 |
 | 0710 | 0810 | 1 |
 | 0801 | 0802 | 1 |

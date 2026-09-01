@@ -108,6 +108,7 @@ func (r *Renderer) Booklet(out io.Writer, record *starmap.Record) error {
 		pdf:    newPDF(),
 		charts: r.charts,
 		record: record,
+		drawn:  r.drawn(record.Routes),
 		names:  namesByHex(record),
 		latin:  windows1252(),
 		y:      pageMargin,
@@ -196,9 +197,15 @@ type booklet struct {
 	pdf    *fpdf.Fpdf
 	charts *tables.Tables
 	record *starmap.Record
-	names  map[starmap.Hex]string
-	latin  *encoding.Encoder
-	y      float64
+
+	// drawn is the lanes this booklet inks, which is every one the record
+	// carries unless the renderer was built for legible lanes (ERRATA
+	// E007). The record itself is unchanged.
+	drawn []starmap.Route
+
+	names map[starmap.Hex]string
+	latin *encoding.Encoder
+	y     float64
 }
 
 // text draws a string, and width measures one, in the page's own
@@ -268,7 +275,7 @@ func (b *booklet) firstPage() {
 
 	b.pdf.SetFont("Helvetica", "", noteSize)
 	b.pdf.SetTextColor(inkNote, inkNote, inkNote)
-	b.text(pageMargin, b.y+noteSize, summary(b.record))
+	b.text(pageMargin, b.y+noteSize, summary(b.record, b.drawn))
 
 	b.y += sectionGap
 
@@ -302,13 +309,6 @@ func (b *booklet) firstPage() {
 	}
 
 	b.rosterSection(rosterX, rosterWidth, rosterTop)
-}
-
-// summary is the sentence the Markdown listing opens with, so that the
-// two documents report the same record in the same words.
-func summary(record *starmap.Record) string {
-	return fmt.Sprintf("%d worlds, %d routes. Generated from seed %d at occurrence DM %s.",
-		len(record.Worlds), len(record.Routes), record.Seed, occurrenceDM(record.OccurrenceDM))
 }
 
 // drawMap draws the p. 3 grid inside a box: the hexes and their numbers,
@@ -353,7 +353,7 @@ func (b *booklet) drawRoutes(fit mapFit) {
 	b.pdf.SetLineWidth(routeWeight)
 	b.pdf.SetDrawColor(inkRoute, inkRoute, inkRoute)
 
-	for _, route := range b.record.Routes {
+	for _, route := range b.drawn {
 		from := fit.hexCenter(route.From)
 		to := fit.hexCenter(route.To)
 
@@ -510,7 +510,7 @@ func (b *booklet) routesSection() {
 
 	b.routeHead()
 
-	for _, route := range b.record.Routes {
+	for _, route := range b.drawn {
 		// The head goes on every page the table reaches, as the roster's
 		// does. A subsector at DM +1 carries a hundred and fifty routes and
 		// a sector carries hundreds, so a table without this prints pages

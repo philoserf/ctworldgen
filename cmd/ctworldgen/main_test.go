@@ -480,6 +480,53 @@ func TestRenderWritesTheBooklet(t *testing.T) {
 
 // TestRenderRefusesAFormatItDoesNotWrite: the flag takes two values, and
 // an error that names them is what tells the operator which.
+// TestLanesChoosesWhatIsDrawn: legible is the default, --lanes all draws
+// every lane the record carries, and anything else is refused (ERRATA
+// E007). The record is the same file in all three cases.
+func TestLanesChoosesWhatIsDrawn(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	record := filepath.Join(dir, "subsector.json")
+
+	// Seed 1 at DM +1 is the dense case: 150 lanes, most of them redundant.
+	_, _, err := exec(t, "new", "--seed", "1", "--occurrence-dm", "1", "-o", record)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	byDefault, _, err := exec(t, renderVerb, record)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	all, _, err := exec(t, renderVerb, "--lanes", "all", record)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rows := strings.Count(all, " | "); rows <= strings.Count(byDefault, " | ") {
+		t.Error("--lanes all drew no more than the default, so the default suppressed nothing")
+	}
+
+	if !strings.Contains(byDefault, "not listed") || !strings.Contains(byDefault, "ERRATA E007") {
+		t.Error("the default listing suppressed lanes without saying so")
+	}
+
+	if strings.Contains(all, "not listed") {
+		t.Error("--lanes all reported suppressing something")
+	}
+
+	_, _, err = exec(t, renderVerb, "--lanes", "nonesuch", record)
+	if err == nil {
+		t.Fatal("--lanes nonesuch was accepted")
+	}
+
+	if !strings.Contains(err.Error(), "legible or all") {
+		t.Errorf("the error does not name the lane modes: %v", err)
+	}
+}
+
 func TestRenderRefusesAFormatItDoesNotWrite(t *testing.T) {
 	t.Parallel()
 

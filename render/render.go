@@ -20,19 +20,26 @@ import (
 	"github.com/philoserf/ctworldgen/tables"
 )
 
-// Renderer holds the descriptive tables of pp. 5-7, loaded once.
+// Renderer holds the descriptive tables of pp. 5-7, loaded once, and which
+// lanes the documents draw.
 type Renderer struct {
 	charts *tables.Tables
+	lanes  Lanes
 }
 
-// New loads and validates the charts the listing reads its labels from.
-func New() (*Renderer, error) {
+// New loads and validates the charts the listing reads its labels from, and
+// fixes which lanes the documents draw.
+//
+// The lanes are an argument rather than a default because neither answer is
+// obviously the zero one, and a rendering that quietly stopped drawing half
+// a map would be the worst way to find that out.
+func New(lanes Lanes) (*Renderer, error) {
 	charts, err := tables.Load()
 	if err != nil {
 		return nil, fmt.Errorf("loading the Book 3 charts: %w", err)
 	}
 
-	return &Renderer{charts: charts}, nil
+	return &Renderer{charts: charts, lanes: lanes}, nil
 }
 
 // Listing writes the Markdown listing.
@@ -40,11 +47,12 @@ func (r *Renderer) Listing(out io.Writer, record *starmap.Record) error {
 	var built strings.Builder
 
 	names := namesByHex(record)
+	drawn := r.drawn(record.Routes)
 
-	r.heading(&built, record)
+	r.heading(&built, record, drawn)
 	r.grid(&built, record)
 	r.roster(&built, record)
-	r.routes(&built, names, record)
+	r.routes(&built, names, record, drawn)
 	r.details(&built, names, record)
 
 	_, err := io.WriteString(out, built.String())
@@ -55,21 +63,44 @@ func (r *Renderer) Listing(out io.Writer, record *starmap.Record) error {
 	return nil
 }
 
-func (r *Renderer) heading(built *strings.Builder, record *starmap.Record) {
+// drawn returns the lanes this renderer puts on the page. The record is not
+// changed and carries every one of them (ERRATA E007).
+func (r *Renderer) drawn(routes []starmap.Route) []starmap.Route {
+	if r.lanes == AllLanes {
+		return routes
+	}
+
+	return legible(routes)
+}
+
+func (r *Renderer) heading(built *strings.Builder, record *starmap.Record, drawn []starmap.Route) {
 	name := record.Name
 	if name == "" {
 		name = untitled(record)
 	}
 
 	fmt.Fprintf(built, "# %s\n\n", name)
-	fmt.Fprintf(built, "%d worlds, %d routes. Generated from seed %d at occurrence DM %s.\n\n",
-		len(record.Worlds), len(record.Routes), record.Seed, occurrenceDM(record.OccurrenceDM))
+	fmt.Fprintf(built, "%s\n\n", summary(record, drawn))
 
 	// The referee's note about the map as a whole, under the summary and
 	// above everything the tool generated (issue 1 #6).
 	if record.Notes != "" {
 		fmt.Fprintf(built, "%s\n\n", oneLine(record.Notes))
 	}
+}
+
+// summary is the sentence both documents open with, so that the two report
+// the same record in the same words. It says how many lanes were drawn
+// whenever that is fewer than the record carries: a document that quietly
+// showed less than it had would be worse than an unreadable one.
+func summary(record *starmap.Record, drawn []starmap.Route) string {
+	if len(drawn) == len(record.Routes) {
+		return fmt.Sprintf("%d worlds, %d routes. Generated from seed %d at occurrence DM %s.",
+			len(record.Worlds), len(record.Routes), record.Seed, occurrenceDM(record.OccurrenceDM))
+	}
+
+	return fmt.Sprintf("%d worlds, %d routes, %d drawn. Generated from seed %d at occurrence DM %s.",
+		len(record.Worlds), len(record.Routes), len(drawn), record.Seed, occurrenceDM(record.OccurrenceDM))
 }
 
 // untitled is the heading a record the referee has not named gets. It is
@@ -197,6 +228,18 @@ func (r *Renderer) roster(built *strings.Builder, record *starmap.Record) {
 	built.WriteString("\n")
 }
 
+// lanesNote says what the table is not showing and how to see it. P. 2
+// offers the map-drawer this and the tool takes it by default, so the
+// document has to say so where a referee reading the table would look
+// (ERRATA E007).
+func lanesNote(all, suppressed int) string {
+	return fmt.Sprintf(
+		"%d of these %d lanes are not listed: each joins two worlds already joined by shorter lanes, "+
+			"which p. 2 says may be ignored in the drawing (ERRATA E007). The record carries every one of "+
+			"them, and `render --lanes=all` lists them.",
+		suppressed, all)
+}
+
 // occurrenceDM writes the referee's DM the way p. 1 offers it: +1, 0 or
 // -1, rather than the "+0" a signed format would give.
 func occurrenceDM(value int) string {
@@ -275,7 +318,9 @@ func bases(world starmap.World) string {
 	return strings.Join(present, ", ")
 }
 
-func (r *Renderer) routes(built *strings.Builder, names map[starmap.Hex]string, record *starmap.Record) {
+func (r *Renderer) routes(
+	built *strings.Builder, names map[starmap.Hex]string, record *starmap.Record, drawn []starmap.Route,
+) {
 	built.WriteString("## Routes\n\n")
 
 	if len(record.Routes) == 0 {
@@ -284,9 +329,13 @@ func (r *Renderer) routes(built *strings.Builder, names map[starmap.Hex]string, 
 		return
 	}
 
+	if suppressed := len(record.Routes) - len(drawn); suppressed > 0 {
+		fmt.Fprintf(built, "%s\n\n", lanesNote(len(record.Routes), suppressed))
+	}
+
 	built.WriteString("| From | To | Parsecs |\n| --- | --- | --- |\n")
 
-	for _, route := range record.Routes {
+	for _, route := range drawn {
 		fmt.Fprintf(built, "| %s | %s | %d |\n",
 			cell(named(names, route.From)), cell(named(names, route.To)), route.Distance)
 	}

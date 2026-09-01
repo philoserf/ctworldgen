@@ -51,7 +51,13 @@ type segment struct {
 func drawn(t *testing.T, record *starmap.Record) []byte {
 	t.Helper()
 
-	renderer, err := render.New()
+	return drawnWith(t, record, render.LegibleLanes)
+}
+
+func drawnWith(t *testing.T, record *starmap.Record, lanes render.Lanes) []byte {
+	t.Helper()
+
+	renderer, err := render.New(lanes)
 	if err != nil {
 		t.Fatalf("building the renderer: %v", err)
 	}
@@ -407,10 +413,14 @@ func TestEveryRouteIsDrawn(t *testing.T) {
 				joined[from.String()+"-"+until.String()]++
 			}
 
-			for _, route := range record.Routes {
+			// The map draws the lanes the booklet drew, which by default is
+			// the legible set (ERRATA E007). A suppressed lane must be
+			// absent from the drawing as well as from the table -- that is
+			// the half that proves the suppression reached the ink.
+			for _, route := range drawnRoutes(t, record) {
 				key := route.From.String() + "-" + route.To.String()
 				if joined[key] == 0 {
-					t.Fatalf("the route %s to %s was not drawn", route.From, route.To)
+					t.Fatalf("the drawn lane %s to %s was not inked", route.From, route.To)
 				}
 
 				joined[key]--
@@ -420,7 +430,7 @@ func TestEveryRouteIsDrawn(t *testing.T) {
 			}
 
 			if len(joined) != 0 {
-				t.Fatalf("the map drew lines no route accounts for: %v", joined)
+				t.Fatalf("the map drew lines no drawn lane accounts for: %v", joined)
 			}
 		})
 	}
@@ -465,14 +475,20 @@ func TestEveryWorldAndRouteReachesTheBooklet(t *testing.T) {
 				}
 			}
 
-			assertRouteTableIsWhole(t, record, written)
+			// The booklet's table carries what the booklet drew. Under
+			// --lanes=all that is every lane the record holds, which is the
+			// promise this test has always made.
+			assertRouteTableIsWhole(t, len(drawnRoutes(t, record)), written)
+
+			assertRouteTableIsWhole(t, len(record.Routes),
+				everyStamp(t, drawnWith(t, record, render.AllLanes)))
 		})
 	}
 }
 
 // assertRouteTableIsWhole counts the route table's rows by their Parsecs
 // column, which is the one column of the booklet nothing else writes in.
-func assertRouteTableIsWhole(t *testing.T, record *starmap.Record, written []stamp) {
+func assertRouteTableIsWhole(t *testing.T, want int, written []stamp) {
 	t.Helper()
 
 	// The column is placed by the renderer, and this reads it back: the x
@@ -490,8 +506,8 @@ func assertRouteTableIsWhole(t *testing.T, record *starmap.Record, written []sta
 		best = max(best, count)
 	}
 
-	if best != len(record.Routes) {
-		t.Fatalf("the route table has %d rows; the record has %d routes", best, len(record.Routes))
+	if best != want {
+		t.Fatalf("the route table has %d rows; want %d", best, want)
 	}
 }
 

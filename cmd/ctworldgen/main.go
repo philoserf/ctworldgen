@@ -38,6 +38,7 @@ var (
 	errTakesNoArguments     = errors.New("this subcommand takes no arguments (flags precede any filename)")
 	errRenderWantsOneRecord = errors.New("render takes exactly one record to read (flags precede it)")
 	errNotAFormat           = errors.New("--format is markdown or pdf and nothing else")
+	errNotALaneMode         = errors.New("--lanes is legible or all and nothing else")
 	errPDFWantsAFile        = errors.New("--format pdf writes a binary and needs -o")
 )
 
@@ -49,12 +50,22 @@ const (
 	formatPDF      = "pdf"
 )
 
+// The two ways to draw the commercial routes. Legible is the default: p. 2
+// offers the map-drawer the choice of ignoring a lane whose worlds are
+// already joined, and a dense subsector draws a hundred and sixty lanes
+// over forty-six worlds without it (ERRATA E007). The record carries every
+// lane either way, and `--lanes all` draws them.
+const (
+	lanesLegible = "legible"
+	lanesAll     = "all"
+)
+
 const usage = `ctworldgen generates Classic Traveller subsectors from Book 3 pp. 1-12.
 
 usage:
   ctworldgen new   [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
   ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
-  ctworldgen render [--format markdown|pdf] [-o file] [--force] subsector.json
+  ctworldgen render [--format markdown|pdf] [--lanes legible|all] [-o file] [--force] subsector.json
   ctworldgen version
 `
 
@@ -308,6 +319,8 @@ func renderCmd(args []string, stdout, stderr io.Writer) error {
 	out := flags.String("o", "", "write to this file instead of stdout")
 	force := flags.Bool("force", false, "overwrite an existing output file")
 	format := flags.String("format", formatMarkdown, "markdown listing or pdf booklet")
+	lanes := flags.String("lanes", lanesLegible,
+		"legible draws only the lanes that join something (ERRATA E007); all draws every lane")
 
 	err := flags.Parse(args)
 	if err != nil {
@@ -327,6 +340,11 @@ func renderCmd(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 
+	drawn, err := holdLanes(*lanes)
+	if err != nil {
+		return err
+	}
+
 	file, err := os.Open(flags.Arg(0))
 	if err != nil {
 		return fmt.Errorf("opening %s: %w", flags.Arg(0), err)
@@ -339,7 +357,7 @@ func renderCmd(args []string, stdout, stderr io.Writer) error {
 		return fmt.Errorf("reading %s: %w", flags.Arg(0), err)
 	}
 
-	renderer, err := render.New()
+	renderer, err := render.New(drawn)
 	if err != nil {
 		return fmt.Errorf("building the renderer: %w", err)
 	}
@@ -349,6 +367,19 @@ func renderCmd(args []string, stdout, stderr io.Writer) error {
 	}
 
 	return writeListing(renderer, record, flags.Arg(0), *out, *force, stdout)
+}
+
+// holdLanes reads which lanes the documents should draw, and refuses
+// anything that is neither.
+func holdLanes(lanes string) (render.Lanes, error) {
+	switch lanes {
+	case lanesLegible:
+		return render.LegibleLanes, nil
+	case lanesAll:
+		return render.AllLanes, nil
+	default:
+		return render.LegibleLanes, fmt.Errorf("%w: %s", errNotALaneMode, lanes)
+	}
 }
 
 // holdFormat refuses a format the tool does not write, and a booklet with

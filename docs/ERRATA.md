@@ -1,10 +1,18 @@
 # ERRATA
 
 Readings of the held text where it is ambiguous or silent, each with the
-printed page it is read from. Nothing here is applied silently: every
-subsector record stamps, in its `errata` array, the identifiers of the
-entries that governed its generation, and each entry below states the
-condition under which it is stamped.
+printed page it is read from. Nothing here is applied silently.
+
+Most entries govern **generation**, and a record stamps them: the `errata`
+array carries the identifiers of the readings that governed it, and each
+such entry states the condition under which it is stamped.
+
+A reading can also govern the **documents** rather than the generation --
+what the listing and the booklet draw from a record they did not change.
+Such an entry is never stamped, because it is not a property of the record:
+the same record renders two ways depending on what the referee asked for.
+It is cited in the document's own prose instead, where a reader of that
+document will meet it. E007 is the first of these, and its entry says so.
 
 The held text is Book 3 _Worlds and Adventures_ pp. 1–12 and Book 1
 _Characters and Combat_ pp. 2–3 and p. 8 (FFE reprints of the © 1977
@@ -309,6 +317,69 @@ recorded seed like everything else this tool writes.
 
 _Stamped on every sector record. A sector also carries the readings its
 members stamped, because the members are the record's worlds._
+
+## E007 — Which lanes the documents draw (p. 2)
+
+P. 2 describes the route procedure and then, having observed that a jump-2
+can be made over two jump-1 links, tells the map-drawer this:
+
+> It is possible to ignore some potential connections because they are
+> already present… This may well help in the creation of legible subsector
+> maps.
+
+That is permission and not a rule, and it is addressed to whoever draws the
+map rather than to whoever throws the dice. E003 is unaffected: the engine
+examines every pair and consumes every die, because the dice stream depends
+on it, and the record carries every lane the throws produced.
+
+What the page leaves unfixed is which connections count as "already
+present", and it decides how a map reads. A dense subsector draws a hundred
+and sixty lanes over forty-six worlds — 2.05 per world, and unreadable.
+
+**The reading, in three parts.**
+
+### 1. Already present means joined by strictly shorter lanes
+
+A lane is not drawn when its two worlds are already joined by a chain of
+lanes each shorter than it. So a jump-2 is dropped where two jump-1 links
+already connect its ends, which is the page's own example. A jump-1 is
+never dropped: nothing is shorter than it.
+
+Equal lengths do not suppress each other. Two jump-2 lanes between the same
+pair of groups are equally good roads, and the page gives no basis for
+preferring one — its example is a *longer* lane made redundant by *shorter*
+ones, and nothing more.
+
+This is also the only reading that is a function of the record. Suppressing
+within a length — the ordinary greedy spanning forest — draws fewer lanes
+and would look better, but which of several equal lanes survives then
+depends on the order they are examined in. Measured over two hundred
+shufflings of one record's routes, the reading above gives one result and
+the greedy form gives two hundred.
+
+### 2. It governs the documents, not the record
+
+The record is unchanged and carries every lane. Only the drawn map and the
+route table are affected, and the technological reason is the same as the
+practical one: a referee must be able to ask the record a question the map
+cannot answer.
+
+Both documents say what they suppressed and how many, and both name this
+entry. Across the fixtures the reading drops about 46% of lanes and changes
+the reachability of nothing: a lane is dropped only when its ends are
+already joined, so no world is cut off from one it could reach before.
+
+### 3. It is the default
+
+`render` draws legible lanes unless asked otherwise; `render --lanes all`
+draws every lane the record carries. The default is the readable one
+because the alpha report's sharpest finding was that the map could not be
+read, and a referee who never finds a flag should not be left with the
+wall.
+
+_Never stamped. This reading governs the documents rather than the
+generation, so it is not a property of any record — the same record draws
+both ways. The listing and the booklet cite it where they suppress._
 
 ## Noted discrepancies (not stamped)
 
