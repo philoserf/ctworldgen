@@ -30,14 +30,14 @@ func sector(t *testing.T, golden fixture.Golden) *starmap.Record {
 	return record
 }
 
-// placed is the engine's own translation, not a second copy of the
-// arithmetic. A test that re-derived the translation would assert only
-// that its own copy is self-consistent, and would pass while the engine
-// laid the members out any way at all.
+// placed is the translation the engine itself calls, not a second copy of
+// the arithmetic. A test that re-derived it would assert only that its own
+// copy is self-consistent, and would pass while the engine laid the
+// members out any way at all.
 func placed(t *testing.T, index int, hex starmap.Hex) starmap.Hex {
 	t.Helper()
 
-	on := gen.Place(index, hex)
+	on := starmap.Place(index, hex)
 	if !starmap.SectorGrid().Contains(on) {
 		t.Fatalf("member %d puts %s at %s, off the sector grid", index, hex, on)
 	}
@@ -71,7 +71,7 @@ func TestASectorsMembersAreTheSubsectorsNewWrites(t *testing.T) {
 
 	counted := 0
 
-	for index := range gen.SectorMembers {
+	for index := range starmap.Members {
 		alone, genErr := engine.Generate(gen.Inputs{
 			Seed: golden.Seed + uint64(index), Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
 		})
@@ -118,9 +118,9 @@ func TestRoutesCrossTheSeams(t *testing.T) {
 	}
 
 	for _, route := range crossing {
-		if gen.MemberOf(route.From) == gen.MemberOf(route.To) {
+		if starmap.MemberOf(route.From) == starmap.MemberOf(route.To) {
 			t.Errorf("%s-%s is counted as crossing and both ends are in member %d",
-				route.From, route.To, gen.MemberOf(route.From))
+				route.From, route.To, starmap.MemberOf(route.From))
 		}
 
 		if route.Distance < 1 || route.Distance > 4 {
@@ -168,7 +168,7 @@ func TestEveryPairIsExaminedOnce(t *testing.T) {
 func TestTranslationKeepsThePageThreeParity(t *testing.T) {
 	t.Parallel()
 
-	for index := range gen.SectorMembers {
+	for index := range starmap.Members {
 		for aCol := 1; aCol <= starmap.Columns; aCol++ {
 			for aRow := 1; aRow <= starmap.Rows; aRow++ {
 				assertOneHexKeepsItsDistances(t, index, aCol, aRow)
@@ -269,6 +269,125 @@ func TestSectorRejectsADMTheBookDoesNotOffer(t *testing.T) {
 		_, err := engine.Sector(gen.Inputs{Seed: 1, Name: "Aramis", OccurrenceDM: dm})
 		if err == nil {
 			t.Errorf("Sector accepted an occurrence DM of %+d, and p. 1 offers -1, 0 and +1", dm)
+		}
+	}
+}
+
+// TestASectorsMembersKeepTheirOwnRoutes is the other half of the identity
+// TestASectorsMembersAreTheSubsectorsNewWrites holds. That one compares
+// the worlds of every member against the subsector its seed writes alone;
+// this one compares the lanes.
+//
+// It is not a refinement. Nothing in this package noticed a sector that
+// dropped every interior route: the seams golden pins only the lanes that
+// cross a border, and the member identity compared worlds. A sector that
+// carried its sixteen star fields and none of the roads between them was
+// a passing suite.
+func TestASectorsMembersKeepTheirOwnRoutes(t *testing.T) {
+	t.Parallel()
+
+	golden := fixture.SectorGolden()
+	record := sector(t, golden)
+
+	engine, err := gen.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The sector's lanes that stay inside one member, gathered by member.
+	interior := make([]map[starmap.Route]bool, starmap.Members)
+	for index := range interior {
+		interior[index] = map[starmap.Route]bool{}
+	}
+
+	for _, route := range record.Routes {
+		home := starmap.MemberOf(route.From)
+		if home != starmap.MemberOf(route.To) {
+			continue
+		}
+
+		interior[home][route] = true
+	}
+
+	counted := 0
+
+	for index := range starmap.Members {
+		alone, genErr := engine.Generate(gen.Inputs{
+			Seed: golden.Seed + uint64(index), Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+		})
+		if genErr != nil {
+			t.Fatal(genErr)
+		}
+
+		assertOneMemberKeptItsRoutes(t, index, golden.Seed+uint64(index), alone.Routes, interior[index])
+
+		counted += len(alone.Routes)
+	}
+
+	if crossing := len(gen.CrossingRoutes(record)); counted+crossing != len(record.Routes) {
+		t.Errorf("the members hold %d lanes and %d cross, and the sector holds %d",
+			counted, crossing, len(record.Routes))
+	}
+}
+
+// assertOneMemberKeptItsRoutes compares the lanes one member's subsector
+// draws alone against the lanes the sector carries inside that member's
+// band, translated by the engine's own Place.
+func assertOneMemberKeptItsRoutes(
+	t *testing.T, index int, seed uint64, alone []starmap.Route, interior map[starmap.Route]bool,
+) {
+	t.Helper()
+
+	if len(alone) == 0 {
+		t.Fatalf("member %d's subsector draws no lanes of its own, so this proves nothing about it", index)
+	}
+
+	for _, want := range alone {
+		laid := starmap.Route{
+			From:     placed(t, index, want.From),
+			To:       placed(t, index, want.To),
+			Distance: want.Distance,
+		}
+
+		if !interior[laid] {
+			t.Errorf("`new --seed %d` draws %s-%s and member %d of the sector does not carry it as %s-%s",
+				seed, want.From, want.To, index, laid.From, laid.To)
+		}
+	}
+
+	if len(interior) != len(alone) {
+		t.Errorf("member %d carries %d lanes of its own and its subsector draws %d",
+			index, len(interior), len(alone))
+	}
+}
+
+// TestASectorIsInTheOrderPageTwoReads: a sector's worlds and lanes are
+// sorted over the whole grid, not left in the order sixteen members and a
+// seam pass appended them (ERRATA E002, E006 part 3).
+//
+// The order is what a referee reads down and what makes two renders of one
+// record the same document. It was pinned only by the goldens, which say a
+// file changed rather than what about it is wrong.
+func TestASectorIsInTheOrderPageTwoReads(t *testing.T) {
+	t.Parallel()
+
+	record := sector(t, fixture.SectorGolden())
+
+	for place := 1; place < len(record.Worlds); place++ {
+		if !record.Worlds[place-1].Hex.Less(record.Worlds[place].Hex) {
+			t.Fatalf("world %d is %s and world %d is %s; E002 reads them column by column",
+				place-1, record.Worlds[place-1].Hex, place, record.Worlds[place].Hex)
+		}
+	}
+
+	for place := 1; place < len(record.Routes); place++ {
+		before, after := record.Routes[place-1], record.Routes[place]
+
+		ordered := before.From.Less(after.From) ||
+			(before.From == after.From && before.To.Less(after.To))
+		if !ordered {
+			t.Fatalf("lane %d is %s-%s and lane %d is %s-%s; they are read from first, then to",
+				place-1, before.From, before.To, place, after.From, after.To)
 		}
 	}
 }

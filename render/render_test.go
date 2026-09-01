@@ -1,6 +1,8 @@
 package render_test
 
 import (
+	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -558,10 +560,10 @@ type hexPlace struct{ line, char int }
 
 // mapBlock returns the fenced drawing alone, so the prose above it cannot
 // answer a question asked of the map.
-func mapBlock(t *testing.T, written string) string {
+func mapBlock(t *testing.T, body string) string {
 	t.Helper()
 
-	_, after, found := strings.Cut(section(t, written, "The map"), "```text\n")
+	_, after, found := strings.Cut(body, "```text\n")
 	if !found {
 		t.Fatal("the map section has no drawing")
 	}
@@ -616,8 +618,20 @@ func mapGeometry(t *testing.T, places map[starmap.Hex]hexPlace) (int, int) {
 	t.Helper()
 
 	// One slot across is two printed columns; one row down is two lines.
-	slot := places[hexOf(t, 3, 1)].char - places[hexOf(t, 1, 1)].char
-	step := places[hexOf(t, 1, 2)].line - places[hexOf(t, 1, 1)].line
+	// Measured over the drawing rather than read off named hexes: a
+	// member's map begins at its own band and its ring a hex outside that,
+	// so 0101 is not on most of the maps this holds.
+	slot, step := 0, 0
+
+	for _, place := range places {
+		for _, against := range places {
+			slot, step = closerPlace(place, against, slot, step)
+		}
+	}
+
+	if slot == 0 || step == 0 {
+		t.Fatal("this map has no two hexes to measure a slot and a row step between")
+	}
 
 	if slot <= 0 || step <= 0 {
 		t.Fatalf("the map's slot is %d characters and its row %d lines; both run forwards", slot, step)
@@ -684,27 +698,30 @@ func TestTheMapIsTheGridPrintedOnPageThree(t *testing.T) {
 	// on the map at all; the goldens carry the starport letters.
 	t.Run("empty", func(t *testing.T) {
 		t.Parallel()
-		assertTheMapIsThePrintedGrid(t, listing(t, starmap.New(1, "Aramis", 0)), starmap.PageThreeGrid())
+		assertTheMapIsThePrintedGrid(t, section(t, listing(t, starmap.New(1, "Aramis", 0)), "The map"),
+			everyHexOfGrid(starmap.PageThreeGrid()))
 	})
 
 	for _, golden := range fixture.Goldens() {
 		t.Run(golden.File, func(t *testing.T) {
 			t.Parallel()
-			assertTheMapIsThePrintedGrid(t, listing(t, generated(t, golden)), starmap.PageThreeGrid())
+			assertTheMapIsThePrintedGrid(t, section(t, listing(t, generated(t, golden)), "The map"),
+				everyHexOfGrid(starmap.PageThreeGrid()))
 		})
 	}
 }
 
 // assertTheMapIsThePrintedGrid holds one drawing against Hex.Distance.
-func assertTheMapIsThePrintedGrid(t *testing.T, written string, grid starmap.Grid) {
+func assertTheMapIsThePrintedGrid(t *testing.T, body string, want map[starmap.Hex]bool) {
 	t.Helper()
 
-	places := mapPlaces(t, mapBlock(t, written))
-
-	if len(places) != grid.Columns*grid.Rows {
-		t.Fatalf("the map draws %d hexes and a %dx%d grid has %d",
-			len(places), grid.Columns, grid.Rows, grid.Columns*grid.Rows)
+	if len(want) == 0 {
+		t.Fatal("this check was given no hexes to look for, so it could only pass")
 	}
+
+	places := mapPlaces(t, mapBlock(t, body))
+
+	assertTheseAreTheHexesDrawn(t, places, want)
 
 	slot, step := mapGeometry(t, places)
 
@@ -723,6 +740,37 @@ func assertTheMapIsThePrintedGrid(t *testing.T, written string, grid starmap.Gri
 				t.Errorf("%s and %s are one parsec apart on the p. 3 grid and the map draws them apart",
 					hex, other)
 			}
+		}
+	}
+}
+
+// closerPlace narrows the smallest slot and row step seen so far by one
+// pair of drawn labels.
+func closerPlace(place, against hexPlace, slot, step int) (int, int) {
+	if place.line == against.line && against.char > place.char && (slot == 0 || against.char-place.char < slot) {
+		slot = against.char - place.char
+	}
+
+	if place.char == against.char && against.line > place.line && (step == 0 || against.line-place.line < step) {
+		step = against.line - place.line
+	}
+
+	return slot, step
+}
+
+// assertTheseAreTheHexesDrawn holds a drawing to an exact set of hexes.
+func assertTheseAreTheHexesDrawn(t *testing.T, places map[starmap.Hex]hexPlace, want map[starmap.Hex]bool) {
+	t.Helper()
+
+	for hex := range want {
+		if _, drew := places[hex]; !drew {
+			t.Fatalf("the map does not draw %s, and it should (%d of %d drawn)", hex, len(places), len(want))
+		}
+	}
+
+	for hex := range places {
+		if !want[hex] {
+			t.Fatalf("the map draws %s, and it should not (%d drawn, %d wanted)", hex, len(places), len(want))
 		}
 	}
 }
@@ -770,13 +818,67 @@ func drawnSlot(line string, char, slot int) string {
 	return strings.TrimSpace(line[char:min(char+slot, len(line))])
 }
 
-// TestASectorRendersOnItsOwnGrid: the map is drawn from the record's
-// grid, not from the p. 3 constants, so a sector draws all 1,280 of its
-// hexes and the parity holds across the whole of it. Getting the band
-// offsets wrong would put a hex where Hex.Distance says another one
-// belongs, which is the same check the subsector map gets.
-func TestASectorRendersOnItsOwnGrid(t *testing.T) {
-	t.Parallel()
+// everyHexOfGrid is the set a map of a whole grid draws.
+func everyHexOfGrid(grid starmap.Grid) map[starmap.Hex]bool {
+	want := map[starmap.Hex]bool{}
+
+	for col := 1; col <= grid.Columns; col++ {
+		for row := 1; row <= grid.Rows; row++ {
+			want[starmap.Hex{Col: col, Row: row}] = true
+		}
+	}
+
+	return want
+}
+
+// memberAndItsRingHexes is the set one member's map draws: its own eighty
+// hexes, and every hex of the sector one parsec outside them (ERRATA E008
+// part 2).
+//
+// Measured against every hex of the band, which is the slow road; the
+// renderer clamps a hex into the band and measures once, which is the
+// fast one. Two roads to one set, so a ring drawn a row out of place
+// cannot pass.
+func memberAndItsRingHexes(index int) map[starmap.Hex]bool {
+	grid := starmap.SectorGrid()
+	first, last := starmap.MemberBounds(index)
+
+	own := []starmap.Hex{}
+
+	for col := first.Col; col <= last.Col; col++ {
+		for row := first.Row; row <= last.Row; row++ {
+			own = append(own, starmap.Hex{Col: col, Row: row})
+		}
+	}
+
+	want := map[starmap.Hex]bool{}
+	for _, hex := range own {
+		want[hex] = true
+	}
+
+	for col := 1; col <= grid.Columns; col++ {
+		for row := 1; row <= grid.Rows; row++ {
+			hex := starmap.Hex{Col: col, Row: row}
+			if want[hex] {
+				continue
+			}
+
+			for _, at := range own {
+				if hex.Distance(at) == 1 {
+					want[hex] = true
+
+					break
+				}
+			}
+		}
+	}
+
+	return want
+}
+
+// sectorListing generates the sector the listing tests read.
+func sectorListingRecord(t *testing.T) *starmap.Record {
+	t.Helper()
 
 	engine, err := gen.New()
 	if err != nil {
@@ -788,16 +890,236 @@ func TestASectorRendersOnItsOwnGrid(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	written := listing(t, record)
-	assertTheMapIsThePrintedGrid(t, written, starmap.SectorGrid())
+	return record
+}
 
-	if rows := tableRows(section(t, written, "Worlds")); rows != len(record.Worlds) {
-		t.Errorf("the roster has %d rows and the sector has %d worlds", rows, len(record.Worlds))
+// memberSection cuts one of the sixteen "## Subsector N" sections out of a
+// sector's listing, so a check on one member cannot be answered by
+// another's.
+func memberSection(t *testing.T, written string, index int) string {
+	t.Helper()
+
+	heading := fmt.Sprintf("## Subsector %d &mdash; ", index)
+
+	start := strings.Index(written, heading)
+	if start < 0 {
+		t.Fatalf("the listing has no section for member %d", index)
 	}
 
-	all := listingWith(t, record, render.AllLanes)
-	if rows := tableRows(section(t, all, "Routes")); rows != len(record.Routes) {
-		t.Errorf("--lanes=all has %d rows and the sector has %d routes", rows, len(record.Routes))
+	body, _, _ := strings.Cut(written[start+len(heading):], "\n## ")
+
+	return body
+}
+
+// subsection cuts one "### " part out of a member's section.
+func subsection(t *testing.T, body, heading string) string {
+	t.Helper()
+
+	start := strings.Index(body, "### "+heading+"\n")
+	if start < 0 {
+		t.Fatalf("this member's section has no %q part", heading)
+	}
+
+	part, _, _ := strings.Cut(body[start+len(heading)+5:], "\n### ")
+
+	return part
+}
+
+// TestTheSectorSliceGolden pins one member's section of a sector's
+// listing, which is where the decomposition, the ring of neighbours and
+// the doubled crossing lanes can be read at a size a human will read.
+//
+// It catches drift and nothing else. A golden is regenerated from the
+// code under test, so what holds the decomposition itself is the live
+// assertions above it.
+func TestTheSectorSliceGolden(t *testing.T) {
+	t.Parallel()
+
+	var whole strings.Builder
+
+	renderer, err := render.New(render.LegibleLanes)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	golden := fixture.SectorGolden()
+
+	engine, err := gen.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	record, err := engine.Sector(gen.Inputs{
+		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = renderer.Listing(&whole, record)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := fixture.SectorSlice(whole.String())
+	if got == "" {
+		t.Fatalf("the sector listing has no section for member %d", fixture.SectorSliceMember)
+	}
+
+	want, err := os.ReadFile(filepath.Join("..", fixture.SectorSlicePath()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got != string(want) {
+		t.Errorf("subsector %d's section has changed; run `task regenerate` and read the diff",
+			fixture.SectorSliceMember)
+	}
+}
+
+// TestARefereesNoteReachesASectorsIndexPage: the note goes under the
+// summary and above everything the tool generated (issue 1 #6), on a
+// sector's index page as on a subsector's first page.
+func TestARefereesNoteReachesASectorsIndexPage(t *testing.T) {
+	t.Parallel()
+
+	record := sectorListingRecord(t)
+
+	record.Notes = "the Spinward Marches, such as they are"
+
+	if written := listing(t, record); !strings.Contains(written, record.Notes) {
+		t.Error("the referee's note about the sector is not in its listing")
+	}
+
+	renderer, err := render.New(render.LegibleLanes)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var booklet bytes.Buffer
+
+	err = renderer.Booklet(&booklet, record)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Contains(booklet.Bytes(), []byte("Spinward Marches")) {
+		t.Error("the referee's note about the sector is not in its booklet")
+	}
+}
+
+// TestASectorsMemberMapsAreThePrintedGrid: a sector's listing draws
+// sixteen p. 3 grids rather than one map of 1,280 hexes, and each is held
+// to the parity the same way a subsector's is (ERRATA E008).
+//
+// The ring of neighbours is what keeps the sixteen in one frame. Member
+// 5's map draws 0810, which is member 4's, one hex from its own 0911, so
+// every seam relation the single grid stated is stated again here.
+func TestASectorsMemberMapsAreThePrintedGrid(t *testing.T) {
+	t.Parallel()
+
+	written := listing(t, sectorListingRecord(t))
+
+	for index := range starmap.Members {
+		assertTheMapIsThePrintedGrid(t,
+			subsection(t, memberSection(t, written, index), "The map"),
+			memberAndItsRingHexes(index))
+	}
+}
+
+// TestASectorsMemberSectionsPartitionItsWorlds: each of the sixteen
+// rosters carries exactly the worlds of its own band, and between them
+// they carry every world once (ERRATA E008 part 1).
+//
+// A count would not do this. Sixteen rosters summing to 662 rows survives
+// member 5's worlds being printed under member 6, which is the mutation
+// the band arithmetic can make.
+func TestASectorsMemberSectionsPartitionItsWorlds(t *testing.T) {
+	t.Parallel()
+
+	record := sectorListingRecord(t)
+	written := listing(t, record)
+
+	seen := map[starmap.Hex]int{}
+
+	for index := range starmap.Members {
+		roster := subsection(t, memberSection(t, written, index), "Worlds")
+
+		for _, world := range record.Worlds {
+			at := starmap.MemberOf(world.Hex)
+			carries := strings.Contains(roster, "| "+world.Hex.String()+" |")
+
+			if carries != (at == index) {
+				t.Fatalf("subsector %d's roster carries %s = %v, and that world is in subsector %d",
+					index, world.Hex, carries, at)
+			}
+
+			if carries {
+				seen[world.Hex]++
+			}
+		}
+	}
+
+	for _, world := range record.Worlds {
+		if seen[world.Hex] != 1 {
+			t.Errorf("%s appears in %d of the sixteen rosters", world.Hex, seen[world.Hex])
+		}
+	}
+}
+
+// TestACrossingLaneIsListedUnderBothItsSubsectors: a lane whose two ends
+// are in different members is in both their tables, because a referee
+// reading one sub-sector needs to see the road out of it (ERRATA E008
+// part 3). A lane at home is in one.
+func TestACrossingLaneIsListedUnderBothItsSubsectors(t *testing.T) {
+	t.Parallel()
+
+	record := sectorListingRecord(t)
+	written := listingWith(t, record, render.AllLanes)
+
+	tables := make([]string, starmap.Members)
+	for index := range tables {
+		tables[index] = subsection(t, memberSection(t, written, index), "Routes")
+	}
+
+	rows := 0
+	crossing := 0
+
+	for _, route := range record.Routes {
+		row := fmt.Sprintf("| %s | %s | %d |", route.From, route.To, route.Distance)
+		home := starmap.MemberOf(route.From)
+		across := starmap.MemberOf(route.To)
+
+		for index, table := range tables {
+			listed := strings.Contains(table, row)
+			want := index == home || index == across
+
+			if listed != want {
+				t.Fatalf("subsector %d lists %s-%s = %v, and that lane joins subsectors %d and %d",
+					index, route.From, route.To, listed, home, across)
+			}
+		}
+
+		rows++
+
+		if home != across {
+			rows++
+
+			crossing++
+		}
+	}
+
+	// The consequence, worth stating because the document states it: the
+	// sixteen tables carry more rows between them than the record has
+	// lanes, by exactly the number that cross.
+	counted := 0
+	for _, table := range tables {
+		counted += tableRows(table)
+	}
+
+	if counted != rows {
+		t.Errorf("the sixteen lane tables carry %d rows; %d lanes and %d crossings make %d",
+			counted, len(record.Routes), crossing, rows)
 	}
 }
 
@@ -827,7 +1149,7 @@ func TestTheListingSaysWhichGridItDrew(t *testing.T) {
 		t.Errorf("an unnamed sector is headed %q", line(sectorListing))
 	}
 
-	if note := noteLine(t, sectorListing); !strings.Contains(note, "3240") {
+	if note := noteLine(t, sectorListing, "The sector"); !strings.Contains(note, "3240") {
 		t.Errorf("the map note of a sector does not say which grid was drawn: %q", note)
 	}
 
@@ -837,15 +1159,15 @@ func TestTheListingSaysWhichGridItDrew(t *testing.T) {
 		t.Errorf("an unnamed subsector is headed %q", line(subsectorListing))
 	}
 
-	if note := noteLine(t, subsectorListing); !strings.HasPrefix(note, "The p. 3 sub-sector hex grid.") {
+	if note := noteLine(t, subsectorListing, "The map"); !strings.HasPrefix(note, "The p. 3 sub-sector hex grid.") {
 		t.Errorf("the map note of a subsector no longer names the p. 3 grid: %q", note)
 	}
 }
 
 // noteLine is the map section's prose: its first non-empty line, which is
 // the sentence naming the grid.
-func noteLine(t *testing.T, written string) string {
+func noteLine(t *testing.T, written, heading string) string {
 	t.Helper()
 
-	return line(strings.TrimLeft(section(t, written, "The map"), "\n"))
+	return line(strings.TrimLeft(section(t, written, heading), "\n"))
 }

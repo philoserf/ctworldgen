@@ -8,13 +8,9 @@ import (
 	"github.com/philoserf/ctworldgen/starmap"
 )
 
-// SectorMembers is how many subsectors a sector is: four across and four
-// down (ERRATA E006).
-const SectorMembers = starmap.SectorAcross * starmap.SectorAcross
-
 // seamSeedOffset is the seventeenth stream, after the sixteen the members
 // consume (ERRATA E006 part 4).
-const seamSeedOffset = SectorMembers
+const seamSeedOffset = starmap.Members
 
 // Sector assembles sixteen subsectors on one grid and throws for the
 // routes at their seams.
@@ -40,7 +36,7 @@ func (e *Engine) Sector(inputs Inputs) (*starmap.Record, error) {
 	// keeps the derivation in one place and out of a conversion.
 	seed := inputs.Seed
 
-	for index := range SectorMembers {
+	for index := range starmap.Members {
 		err := e.member(record, inputs, index, seed)
 		if err != nil {
 			return nil, err
@@ -75,7 +71,7 @@ func (e *Engine) member(record *starmap.Record, inputs Inputs, index int, seed u
 	}
 
 	for _, world := range part.Worlds {
-		world.Hex = Place(index, world.Hex)
+		world.Hex = starmap.Place(index, world.Hex)
 		if !record.Grid.Contains(world.Hex) {
 			return fmt.Errorf("%w: member %d puts a world at %s", starmap.ErrOffGrid, index, world.Hex)
 		}
@@ -85,7 +81,7 @@ func (e *Engine) member(record *starmap.Record, inputs Inputs, index int, seed u
 
 	for _, route := range part.Routes {
 		record.Routes = append(record.Routes, starmap.Route{
-			From: Place(index, route.From), To: Place(index, route.To), Distance: route.Distance,
+			From: starmap.Place(index, route.From), To: starmap.Place(index, route.To), Distance: route.Distance,
 		})
 	}
 
@@ -100,10 +96,10 @@ func (e *Engine) member(record *starmap.Record, inputs Inputs, index int, seed u
 // stated number, no row for an X starport and no throw at a dash cell,
 // and the same order, read now in sector coordinates.
 //
-// Which member a world came from is not remembered: Place puts member i's
-// hexes in band i, so MemberOf reads the band straight back off the hex
-// (ERRATA E006 part 1). That is the same fact the translation states, held
-// in one place rather than two that must agree.
+// Which member a world came from is not remembered: starmap.Place puts
+// member i's hexes in band i, so starmap.MemberOf reads the band straight
+// back off the hex (ERRATA E006 part 1). That is the same fact the
+// translation states, held in one place rather than two that must agree.
 func (e *Engine) seams(stream *dice.Stream, worlds []starmap.World) []starmap.Route {
 	routes := []starmap.Route{}
 
@@ -111,10 +107,10 @@ func (e *Engine) seams(stream *dice.Stream, worlds []starmap.World) []starmap.Ro
 		// Hoisted: the first world's band is fixed for the whole inner
 		// loop, and deriving it per pair is a division per pair over the
 		// two hundred thousand a sector has.
-		firstMember := MemberOf(first.Hex)
+		firstMember := starmap.MemberOf(first.Hex)
 
 		for _, second := range worlds[index+1:] {
-			if firstMember == MemberOf(second.Hex) {
+			if firstMember == starmap.MemberOf(second.Hex) {
 				continue
 			}
 
@@ -145,32 +141,6 @@ func routeOrder(a, b starmap.Route) int {
 	return a.To.Number() - b.To.Number()
 }
 
-// Place translates a member's local hex onto the sector grid: member
-// index sits at column band index mod 4 and row band index div 4, and a
-// local hex moves by whole bands (ERRATA E006 parts 1 and 2).
-//
-// A sub-sector is eight columns wide and eight is even, so a column's
-// odd-or-even parity survives this -- which is what makes an interior
-// pair measure the same distance on the sector grid as it did at home.
-// It is exported because that property is worth asserting against the
-// translation the engine actually uses, rather than against a second copy
-// of the arithmetic written in a test.
-func Place(index int, hex starmap.Hex) starmap.Hex {
-	across := index % starmap.SectorAcross
-	down := index / starmap.SectorAcross
-
-	return starmap.Hex{Col: across*starmap.Columns + hex.Col, Row: down*starmap.Rows + hex.Row}
-}
-
-// MemberOf returns which of a sector's sixteen subsectors a hex fell in,
-// numbered left to right and then down (ERRATA E006 part 1).
-func MemberOf(hex starmap.Hex) int {
-	across := (hex.Col - 1) / starmap.Columns
-	down := (hex.Row - 1) / starmap.Rows
-
-	return down*starmap.SectorAcross + across
-}
-
 // CrossingRoutes returns the routes whose two ends sit in different
 // members: the ones a referee generating sixteen subsectors one at a time
 // could never have found. It is exported because it is what the sector
@@ -179,7 +149,7 @@ func CrossingRoutes(record *starmap.Record) []starmap.Route {
 	crossing := []starmap.Route{}
 
 	for _, route := range record.Routes {
-		if MemberOf(route.From) != MemberOf(route.To) {
+		if starmap.MemberOf(route.From) != starmap.MemberOf(route.To) {
 			crossing = append(crossing, route)
 		}
 	}

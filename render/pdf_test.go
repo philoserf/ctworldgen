@@ -181,29 +181,54 @@ func number(t *testing.T, text string) float64 {
 // the upper-left, as p. 3 prints it.
 var hexLabel = regexp.MustCompile(`^\d{4}$`)
 
-// mapRegion is where on page one the map is drawn, which is the right
-// column for a subsector and the whole width for a sector. It is a fact
-// about the page rather than a geometry constant: if it were wrong, the
-// count assertion in mapLabels would fail rather than quietly reading the
-// roster's hex column as if it were the map.
-func mapRegion(record *starmap.Record) float64 {
-	if record.Grid == starmap.PageThreeGrid() {
-		return 300
-	}
+// Where on its page a map is drawn. A map on the p. 3 scale -- a
+// subsector's, or one of a sector's sixteen members -- sits in the right
+// column beside its roster; a sector's index map takes the whole width.
+// These are facts about the page rather than geometry constants: if one
+// were wrong, the set assertion in mapLabels would fail rather than
+// quietly read the roster's hex column as if it were the map.
+const (
+	besideTheRoster = 300.0
+	acrossThePage   = 0.0
+)
 
-	return 0
-}
-
-// mapLabels reads back where each hex of the grid was actually drawn.
+// mapLabels reads back where each hex of a map was actually drawn, and
+// holds the drawing to the exact set of hexes that map should show.
 //
-// Every hex of the grid must be found -- not every hex with a world in
-// it. That count is what makes the region filter safe: picking up the
-// roster's hex column instead would find only the worlds, and picking up
-// both would find too many.
-func mapLabels(t *testing.T, record *starmap.Record, page string) map[starmap.Hex]stamp {
+// A set and not a count. A count of a member's map would be 118, and 118
+// is also what a ring drawn a row out of place has -- so the count is a
+// tripwire and the set is the check.
+func mapLabels(t *testing.T, page string, want map[starmap.Hex]bool) map[starmap.Hex]stamp {
 	t.Helper()
 
-	left := mapRegion(record)
+	if len(want) == 0 {
+		t.Fatal("mapLabels was given no hexes to look for, so it could only pass")
+	}
+
+	places := hexStampsOn(t, page, besideTheRoster)
+
+	for hex := range want {
+		if _, drew := places[hex]; !drew {
+			t.Fatalf("the map does not draw hex %s, and it should (%d of %d drawn)",
+				hex, len(places), len(want))
+		}
+	}
+
+	for hex := range places {
+		if !want[hex] {
+			t.Fatalf("the map draws hex %s, and it should not (%d drawn, %d wanted)",
+				hex, len(places), len(want))
+		}
+	}
+
+	return places
+}
+
+// hexStampsOn reads back where each hex number right of a margin was
+// drawn on one page.
+func hexStampsOn(t *testing.T, page string, left float64) map[starmap.Hex]stamp {
+	t.Helper()
+
 	places := map[starmap.Hex]stamp{}
 
 	for _, found := range stamps(t, page) {
@@ -223,13 +248,20 @@ func mapLabels(t *testing.T, record *starmap.Record, page string) map[starmap.He
 		places[hex] = found
 	}
 
-	want := record.Grid.Columns * record.Grid.Rows
-	if len(places) != want {
-		t.Fatalf("the map drew %d hexes of a %dx%d grid; want %d",
-			len(places), record.Grid.Columns, record.Grid.Rows, want)
+	return places
+}
+
+// everyHexOf is the set a map of a whole grid draws.
+func everyHexOf(grid starmap.Grid) map[starmap.Hex]bool {
+	want := map[starmap.Hex]bool{}
+
+	for col := 1; col <= grid.Columns; col++ {
+		for row := 1; row <= grid.Rows; row++ {
+			want[starmap.Hex{Col: col, Row: row}] = true
+		}
 	}
 
-	return places
+	return want
 }
 
 // near reports whether two measures agree to within a hairline, which is
@@ -252,33 +284,75 @@ func TestTheDrawnMapIsTheGridPrintedOnPageThree(t *testing.T) {
 			t.Parallel()
 
 			record := generated(t, golden)
-			places := mapLabels(t, record, pages(t, drawn(t, record))[0])
+			places := mapLabels(t, pages(t, drawn(t, record))[0], everyHexOf(record.Grid))
 
-			label := func(col, row int) stamp { return places[hexOf(t, col, row)] }
-
-			// 1. A later row is drawn further down the page. Content stream
-			// y runs upward, so down the page is a smaller y.
-			if label(1, 2).Y >= label(1, 1).Y {
-				t.Fatalf("row 2 of column 1 is not below row 1: %v then %v", label(1, 1), label(1, 2))
-			}
-
-			// 2. The even-numbered columns sit half a hex low, which is how
-			// p. 3 prints the grid. This is the assertion that a mirrored
-			// map fails and nothing else does.
-			step := label(1, 1).Y - label(1, 2).Y
-			drop := label(1, 1).Y - label(2, 1).Y
-
-			if !near(drop, step/2) {
-				t.Fatalf("column 2 sits %.2f below column 1; a row step is %.2f, so it should be %.2f",
-					drop, step, step/2)
-			}
-
-			// 3. Every hex the drawing puts against another is a hex
-			// Hex.Distance calls one parsec away, and every hex it does not
-			// is not.
-			assertDrawnNeighboursAreOneParsec(t, places)
+			assertTheDrawingIsThePrintedParity(t, places)
 		})
 	}
+}
+
+// assertTheDrawingIsThePrintedParity is the whole of the p. 3 parity read
+// back off a drawing, in three parts. The first two pin the direction:
+// adjacency alone is symmetric under a flip, so it cannot tell the printed
+// grid from its mirror.
+//
+// No hex is named. A subsector's map begins at 0101, a member's at its own
+// band, and a member's ring a hex outside that again -- so the anchors are
+// found in the drawing rather than assumed, and the one assertion that a
+// mirrored map fails works on any of them.
+func assertTheDrawingIsThePrintedParity(t *testing.T, places map[starmap.Hex]stamp) {
+	t.Helper()
+
+	// An odd column with the row below it drawn, and the even column
+	// beside it drawn too. The lowest-numbered such hex, so a failure names
+	// the same hex twice running.
+	var (
+		anchor starmap.Hex
+		found  bool
+	)
+
+	for hex := range places {
+		if hex.Col%2 != 1 {
+			continue
+		}
+
+		_, below := places[starmap.Hex{Col: hex.Col, Row: hex.Row + 1}]
+		_, beside := places[starmap.Hex{Col: hex.Col + 1, Row: hex.Row}]
+
+		if below && beside && (!found || hex.Less(anchor)) {
+			anchor, found = hex, true
+		}
+	}
+
+	if !found {
+		t.Fatal("no hex of this map has both the row below it and the column beside it drawn, " +
+			"so the direction of the parity cannot be measured here")
+	}
+
+	place := places[anchor]
+	under := places[starmap.Hex{Col: anchor.Col, Row: anchor.Row + 1}]
+	rightOf := places[starmap.Hex{Col: anchor.Col + 1, Row: anchor.Row}]
+
+	// 1. A later row is drawn further down the page. Content stream y runs
+	// upward, so down the page is a smaller y.
+	if under.Y >= place.Y {
+		t.Fatalf("the row below %s is not below it on the page: %v then %v", anchor, place, under)
+	}
+
+	// 2. The even-numbered columns sit half a hex low, which is how p. 3
+	// prints the grid. This is the assertion that a mirrored map fails and
+	// nothing else does.
+	step := place.Y - under.Y
+	drop := place.Y - rightOf.Y
+
+	if !near(drop, step/2) {
+		t.Fatalf("the column right of %s sits %.2f below it; a row step is %.2f, so it should be %.2f",
+			anchor, drop, step, step/2)
+	}
+
+	// 3. Every hex the drawing puts against another is a hex Hex.Distance
+	// calls one parsec away, and every hex it does not is not.
+	assertDrawnNeighboursAreOneParsec(t, places)
 }
 
 // assertDrawnNeighboursAreOneParsec holds the drawing against the
@@ -290,9 +364,7 @@ func TestTheDrawnMapIsTheGridPrintedOnPageThree(t *testing.T) {
 func assertDrawnNeighboursAreOneParsec(t *testing.T, places map[starmap.Hex]stamp) {
 	t.Helper()
 
-	first := places[hexOf(t, 1, 1)]
-	rowStep := first.Y - places[hexOf(t, 1, 2)].Y
-	colStep := places[hexOf(t, 2, 1)].X - first.X
+	colStep, rowStep := stepsOf(t, places)
 
 	// A neighbour's centre is one row step away, or one column step across
 	// and half a row step up or down. Anything further is not touching.
@@ -314,6 +386,44 @@ func assertDrawnNeighboursAreOneParsec(t *testing.T, places map[starmap.Hex]stam
 			}
 		}
 	}
+}
+
+// stepsOf measures a drawing's own row and column steps. It names no hex,
+// so it serves a subsector's map, one of a sector's members, and a
+// member's map extended by its ring, all alike.
+func stepsOf(t *testing.T, places map[starmap.Hex]stamp) (float64, float64) {
+	t.Helper()
+
+	colStep, rowStep := math.Inf(1), math.Inf(1)
+
+	for _, place := range places {
+		for _, against := range places {
+			colStep, rowStep = closerStep(place, against, colStep, rowStep)
+		}
+	}
+
+	if math.IsInf(colStep, 1) || math.IsInf(rowStep, 1) {
+		t.Fatal("this map has no two hexes to measure a step between, so nothing here could fail")
+	}
+
+	return colStep, rowStep
+}
+
+// closerStep narrows the smallest column and row step seen so far by one
+// pair of drawn labels.
+func closerStep(place, against stamp, colStep, rowStep float64) (float64, float64) {
+	apartX := math.Abs(place.X - against.X)
+	apartY := math.Abs(place.Y - against.Y)
+
+	if near(apartX, 0) && apartY > 0.05 && apartY < rowStep {
+		rowStep = apartY
+	}
+
+	if apartX > 0.05 && apartX < colStep {
+		colStep = apartX
+	}
+
+	return colStep, rowStep
 }
 
 // nearest returns the hex whose drawn label is closest to a place, which
@@ -346,8 +456,8 @@ func TestEveryWorldIsDrawnInItsOwnHex(t *testing.T) {
 
 			record := generated(t, golden)
 			page := pages(t, drawn(t, record))[0]
-			places := mapLabels(t, record, page)
-			left := mapRegion(record)
+			places := mapLabels(t, page, everyHexOf(record.Grid))
+			left := besideTheRoster
 
 			marked := map[starmap.Hex]string{}
 
@@ -391,8 +501,8 @@ func TestEveryRouteIsDrawn(t *testing.T) {
 			record := generated(t, golden)
 			doc := drawn(t, record)
 			page := pages(t, doc)[0]
-			places := mapLabels(t, record, page)
-			left := mapRegion(record)
+			places := mapLabels(t, page, everyHexOf(record.Grid))
+			left := besideTheRoster
 
 			joined := map[string]int{}
 
@@ -558,11 +668,10 @@ const pdfDate = "20060102150405"
 // is what makes "the stamp is older than this" mean "no clock was read".
 func beforeTheTool() time.Time { return time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC) }
 
-// TestTheBookletRendersASector: a sector is thirty-two columns by forty
-// on one grid (ERRATA E006), and the same drawing has to hold it. A hex
-// size that suits a subsector overruns the page here.
-func TestTheBookletRendersASector(t *testing.T) {
-	t.Parallel()
+// sectorRecord is the sector the booklet tests read, generated once per
+// test from the fixture roster's sector seed.
+func sectorRecord(t *testing.T) *starmap.Record {
+	t.Helper()
 
 	golden := fixture.SectorGolden()
 
@@ -576,11 +685,234 @@ func TestTheBookletRendersASector(t *testing.T) {
 		t.Fatalf("generating the sector: %v", err)
 	}
 
-	doc := drawn(t, record)
-	places := mapLabels(t, record, pages(t, doc)[0])
+	return record
+}
 
-	assertDrawnNeighboursAreOneParsec(t, places)
+// memberMapPages finds the sixteen member maps in a sector booklet by
+// reading the drawing back, never by asking the renderer which page it
+// used: a page is member k's map iff the hexes drawn on it are exactly the
+// hexes member k's map should draw.
+//
+// It returns the page index of each member's map, in member order.
+func memberMapPages(t *testing.T, doc []byte) []int {
+	t.Helper()
+
+	found := make([]int, starmap.Members)
+	for index := range found {
+		found[index] = -1
+	}
+
+	for page, content := range pages(t, doc) {
+		drew := hexesDrawnOn(t, page, content)
+		if len(drew) == 0 {
+			continue
+		}
+
+		for index := range starmap.Members {
+			if !sameHexes(drew, memberAndItsRingHexes(index)) {
+				continue
+			}
+
+			if found[index] != -1 {
+				t.Fatalf("the booklet draws member %d's map on page %d and again on page %d",
+					index, found[index], page)
+			}
+
+			found[index] = page
+		}
+	}
+
+	previous := -1
+
+	for index, page := range found {
+		if page == -1 {
+			t.Fatalf("the booklet draws no map for member %d", index)
+		}
+
+		if page <= previous {
+			t.Fatalf("member %d's map is on page %d, and member %d's is on page %d or later",
+				index, page, index-1, previous)
+		}
+
+		previous = page
+	}
+
+	return found
+}
+
+// hexesDrawnOn is the set of hexes a page's map numbers.
+func hexesDrawnOn(t *testing.T, page int, content string) map[starmap.Hex]bool {
+	t.Helper()
+
+	drew := map[starmap.Hex]bool{}
+
+	for _, stamped := range stamps(t, content) {
+		if stamped.X < besideTheRoster || !hexLabel.MatchString(stamped.Text) {
+			continue
+		}
+
+		hex, err := starmap.ParseHex(stamped.Text)
+		if err != nil {
+			t.Fatalf("page %d drew %q, which is not a hex: %v", page, stamped.Text, err)
+		}
+
+		drew[hex] = true
+	}
+
+	return drew
+}
+
+func sameHexes(got, want map[starmap.Hex]bool) bool {
+	if len(got) != len(want) {
+		return false
+	}
+
+	for hex := range want {
+		if !got[hex] {
+			return false
+		}
+	}
+
+	return true
+}
+
+// TestTheBookletsMemberMapsAreTheGridPrintedOnPageThree is the parity
+// check a sector's booklet needs, and it is stronger than the single
+// thirty-two by forty map it replaces.
+//
+// Sixteen maps at p. 3 scale, each held to all three parts of the parity
+// rather than to adjacency alone -- a mirrored sector map passed the check
+// this replaces, because adjacency is symmetric under a flip and the two
+// direction anchors were never run on it.
+//
+// The ring of neighbours each member draws is what keeps the sixteen in
+// one frame. Member 5's map draws 0810, which is member 4's hex, one hex
+// from its own 0911; the parity is measured over the member and its ring
+// together, so every seam relation the one big grid stated implicitly is
+// stated again inside a member's map.
+func TestTheBookletsMemberMapsAreTheGridPrintedOnPageThree(t *testing.T) {
+	t.Parallel()
+
+	record := sectorRecord(t)
+	doc := drawn(t, record)
+	sheets := pages(t, doc)
+
+	for index, page := range memberMapPages(t, doc) {
+		places := mapLabels(t, sheets[page], memberAndItsRingHexes(index))
+
+		assertTheDrawingIsThePrintedParity(t, places)
+	}
+
 	assertNothingLeavesThePage(t, doc)
+}
+
+// TestTheSectorIndexCarriesNoHexNumbers: thirty-two columns fitted to a
+// sheet give a hex seventeen points across, and a four-digit number drawn
+// in one runs out into the hex beside it -- which is what a sector booklet
+// used to do. The index carries the starport letters and the seams and no
+// hex numbers, and the member maps overleaf carry the numbers (ERRATA
+// E008 part 4).
+func TestTheSectorIndexCarriesNoHexNumbers(t *testing.T) {
+	t.Parallel()
+
+	record := sectorRecord(t)
+	doc := drawn(t, record)
+	index := pages(t, doc)[0]
+
+	numbered := []string{}
+
+	for _, found := range stamps(t, index) {
+		if hexLabel.MatchString(found.Text) {
+			numbered = append(numbered, found.Text)
+		}
+	}
+
+	if len(numbered) != 0 {
+		t.Errorf("the sector index draws %d hex numbers, beginning %q; it should draw none",
+			len(numbered), numbered[0])
+	}
+
+	// And it is the index that was read, not a blank page: every world of
+	// the sector is marked on it with the letter of its starport.
+	letters := 0
+
+	for _, found := range stamps(t, index) {
+		if len(found.Text) == 1 && found.Text >= "A" && found.Text <= "Z" {
+			letters++
+		}
+	}
+
+	if letters != len(record.Worlds) {
+		t.Errorf("the sector index marks %d hexes and the sector has %d worlds", letters, len(record.Worlds))
+	}
+
+	// And an unnamed sector's index is headed for what it is. A booklet
+	// headed "Subsector" over sixteen of them reads perfectly well while
+	// misreporting its own subject, which is the only way this goes wrong.
+	record.Name = ""
+
+	if titled := string(drawn(t, record)); !strings.Contains(titled, "(Sector)") {
+		t.Error("an unnamed sector's booklet is not titled Sector")
+	}
+}
+
+// TestTheSectorIndexNumbersItsSixteenBands: the index says which
+// sub-sector is which, and says it in the order E006 part 1 lays them --
+// left to right and then down.
+//
+// Sixteen bands with no numbers on them, or sixteen carrying the same
+// thing, would leave an index laid out in columns instead of rows looking
+// perfectly well. This is the assertion that a transposed index fails.
+func TestTheSectorIndexNumbersItsSixteenBands(t *testing.T) {
+	t.Parallel()
+
+	doc := drawn(t, sectorRecord(t))
+	where := map[int]stamp{}
+
+	for _, found := range stamps(t, pages(t, doc)[0]) {
+		for index := range starmap.Members {
+			if found.Text != strconv.Itoa(index) {
+				continue
+			}
+
+			if _, twice := where[index]; twice {
+				t.Fatalf("the index writes the number %d on two bands", index)
+			}
+
+			where[index] = found
+		}
+	}
+
+	if len(where) != starmap.Members {
+		t.Fatalf("the index numbers %d of its %d bands", len(where), starmap.Members)
+	}
+
+	assertTheBandsAreLeftToRightThenDown(t, where)
+}
+
+// assertTheBandsAreLeftToRightThenDown holds the index's sixteen numbers
+// to the order E006 part 1 lays the members in.
+func assertTheBandsAreLeftToRightThenDown(t *testing.T, where map[int]stamp) {
+	t.Helper()
+
+	for index := 1; index < starmap.Members; index++ {
+		// Left to right within a row of bands: a later column band is
+		// further right.
+		if index%starmap.SectorAcross > 0 && where[index].X <= where[index-1].X {
+			t.Errorf("band %d is at x %.2f and band %d at %.2f; %d should be to its right",
+				index-1, where[index-1].X, index, where[index].X, index)
+		}
+	}
+
+	// And then down: a later row band is further down the page, which is a
+	// smaller y in a content stream.
+	for index := starmap.SectorAcross; index < starmap.Members; index++ {
+		above := index - starmap.SectorAcross
+		if where[index].Y >= where[above].Y {
+			t.Errorf("band %d is at y %.2f and band %d at %.2f; %d should be below it",
+				above, where[above].Y, index, where[index].Y, index)
+		}
+	}
 }
 
 // TestAFullSubsectorPaginates: eighty worlds is a legal record -- every

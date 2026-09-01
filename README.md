@@ -64,7 +64,12 @@ subsector you get. The seams are one further reading (`ERRATA.md` E006),
 stamped on every sector record.
 
 `render` reads either record, a subsector or a sector, and writes the
-Markdown listing by default. `--format pdf` writes the booklet instead: the
+Markdown listing by default. A sector's listing opens with an index map of
+the whole 32x40 grid and a table of its sixteen, and then carries the
+sixteen sub-sector listings themselves -- each on its own p. 3 grid, ringed
+by one hex of its neighbours so the lanes crossing a seam have somewhere to
+land, and each headed with the seed that writes it standalone (`ERRATA.md`
+E008). `--format pdf` writes the booklet instead: the
 map beside its roster on the first page, then the routes and a page of
 detail per world. It is the one output that draws p. 2's "line connecting
 the two worlds on the map", which a monospace grid has nowhere to put. A
