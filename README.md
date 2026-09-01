@@ -12,11 +12,6 @@ with the hex map drawn and the routes joined.
 go install github.com/philoserf/ctworldgen/cmd/ctworldgen@latest
 ```
 
-**Until `v1.0.0-alpha.2` is tagged, use `@main` instead.** The newest tag is
-still `v1.0.0-alpha.1`, which predates `sector`, the drawn map and
-`--lanes`, so `@latest` installs a tool this README does not describe. This
-paragraph goes away with the tag; the line above it does not change.
-
 ## What is built, and what is not
 
 The engine walks the whole of Book 3 pp. 1-12 -- the eighty-hex occurrence
