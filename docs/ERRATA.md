@@ -258,14 +258,14 @@ neighbours as p. 2 states it. **The reading, in four parts.**
 
 ### 1. Sixteen subsectors, each generated whole
 
-Four across and four down. Member *i* is generated exactly as a lone
+Four across and four down. Member _i_ is generated exactly as a lone
 subsector is — the same eighty occurrence throws, the same starports, the
 same bases, the same interior route pass, the same world creation — on
-seed `base + i`, which is the derivation `batch` already uses. So every
-member of a sector reproduces on its own: member 5 of `sector --seed N` is
-`new --seed N+5`, and nothing about being in a sector changes a world.
+seed `base + i`. So every member of a sector reproduces on its own: member
+5 of `sector --seed N` is `new --seed N+5`, and nothing about being in a
+sector changes a world.
 
-Member *i* sits at column band `i mod 4` and row band `i div 4`, which
+Member _i_ sits at column band `i mod 4` and row band `i div 4`, which
 numbers the members left to right and then down, as a reader numbers
 anything on a page.
 
@@ -275,7 +275,7 @@ and then examines seams.
 
 ### 2. The hexes translate, and the p. 3 parity survives it
 
-A local hex (*c*, *r*) in band (*mx*, *my*) becomes (`mx*8 + c`,
+A local hex (_c_, _r_) in band (_mx_, _my_) becomes (`mx*8 + c`,
 `my*10 + r`) on the sector grid, 0101 through 3240.
 
 A subsector is **eight** columns wide, and eight is even, so a column's
@@ -364,7 +364,7 @@ should be made."
 Worth noting where the book's own help stops. P. 4 glosses what the liquid
 might be -- "for normal worlds, this will be water; on other worlds (with
 corrosive or exotic atmospheres), it may instead be other liquids of
-fluids such as ammonia" -- and that gloss is offered for the *high* end of
+fluids such as ammonia" -- and that gloss is offered for the _high_ end of
 the same DM, atmospheres A through C. The low end gets the DM and no
 gloss. What covers a vacuum world is the referee's rationale, not a
 printed one, and the tool supplies none: the throw is made and the result

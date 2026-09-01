@@ -215,3 +215,33 @@ func TestNumberOrdersHexesTheWayTheGridNumbersThem(t *testing.T) {
 		}
 	}
 }
+
+// FuzzParseHex holds the one hand-written parser in the package against
+// arbitrary input. ParseHex reads four bytes with its own digit
+// arithmetic, and it is reached from UnmarshalJSON, so every hex in every
+// record a referee hands the tool goes through it.
+//
+// Two properties, and neither is "it does not crash" alone: a hex that
+// parses must be on the largest grid there is, and it must write back the
+// four digits it was read from. A parser that accepted "0000" or that lost
+// a leading zero would satisfy neither.
+func FuzzParseHex(f *testing.F) {
+	for _, seed := range []string{"0101", "0208", "3240", "0000", "0001", "0100", "9999", "", "01 1", "０１０１"} {
+		f.Add(seed)
+	}
+
+	f.Fuzz(func(t *testing.T, text string) {
+		hex, err := starmap.ParseHex(text)
+		if err != nil {
+			return
+		}
+
+		if !starmap.SectorGrid().Contains(hex) {
+			t.Fatalf("ParseHex(%q) = %s, which is off the largest grid there is", text, hex)
+		}
+
+		if hex.String() != text {
+			t.Fatalf("ParseHex(%q) writes back as %q", text, hex.String())
+		}
+	})
+}

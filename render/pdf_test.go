@@ -13,6 +13,7 @@ import (
 	"github.com/philoserf/ctworldgen/internal/fixture"
 	"github.com/philoserf/ctworldgen/render"
 	"github.com/philoserf/ctworldgen/starmap"
+	"github.com/philoserf/ctworldgen/tables"
 )
 
 // The booklet is checked by reading the drawing back out of the PDF and
@@ -819,6 +820,155 @@ func TestAnEmptyBookletSaysSo(t *testing.T) {
 	for _, found := range written {
 		if strings.Contains(found.Text, "The worlds in detail") {
 			t.Error("the booklet opened a detail section for a subsector with no worlds")
+		}
+	}
+}
+
+// TestTheBookletsBulletsCarryTheirLabelsAndTables is the booklet's half of
+// R16, and it was missing: the Markdown listing's labels were held by
+// TestLabelsComeFromTheTables and the golden listings, and the booklet's
+// were held by nothing at all. Renaming "Law level" in pdf.go alone left
+// the whole suite green -- a sixth instance of the pattern CLAUDE.md
+// records, and the reason the two documents could have drifted unnoticed.
+//
+// Each world's block is read on its own, between its own heading and the
+// next, because another world carrying the same value would otherwise
+// answer for the one under test.
+func TestTheBookletsBulletsCarryTheirLabelsAndTables(t *testing.T) {
+	t.Parallel()
+
+	charts, err := tables.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, golden := range fixture.Goldens() {
+		t.Run(golden.File, func(t *testing.T) {
+			t.Parallel()
+
+			record := generated(t, golden)
+			written := everyStamp(t, drawn(t, record))
+
+			for _, world := range record.Worlds {
+				block := worldBlock(t, written, world)
+
+				assertBulletLabels(t, world, block)
+				assertBulletDescriptions(t, charts, world, block)
+			}
+		})
+	}
+}
+
+// worldBlock is the stamps of one world's detail block: those drawn after
+// its heading and before the next world's.
+//
+// The heading is the one stamp that ends with the world's string of digits
+// without being it -- the roster writes the digits alone, the heading
+// writes them after the hex. Digits are unique to a world, which
+// TestEveryWorldAndRouteReachesTheBooklet already holds.
+func worldBlock(t *testing.T, written []stamp, world starmap.World) []stamp {
+	t.Helper()
+
+	heading := -1
+
+	for index, found := range written {
+		if strings.HasSuffix(found.Text, world.Digits) && found.Text != world.Digits {
+			heading = index
+
+			break
+		}
+	}
+
+	if heading < 0 {
+		t.Fatalf("the booklet has no detail block for the world at %s", world.Hex)
+	}
+
+	end := len(written)
+
+	for index := heading + 1; index < len(written); index++ {
+		// The next heading. Any world's digits will do: what ends the
+		// block is the next block beginning.
+		if strings.HasPrefix(written[index].Text, "Starport ") {
+			continue
+		}
+
+		if isHeading(written[index].Text) {
+			end = index
+
+			break
+		}
+	}
+
+	return written[heading+1 : end]
+}
+
+// isHeading reports a world block's heading, which is a hex and a string
+// of digits and nothing else the booklet draws.
+var headingText = regexp.MustCompile(`^\d{4}.* [A-EX][0-9A-Z]{7}$`)
+
+func isHeading(text string) bool { return headingText.MatchString(text) }
+
+// assertBulletLabels holds the label of every bullet a world's block draws.
+// These are the strings that were duplicated between the two renderers.
+func assertBulletLabels(t *testing.T, world starmap.World, block []stamp) {
+	t.Helper()
+
+	want := []string{
+		"Starport " + world.Starport.String() + ".",
+		"Size " + digitOf(t, world.Size) + ".",
+		"Atmosphere " + digitOf(t, world.Atmosphere) + ".",
+		"Hydrographics " + digitOf(t, world.Hydrographics) + ".",
+		"Population " + digitOf(t, world.Population) + ".",
+		"Government " + digitOf(t, world.Government) + ".",
+		"Law level " + digitOf(t, world.LawLevel) + ".",
+		"Technological index " + digitOf(t, world.TechIndex) + ".",
+		"Bases.",
+	}
+
+	for _, label := range want {
+		if !anyStamp(block, label) {
+			t.Fatalf("the block for the world at %s does not draw the bullet %q", world.Hex, label)
+		}
+	}
+}
+
+// assertBulletDescriptions holds each bullet's description against the
+// table it comes from. The stamps are joined because a long description
+// wraps to several lines, and a wrapped paragraph is still the paragraph.
+func assertBulletDescriptions(t *testing.T, charts *tables.Tables, world starmap.World, block []stamp) {
+	t.Helper()
+
+	// A PDF string literal escapes its parentheses, and a description with
+	// one in it -- "(such as machine guns)" -- must be compared against the
+	// table it was read from rather than against the escaping.
+	unescape := strings.NewReplacer(`\(`, "(", `\)`, ")", `\\`, `\`)
+
+	texts := make([]string, 0, len(block))
+	for _, found := range block {
+		texts = append(texts, unescape.Replace(found.Text))
+	}
+
+	joined := strings.Join(texts, " ")
+
+	for _, line := range []struct {
+		value  int
+		labels tables.Labels
+	}{
+		{world.Size, charts.Size},
+		{world.Atmosphere, charts.Atmosphere},
+		{world.Hydrographics, charts.Hydrographics},
+		{world.Population, charts.Population},
+		{world.Government, charts.Government},
+		{world.LawLevel, charts.LawLevels},
+	} {
+		label, printed := line.labels.Label(line.value)
+		if !printed {
+			continue
+		}
+
+		if !strings.Contains(joined, label) {
+			t.Fatalf("the block for the world at %s does not carry the description %q for %d",
+				world.Hex, label, line.value)
 		}
 	}
 }

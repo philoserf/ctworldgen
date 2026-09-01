@@ -526,15 +526,8 @@ func (b *booklet) detailsSection() {
 	}
 }
 
-// bullet is one line of a world's block: the label the listing sets in
-// bold, and the description the charts give for it.
-type bullet struct {
-	label       string
-	description string
-}
-
 func (b *booklet) worldBlock(world starmap.World) {
-	lines := b.bullets(world)
+	lines := bullets(b.charts, world)
 
 	// The heading and its first line stay together: a world whose name is
 	// the last thing on a page and whose starport is the first thing on
@@ -594,65 +587,6 @@ func (b *booklet) bulletLine(line bullet) {
 
 		b.y += bodyLead
 	}
-}
-
-// bullets is the world's lines, in the order the p. 4 Planetary
-// Characteristics box lists them, which is the order the Markdown listing
-// writes them in.
-func (b *booklet) bullets(world starmap.World) []bullet {
-	starport := "no chart row"
-
-	row, err := b.charts.StarportChart.Row(world.Starport)
-	if err == nil {
-		starport = row.Description
-	}
-
-	// One line for the starport, six for the characteristics of pp. 5-8,
-	// one for the technological index, one for the bases, and one for
-	// every clamp that bound.
-	const fixedLines = 9
-
-	lines := make([]bullet, 0, fixedLines+len(world.Clamps))
-
-	lines = append(lines, bullet{
-		label:       fmt.Sprintf("Starport %s.", world.Starport),
-		description: starport,
-	})
-
-	for _, line := range []struct {
-		name   string
-		value  int
-		labels tables.Labels
-	}{
-		{"Size", world.Size, b.charts.Size},
-		{"Atmosphere", world.Atmosphere, b.charts.Atmosphere},
-		{"Hydrographics", world.Hydrographics, b.charts.Hydrographics},
-		{"Population", world.Population, b.charts.Population},
-		{"Government", world.Government, b.charts.Government},
-		{"Law level", world.LawLevel, b.charts.LawLevels},
-	} {
-		lines = append(lines, bullet{
-			label:       fmt.Sprintf("%s %s.", line.name, digit(line.value)),
-			description: strings.TrimSpace(described(line.labels, line.value)),
-		})
-	}
-
-	// No description: techIndexNote said once, at the head of the section,
-	// why pp. 10-11 supply none.
-	lines = append(lines,
-		bullet{label: fmt.Sprintf("Technological index %s.", digit(world.TechIndex)), description: ""},
-		bullet{label: "Bases.", description: bases(world)},
-	)
-
-	for _, clamp := range world.Clamps {
-		lines = append(lines, bullet{
-			label: "Clamped.",
-			description: fmt.Sprintf("%s threw %d and is recorded as %d.",
-				clamp.Characteristic, clamp.Raw, clamp.Value),
-		})
-	}
-
-	return lines
 }
 
 // heading opens a section on a page of its own, because both sections

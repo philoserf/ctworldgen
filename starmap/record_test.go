@@ -68,7 +68,14 @@ const completeRecord = `{
   "errata": ["E002"],
   "name": "Aramis",
   "occurrence_dm": -1,
-  "worlds": [{"hex": "0105", "name": "", "starport": "X"}]%s
+  "worlds": [{
+    "hex": "0105", "name": "", "starport": "X",
+    "naval_base": false, "scout_base": false,
+    "size": 0, "atmosphere": 0, "hydrographics": 0,
+    "population": 0, "government": 0, "law_level": 0, "tech_index": 0,
+    "digits": "X0000000"
+  }],
+  "routes": []%s
 }`
 
 // TestDecodeRejectsUnknownFields is the Go half of the two obligations:
@@ -101,8 +108,8 @@ func TestDecodeRejectsUnknownFields(t *testing.T) {
 }
 
 // TestDecodeRejectsMoreThanOneDocument: a record is one JSON document, so
-// a JSONL batch handed to a reader of records fails loudly rather than
-// decoding its first member and discarding the rest.
+// a file holding two of them fails loudly rather than decoding the first
+// and discarding the rest.
 func TestDecodeRejectsMoreThanOneDocument(t *testing.T) {
 	t.Parallel()
 
@@ -145,6 +152,168 @@ func TestDecodeRejectsAHexOffTheRecordsGrid(t *testing.T) {
 
 	if !strings.Contains(err.Error(), "0910") {
 		t.Errorf("the error does not name the hex that is off the grid: %v", err)
+	}
+}
+
+// TestDecodeRejectsAnotherToolsProvenance: the three constants
+// record.schema.json states are what a referee trusts without checking --
+// which pages govern, and which generator drew the dice. Each was once
+// accepted at any value, because every other field still parsed and the
+// listing still rendered.
+func TestDecodeRejectsAnotherToolsProvenance(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range []struct {
+		name  string
+		field string
+		was   string
+		now   string
+		want  error
+	}{
+		{"a newer schema", "schema_version", `"schema_version":1`, `"schema_version":99`, starmap.ErrNotThisSchema},
+		{
+			"another ruleset", "ruleset",
+			`"ruleset":"ct-1977-book3-pp1-12"`, `"ruleset":"ct-1981-book3"`, starmap.ErrNotThisRuleset,
+		},
+		{
+			"another generator", "rng_algorithm",
+			`"rng_algorithm":"go-math-rand-v2-pcg"`, `"rng_algorithm":"mersenne"`, starmap.ErrNotThisRNG,
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			record := strings.Replace(recordWith("", "0101"), testCase.was, testCase.now, 1)
+			if record == recordWith("", "0101") {
+				t.Fatalf("the test did not change %s, so it proves nothing", testCase.field)
+			}
+
+			_, err := starmap.Decode(strings.NewReader(record))
+			if !errors.Is(err, testCase.want) {
+				t.Fatalf("Decode(%s) = %v, want %v", testCase.field, err, testCase.want)
+			}
+		})
+	}
+}
+
+// TestDecodeRejectsARecordMissingARequiredField: the schema lists ten
+// required fields and rejects nothing at read time. An empty document once
+// decoded to a nameless, seedless, worldless subsector and rendered as
+// one.
+func TestDecodeRejectsARecordMissingARequiredField(t *testing.T) {
+	t.Parallel()
+
+	full := recordWith("", "0101")
+
+	// Each case names the error it must raise. An empty document is the
+	// one that does not reach here: it fails on its schema version, which
+	// is 0 and not 1, so asserting only that it errored would let this
+	// whole table pass while the required-field check did nothing.
+	for _, testCase := range []struct {
+		name   string
+		record string
+		want   error
+	}{
+		{"an empty document", `{}`, starmap.ErrNotThisSchema},
+		{
+			"no engine_version",
+			strings.Replace(full, `"engine_version":"1",`, "", 1), starmap.ErrFieldMissing,
+		},
+		{"no errata", strings.Replace(full, `"errata":[],`, "", 1), starmap.ErrFieldMissing},
+		{"no routes", strings.Replace(full, `,"routes":[]`, "", 1), starmap.ErrFieldMissing},
+		{
+			"no digits, on a world carrying everything else",
+			strings.Replace(full, `,"digits":"A0000000"`, "", 1), starmap.ErrFieldMissing,
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if testCase.record == full {
+				t.Fatal("the test removed nothing, so it proves nothing")
+			}
+
+			_, err := starmap.Decode(strings.NewReader(testCase.record))
+			if !errors.Is(err, testCase.want) {
+				t.Fatalf("Decode(%s) = %v, want %v", testCase.name, err, testCase.want)
+			}
+		})
+	}
+}
+
+// TestDecodeRejectsARouteWithNoDistance: a route's distance is the one
+// field of its three that the zero value does not refuse on its own -- an
+// absent end is the zero Hex and is off every grid. A route with no
+// distance printed "| 0105 | 0106 | 0 |", a world joined to itself at a
+// range the jump routes table states no target for.
+func TestDecodeRejectsARouteWithNoDistance(t *testing.T) {
+	t.Parallel()
+
+	record := `{"schema_version":1,"ruleset":"ct-1977-book3-pp1-12","engine_version":"1",` +
+		`"rng_algorithm":"go-math-rand-v2-pcg","seed":1,"errata":[],"name":"Aramis","occurrence_dm":0,` +
+		`"worlds":[],"routes":[{"from":"0105","to":"0106"}]}`
+
+	_, err := starmap.Decode(strings.NewReader(record))
+	if !errors.Is(err, starmap.ErrFieldMissing) {
+		t.Fatalf("Decode(a route with no distance) = %v, want %v", err, starmap.ErrFieldMissing)
+	}
+
+	if !strings.Contains(err.Error(), "0105") {
+		t.Errorf("the error does not name the route that has no distance: %v", err)
+	}
+}
+
+// TestDecodeRejectsAWorldWithNoStarport: the map marks a world's hex with
+// the letter of its starport (p. 1). A world with no starport key decoded
+// to Starport(0) and the map drew it as the eleven characters
+// "Starport(0)", which is wider than a hex's slot -- so every hex to the
+// right of it on that line shifted, and the drawn grid stopped being the
+// p. 3 grid. gridLine's own comment reasoned about "a Starport the schema
+// would have rejected"; nothing rejected it until here.
+func TestDecodeRejectsAWorldWithNoStarport(t *testing.T) {
+	t.Parallel()
+
+	full := recordWith("", "0101")
+
+	record := strings.Replace(full, `"starport":"A",`, "", 1)
+	if record == full {
+		t.Fatal("the test removed no starport, so it proves nothing")
+	}
+
+	_, err := starmap.Decode(strings.NewReader(record))
+	if !errors.Is(err, starmap.ErrFieldMissing) {
+		t.Fatalf("Decode(a world with no starport) = %v, want %v", err, starmap.ErrFieldMissing)
+	}
+
+	if !strings.Contains(err.Error(), "0101") {
+		t.Errorf("the error does not name the world that has no starport: %v", err)
+	}
+}
+
+// TestAnEmptyArrayIsNotAMissingOne: the distinction the required-field
+// check rests on. An empty subsector is a legal result and writes
+// "worlds": [], which must decode; a record with no worlds key at all is
+// missing a field the schema requires.
+func TestAnEmptyArrayIsNotAMissingOne(t *testing.T) {
+	t.Parallel()
+
+	empty := `{"schema_version":1,"ruleset":"ct-1977-book3-pp1-12","engine_version":"1",` +
+		`"rng_algorithm":"go-math-rand-v2-pcg","seed":0,"errata":[],"name":"","occurrence_dm":0,` +
+		`"worlds":[],"routes":[]}`
+
+	record, err := starmap.Decode(strings.NewReader(empty))
+	if err != nil {
+		t.Fatalf("an empty subsector did not decode: %v", err)
+	}
+
+	if len(record.Worlds) != 0 {
+		t.Errorf("an empty subsector decoded with %d worlds", len(record.Worlds))
+	}
+
+	// The same record with the key taken away is a different thing.
+	_, err = starmap.Decode(strings.NewReader(strings.Replace(empty, `"worlds":[],`, "", 1)))
+	if !errors.Is(err, starmap.ErrFieldMissing) {
+		t.Errorf("Decode(no worlds key) = %v, want %v", err, starmap.ErrFieldMissing)
 	}
 }
 
