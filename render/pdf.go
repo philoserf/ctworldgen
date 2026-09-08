@@ -549,10 +549,10 @@ func (b *booklet) drawWorlds(fit mapFit, shows func(starmap.Hex) bool) {
 }
 
 // polygon converts a hex outline to the points fpdf draws.
-func polygon(outline [hexSides]Point) []fpdf.PointType {
+func polygon(outline [hexSides]point) []fpdf.PointType {
 	points := make([]fpdf.PointType, 0, hexSides)
-	for _, point := range outline {
-		points = append(points, fpdf.PointType{X: point.X, Y: point.Y})
+	for _, corner := range outline {
+		points = append(points, fpdf.PointType{X: corner.X, Y: corner.Y})
 	}
 
 	return points

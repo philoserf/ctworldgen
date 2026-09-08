@@ -43,9 +43,9 @@ const (
 // is a variable, and this is a constant of the shape.
 const root3 = 1.7320508075688772
 
-// Point is a place on the page, in PostScript points -- 72 to the inch,
+// point is a place on the page, in PostScript points -- 72 to the inch,
 // which is the unit the booklet is laid out in throughout.
-type Point struct{ X, Y float64 }
+type point struct{ X, Y float64 }
 
 // box is a rectangle of the page, measured from the top-left corner
 // downward, as PDF user space with fpdf's default origin does.
@@ -124,7 +124,7 @@ func everywhere(starmap.Hex) bool { return true }
 // E006) -- and a size that suits one overruns the page on the others.
 type mapFit struct {
 	Side   float64
-	Origin Point
+	Origin point
 	From   starmap.Hex
 }
 
@@ -149,7 +149,7 @@ func fitMap(draw window, within box) mapFit {
 	// reserves.
 	return mapFit{
 		Side:   side,
-		Origin: Point{X: within.X + side, Y: within.Y + root3*side/two},
+		Origin: point{X: within.X + side, Y: within.Y + root3*side/two},
 		From:   starmap.Hex{Col: draw.FromCol, Row: draw.FromRow},
 	}
 }
@@ -161,8 +161,8 @@ func fitMap(draw window, within box) mapFit {
 // hex's own column, never off its offset within the window: a member whose
 // first column is even would otherwise draw its whole map upside down and
 // still land in a tidy grid, which is the trap CLAUDE.md names.
-func (f mapFit) hexCenter(hex starmap.Hex) Point {
-	center := Point{
+func (f mapFit) hexCenter(hex starmap.Hex) point {
+	center := point{
 		X: f.Origin.X + float64(hex.Col-f.From.Col)*columnStep*f.Side,
 		Y: f.Origin.Y + float64(hex.Row-f.From.Row)*root3*f.Side,
 	}
@@ -182,11 +182,11 @@ const hexSides = 6
 // hexOutline returns the corners of the flat-top hexagon drawn around a
 // centre, beginning at the rightmost vertex and running clockwise down
 // the page.
-func hexOutline(center Point, side float64) [hexSides]Point {
+func hexOutline(center point, side float64) [hexSides]point {
 	half := side / two
 	rise := root3 * side / two
 
-	return [hexSides]Point{
+	return [hexSides]point{
 		{X: center.X + side, Y: center.Y},
 		{X: center.X + half, Y: center.Y + rise},
 		{X: center.X - half, Y: center.Y + rise},
