@@ -67,12 +67,11 @@ output before I had checked any of it", and "The errata loop works …
 this is the best thing in the alpha." Page accuracy is a user need. What
 retired with the PRD was its scope fence, not this.
 
-**What is in authority**, and nothing else is:
+**What is in authority for generation**, and nothing else is:
 
 - **Book 3 _Worlds and Adventures_ pp. 1-12**, the Worlds chapter. This
   is the ruleset. (pp. 10-11 are reference for play rather than a step of
-  generation, and are not transcribed; that is a backlog item, not a
-  boundary.)
+  generation: in authority for description, and generating nothing.)
 - **Book 1 _Characters and Combat_ pp. 2-3** (the die roll conventions)
   and **p. 8** (the hexadecimal digit notation), which Book 3 uses
   without restating.
@@ -86,6 +85,35 @@ index like any other (`ERRATA.md`, Noted discrepancies).
 
 **Printed page N is PDF page N+5 in Book 3, and N+6 in Book 1.**
 
+### Description is a second authority, and a narrower one
+
+The list above is closed for every throw, modifier, order and cap,
+because a seed's meaning depends on it. What a value _means_ at the table
+is a different question, and pp. 10-11 are the one place where the held
+page answers it badly enough to matter: read as E009 and E010 read them,
+they still give a referee ten proper nouns of 1977 shorthand and no sense
+of the world in front of him.
+
+So **a later edition may be cited for description** (E011), under three
+conditions that are the whole of the permission:
+
+- it is **named in the document** where it is used, so a reader knows
+  whose statement he is reading;
+- the borrowing is **written down in `docs/ERRATA.md`** with its pages;
+- it changes **no throw, no record field and no stamp**.
+
+**T5 is the one such source, and the only one**:
+`~/Documents/Traveller/T5/`, Core Book 2 pp. 230-232, where printed page
+and PDF page are the same number. It is Far Future Enterprises' own, as
+Book 3 is, so this is one FFE book glossing another rather than a
+borrowing across a copyright.
+
+Do not widen this. The temptation is to reach for a later edition
+whenever a held page is terse, and terse is not the test -- pp. 10-11
+could not be read at the table at all. The permission was taken once, on
+the record, after the alternatives had been read, and taking it again is
+a decision of the same size.
+
 ### The font trap
 
 The held PDFs' embedded font maps the em-dash to the glyph `4` and the
@@ -97,7 +125,7 @@ look like data.
 So every table is transcribed from a **visual** read of the page, and
 then transcribed a second time inside the table package's tests, so the
 two must agree. That second transcription is the check the font trap
-needs, and it is where a new numeric table belongs.
+needs, and it is where a new table belongs, numeric or not.
 
 The one exception is the descriptive **labels** of pp. 5-7 — "Feudal
 Technocracy", "Dense, tainted". Those are editorial abbreviations of the
@@ -105,6 +133,11 @@ book's prose rather than transcriptions of it, so retyping them in a test
 compares an abbreviation against itself. They are checked by re-reading
 the page; the suite only asserts that every value in a printed range has
 a non-empty label.
+
+pp. 10-11 are **not** that exception, and neither are T5's charts. Their
+cells are the page's own words -- `Ablat`, `Model/1 bis`, `Drives N or
+less` -- so they are transcribed twice like any other table. A table of
+proper nouns has no other defence against a mis-keyed cell.
 
 Three habits follow, and they are what an agent gets wrong:
 
