@@ -269,11 +269,14 @@ func writeFile(path string, contents []byte, force bool) error {
 // which is atomic on one filesystem. os.CreateTemp creates at 0600, which
 // is recordMode, so the record is not widened on its way through.
 //
-// One difference from the open it replaces: a rename needs write
-// permission on the directory rather than on the file, so --force into a
-// directory the referee cannot write now fails where a truncating open
-// would have succeeded. That case could not have kept his old file
-// either.
+// Two differences from the open it replaces, and they are the cost of
+// the pattern. A rename needs write permission on the directory rather
+// than on the file, so --force into a directory the referee cannot write
+// now fails where a truncating open would have succeeded -- and that case
+// could not have kept his old file either. And where the target is a
+// symbolic or hard link, a truncating open wrote through it into the file
+// it named, where a rename replaces the link with the new record and
+// leaves what it pointed at alone.
 func replaceFile(path string, contents []byte) error {
 	dir := filepath.Dir(path)
 
