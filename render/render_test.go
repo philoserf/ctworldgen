@@ -44,6 +44,10 @@ func listingWith(t *testing.T, record *starmap.Record, lanes render.Lanes) strin
 	return built.String()
 }
 
+// aramis is the subsector name these tests use throughout, as the golden
+// roster does.
+const aramis = "Aramis"
+
 func generated(t *testing.T, golden fixture.Golden) *starmap.Record {
 	t.Helper()
 
@@ -296,7 +300,7 @@ func TestTheRefereesNotesReachBothDocuments(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record := starmap.New(1, "Aramis", 0)
+	record := starmap.New(1, aramis, 0)
 
 	record.Notes = onTheMap
 	record.Worlds = append(record.Worlds, starmap.World{
@@ -349,7 +353,7 @@ func TestARefereesOwnNameStaysInOneCell(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record := starmap.New(1, "Aramis", 0)
+	record := starmap.New(1, aramis, 0)
 
 	record.Worlds = append(record.Worlds, starmap.World{
 		Hex: hex, Name: "Regina | the\nold capital", Notes: "", Starport: starmap.StarportA,
@@ -445,7 +449,7 @@ func TestAnEmptySubsectorRenders(t *testing.T) {
 func annotated(t *testing.T) *starmap.Record {
 	t.Helper()
 
-	record := starmap.New(1, "Aramis", 0)
+	record := starmap.New(1, aramis, 0)
 
 	for _, world := range []struct {
 		col, row int
@@ -698,7 +702,7 @@ func TestTheMapIsTheGridPrintedOnPageThree(t *testing.T) {
 	// on the map at all; the goldens carry the starport letters.
 	t.Run("empty", func(t *testing.T) {
 		t.Parallel()
-		assertTheMapIsThePrintedGrid(t, section(t, listing(t, starmap.New(1, "Aramis", 0)), "The map"),
+		assertTheMapIsThePrintedGrid(t, section(t, listing(t, starmap.New(1, aramis, 0)), "The map"),
 			everyHexOfGrid(starmap.PageThreeGrid()))
 	})
 
@@ -885,7 +889,7 @@ func sectorListingRecord(t *testing.T) *starmap.Record {
 		t.Fatal(err)
 	}
 
-	record, err := engine.Sector(gen.Inputs{Seed: 1, Name: "Aramis", OccurrenceDM: 0})
+	record, err := engine.Sector(gen.Inputs{Seed: 1, Name: aramis, OccurrenceDM: 0})
 	if err != nil {
 		t.Fatal(err)
 	}
