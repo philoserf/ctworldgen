@@ -378,8 +378,15 @@ down.
   The config declines to write rules for the layering edges the compiler
   already refuses as import cycles, and writes them only for the two
   constraints that would otherwise compile: `cmd` may not reach `tables`
-  or `dice`, and production code may not reach `internal/fixture` or
-  `internal/audit`. Removing either removes a real fence.
+  or `dice`, and production code may not reach `internal/fixture`.
+  Removing either removes a real fence.
+
+  `internal/audit` was a third, and is not one any more. The directory
+  holds no non-test file, so the compiler refuses the import outright and
+  a depguard entry for it would enforce nothing -- which is the same test
+  this config applies to the layering edges it declines to write rules
+  for. A fence that moved from configuration into the shape of a
+  directory got stronger, not weaker.
 
 - **`render.memberSeed`'s bounds guard stays, unreachable.** Every call
   site is an exhaustive loop over the sixteen members, so the branch
