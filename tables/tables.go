@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/philoserf/ctworldgen/dice"
 	"github.com/philoserf/ctworldgen/starmap"
@@ -61,6 +62,10 @@ type Tables struct {
 	Population    Labels
 	Government    Labels
 	LawLevels     Labels
+
+	// TechLevels is pp. 10-11 and the chart E011 borrows to gloss them.
+	// It generates nothing: the index is thrown from the p. 9 matrix.
+	TechLevels TechLevels
 }
 
 // Load reads and validates every embedded table. It is the only way to
@@ -84,6 +89,8 @@ func Load() (*Tables, error) {
 		{"population.json", func(b []byte) error { return loaded.Population.load(b) }},
 		{"governmental_type.json", func(b []byte) error { return loaded.Government.load(b) }},
 		{"law_levels.json", func(b []byte) error { return loaded.LawLevels.load(b) }},
+		{"technological_eras.json", func(b []byte) error { return loaded.TechLevels.loadBorrowed(b) }},
+		{"technological_levels.json", func(b []byte) error { return loaded.TechLevels.loadHeld(b) }},
 	}
 	for _, loader := range loaders {
 		b, err := files.ReadFile("data/" + loader.file)
@@ -536,4 +543,299 @@ func (l *Labels) load(data []byte) error {
 	l.labels = doc.Labels
 
 	return nil
+}
+
+// A technological index is not thrown against these two tables -- it is
+// thrown from the p. 9 matrix (R12) -- so they generate nothing and are
+// read only to say what an index means at the table.
+//
+// Both are printed sparse, and both are read the same way: the last entry
+// at or below a level is what a world at that level has (ERRATA E009).
+// A hole is the page's invitation to the referee, not an absence (E010).
+
+// rung is one entry of one column, at the level the page prints it.
+type rung struct {
+	level float64
+	entry string
+}
+
+// ladder is one column of a sparse table, in the order its levels
+// ascend. Reading it is E009: the last entry at or below a level.
+//
+// The level is a float because T5 prints rows at 1.3, 1.6, 3.3 and 3.6. No
+// index ever equals one, but 1.6 is below 2, so a world at index 2 has
+// the cities that row prints rather than the villages of the row before
+// it (E011).
+type ladder []rung
+
+func (l ladder) at(level float64) string {
+	best := ""
+
+	for _, printed := range l {
+		if printed.level > level {
+			break
+		}
+
+		best = printed.entry
+	}
+
+	return best
+}
+
+// Borrowed is what T5 says a level means: Core Book 2 pp. 230-232, cited
+// for description alone (ERRATA E011).
+//
+// It is a type of its own so that the boundary is visible in the code as
+// well as in the document. Nothing here is Book 3's, and a document that
+// prints one of these fields says whose statement it is.
+type Borrowed struct {
+	Band      string
+	Era       string
+	Energy    string
+	Society   string
+	Environ   string
+	Transport string
+	Computers string
+}
+
+// Held is what Book 3 pp. 10-11 print a world at a level can build.
+type Held struct {
+	Personal      string
+	Armor         string
+	Special       string
+	Computers     string
+	Communication string
+
+	Water string
+	Land  string
+	Air   string
+	Space string
+	Fuels string
+
+	// MatterTransport is p. 11's row 16, which is printed across the
+	// water, land and air columns rather than in one of them and so
+	// belongs to none (E010 part 2).
+	MatterTransport bool
+}
+
+// TechLevel is one technological index read across both tables.
+type TechLevel struct {
+	Borrowed Borrowed
+	Held     Held
+}
+
+// TechLevels is the two tables, each column held as its own ladder.
+type TechLevels struct {
+	band      []bandRow
+	spanLevel float64
+
+	era, energy, society, environ, transport, borrowedComputers ladder
+
+	personal, armor, special, computers, communication ladder
+	water, land, air, space, fuels                     ladder
+}
+
+// bandRow is one of T5's bands and the levels it covers, inclusive.
+type bandRow struct {
+	name     string
+	from, to int
+}
+
+// Level reads both tables at an index.
+func (t *TechLevels) Level(index int) TechLevel {
+	asLevel := float64(index)
+
+	return TechLevel{
+		Borrowed: Borrowed{
+			Band:      t.bandAt(index),
+			Era:       t.era.at(asLevel),
+			Energy:    t.energy.at(asLevel),
+			Society:   t.society.at(asLevel),
+			Environ:   t.environ.at(asLevel),
+			Transport: t.transport.at(asLevel),
+			Computers: t.borrowedComputers.at(asLevel),
+		},
+		Held: Held{
+			Personal:        t.personal.at(asLevel),
+			Armor:           t.armor.at(asLevel),
+			Special:         t.special.at(asLevel),
+			Computers:       t.computers.at(asLevel),
+			Communication:   t.communication.at(asLevel),
+			Water:           t.water.at(asLevel),
+			Land:            t.land.at(asLevel),
+			Air:             t.air.at(asLevel),
+			Space:           t.space.at(asLevel),
+			Fuels:           t.fuels.at(asLevel),
+			MatterTransport: asLevel >= t.spanLevel,
+		},
+	}
+}
+
+func (t *TechLevels) bandAt(index int) string {
+	for _, row := range t.band {
+		if index >= row.from && index <= row.to {
+			return row.name
+		}
+	}
+
+	return ""
+}
+
+// printedLevels is the range both tables print, which is also the range
+// the index is capped to (E004 part 3).
+const (
+	minTechLevel = 0
+	maxTechLevel = 18
+)
+
+func (t *TechLevels) loadHeld(data []byte) error {
+	var doc struct {
+		Rows []struct {
+			Level         int     `json:"level"`
+			Personal      *string `json:"personal"`
+			Armor         *string `json:"armor"`
+			Special       *string `json:"special"`
+			Computers     *string `json:"computers"`
+			Communication *string `json:"communication"`
+			Water         *string `json:"water"`
+			Land          *string `json:"land"`
+			Air           *string `json:"air"`
+			Space         *string `json:"space"`
+			Fuels         *string `json:"fuels"`
+		} `json:"rows"`
+		Spanning struct {
+			Level *int `json:"level"`
+		} `json:"spanning"`
+	}
+
+	err := json.Unmarshal(data, &doc)
+	if err != nil {
+		return fmt.Errorf("reading the technological levels tables: %w", err)
+	}
+
+	if len(doc.Rows) != maxTechLevel-minTechLevel+1 {
+		return fmt.Errorf("%w: %d, want %d (%d to %d)",
+			errRowCount, len(doc.Rows), maxTechLevel-minTechLevel+1, minTechLevel, maxTechLevel)
+	}
+
+	if doc.Spanning.Level == nil {
+		return fmt.Errorf("%w: p. 11's matter transport", errMissingRow)
+	}
+
+	t.spanLevel = float64(*doc.Spanning.Level)
+
+	for want, row := range doc.Rows {
+		if row.Level != want {
+			return fmt.Errorf("%w: level %d where %d was expected; the rows ascend",
+				errMissingRow, row.Level, want)
+		}
+
+		asLevel := float64(row.Level)
+
+		t.personal = climb(t.personal, asLevel, row.Personal)
+		t.armor = climb(t.armor, asLevel, row.Armor)
+		t.special = climb(t.special, asLevel, row.Special)
+		t.computers = climb(t.computers, asLevel, row.Computers)
+		t.communication = climb(t.communication, asLevel, row.Communication)
+		t.water = climb(t.water, asLevel, row.Water)
+		t.land = climb(t.land, asLevel, row.Land)
+		t.air = climb(t.air, asLevel, row.Air)
+		t.space = climb(t.space, asLevel, row.Space)
+		t.fuels = climb(t.fuels, asLevel, row.Fuels)
+	}
+
+	return nil
+}
+
+func (t *TechLevels) loadBorrowed(data []byte) error {
+	var doc struct {
+		Bands map[string]json.RawMessage `json:"bands"`
+		Rows  []struct {
+			Level     float64 `json:"level"`
+			Band      string  `json:"band"`
+			Era       *string `json:"era"`
+			Energy    *string `json:"energy"`
+			Society   *string `json:"society"`
+			Environ   *string `json:"environ"`
+			Transport *string `json:"transport"`
+			Computers *string `json:"computers"`
+		} `json:"rows"`
+	}
+
+	err := json.Unmarshal(data, &doc)
+	if err != nil {
+		return fmt.Errorf("reading the borrowed technology chart: %w", err)
+	}
+
+	err = t.loadBands(doc.Bands)
+	if err != nil {
+		return err
+	}
+
+	previous := math.Inf(-1)
+
+	for _, row := range doc.Rows {
+		if row.Level <= previous {
+			return fmt.Errorf("%w: level %v does not ascend", errMissingRow, row.Level)
+		}
+
+		previous = row.Level
+
+		if row.Band != t.bandAt(int(row.Level)) {
+			return fmt.Errorf("%w: level %v is in band %q and the bands put it in %q",
+				errMissingRow, row.Level, row.Band, t.bandAt(int(row.Level)))
+		}
+
+		t.era = climb(t.era, row.Level, row.Era)
+		t.energy = climb(t.energy, row.Level, row.Energy)
+		t.society = climb(t.society, row.Level, row.Society)
+		t.environ = climb(t.environ, row.Level, row.Environ)
+		t.transport = climb(t.transport, row.Level, row.Transport)
+		t.borrowedComputers = climb(t.borrowedComputers, row.Level, row.Computers)
+	}
+
+	// Every index the tool can produce must sit in a band, or a world
+	// would be glossed with no answer to the first thing the gloss says.
+	for index := minTechLevel; index <= maxTechLevel; index++ {
+		if t.bandAt(index) == "" {
+			return fmt.Errorf("%w: no band covers level %d", errMissingRow, index)
+		}
+	}
+
+	return nil
+}
+
+func (t *TechLevels) loadBands(bands map[string]json.RawMessage) error {
+	for name, raw := range bands {
+		var span []int
+
+		if json.Unmarshal(raw, &span) != nil {
+			// The bands object carries a comment beside its entries.
+			continue
+		}
+
+		const fromAndTo = 2
+
+		if len(span) != fromAndTo {
+			return fmt.Errorf("%w: band %s covers %d levels, want a first and a last",
+				errRowCount, name, len(span))
+		}
+
+		t.band = append(t.band, bandRow{name: name, from: span[0], to: span[1]})
+	}
+
+	if len(t.band) == 0 {
+		return fmt.Errorf("%w: the chart names no bands", errMissingRow)
+	}
+
+	return nil
+}
+
+// climb appends an entry to a column's ladder where the page prints one.
+func climb(column ladder, level float64, entry *string) ladder {
+	if entry == nil {
+		return column
+	}
+
+	return append(column, rung{level: level, entry: *entry})
 }
