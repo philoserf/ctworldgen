@@ -13,7 +13,9 @@ alpha was played ([issue 1]) and its report is the working specification:
 what held up is what must not break, what it did not want is not to be
 built, and what it lacked is the backlog. `docs/ERRATA.md` holds the
 recorded readings; `docs/COVERAGE.md` maps rules to implementation and
-tests. Both are live.
+tests. Both are live. `THEORY.md` states the design and its uncertainties;
+`walkthrough.md` is the executable tour, verified with `uvx showboat
+verify walkthrough.md` and never formatted by prettier.
 
 [issue 1]: https://github.com/philoserf/ctworldgen/issues/1
 
@@ -304,7 +306,7 @@ failures the suite is structurally unable to express. So they are written
 down.
 
 - **`render` is one package and stays one.** Two typesetters, a
-  decomposition, a lane rule and a page geometry, in 2,149 lines. The
+  decomposition, a lane rule and a page geometry, in 2,283 lines. The
   middle they share -- `bullets`, `member`/`members`, `legible`,
   `summary`, `named`, `bases` -- is what stops the two documents
   diverging. They did diverge once: the bullet list was written out twice,
