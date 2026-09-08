@@ -181,7 +181,7 @@ func TestJumpRoutesHasNoRowForX(t *testing.T) {
 	routes := load(t).JumpRoutes
 
 	for _, port := range starmap.Starports() {
-		for distance := starmap.Parsecs(1); distance <= tables.MaxJump; distance++ {
+		for distance := starmap.Parsecs(1); distance <= starmap.MaxJump; distance++ {
 			if _, stated := routes.Target(starmap.StarportX, port, distance); stated {
 				t.Errorf("X-%s at jump-%d states a target; the table prints no row for X", port, distance)
 			}

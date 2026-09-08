@@ -428,7 +428,7 @@ func assertRouteHasACell(
 			seed, route.From, route.To, route.Distance, route.From.Distance(route.To))
 	}
 
-	if route.Distance < 1 || route.Distance > tables.MaxJump {
+	if route.Distance < 1 || route.Distance > starmap.MaxJump {
 		t.Fatalf("seed %d: route %s-%s is %d parsecs, beyond the four the table states targets for",
 			seed, route.From, route.To, route.Distance)
 	}
