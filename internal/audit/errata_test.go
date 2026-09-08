@@ -2,14 +2,12 @@ package audit_test
 
 import (
 	"testing"
-
-	"github.com/philoserf/ctworldgen/internal/audit"
 )
 
 func root(t *testing.T) string {
 	t.Helper()
 
-	r, err := audit.Root()
+	r, err := moduleRoot()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +24,7 @@ func TestEveryCitationResolvesToAReading(t *testing.T) {
 
 	repoRoot := root(t)
 
-	headings, err := audit.Headings(repoRoot)
+	headings, err := errataHeadings(repoRoot)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +34,7 @@ func TestEveryCitationResolvesToAReading(t *testing.T) {
 		recorded[id] = true
 	}
 
-	cited, err := audit.Citations(repoRoot)
+	cited, err := errataCitations(repoRoot)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +54,7 @@ func TestEveryReadingIsCited(t *testing.T) {
 
 	repoRoot := root(t)
 
-	headings, err := audit.Headings(repoRoot)
+	headings, err := errataHeadings(repoRoot)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +63,7 @@ func TestEveryReadingIsCited(t *testing.T) {
 		t.Fatal("docs/ERRATA.md records no readings")
 	}
 
-	cited, err := audit.Citations(repoRoot)
+	cited, err := errataCitations(repoRoot)
 	if err != nil {
 		t.Fatal(err)
 	}

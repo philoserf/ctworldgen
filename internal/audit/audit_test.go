@@ -1,9 +1,13 @@
-// Package audit holds the checks that read the repository itself rather
-// than a package's behaviour: that every record the engine writes matches
-// the published schema, and that the readings cited in the code and the
-// documents are exactly the readings ERRATA.md records. It is test
-// support, not architecture.
-package audit
+// The checks in this directory read the repository itself rather than a
+// package's behaviour: that every record the engine writes matches the
+// published schema, and that the readings cited in the code and the
+// documents are exactly the readings ERRATA.md records.
+//
+// It is test support, not architecture, and the directory holds no
+// non-test file, so there is no package here for production code to
+// import even by mistake. That is the point: the fence used to be a
+// depguard rule, and it is now the absence of anything to reach.
+package audit_test
 
 import (
 	"errors"
@@ -18,9 +22,9 @@ import (
 
 var errNoModule = errors.New("no go.mod above the working directory")
 
-// Root returns the repository root, found by walking up from the working
+// moduleRoot returns the repository root, found by walking up from the working
 // directory to the go.mod.
-func Root() (string, error) {
+func moduleRoot() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", fmt.Errorf("finding the working directory: %w", err)
@@ -63,8 +67,8 @@ var erratumID = regexp.MustCompile(`\bE\d{3}\b`)
 // headingID matches the identifier at the head of an ERRATA.md entry.
 var headingID = regexp.MustCompile(`(?m)^## (E\d{3}) `)
 
-// Headings returns the readings ERRATA.md records, in document order.
-func Headings(root string) ([]string, error) {
+// errataHeadings returns the readings ERRATA.md records, in document order.
+func errataHeadings(root string) ([]string, error) {
 	path := filepath.Join(root, "docs", "ERRATA.md")
 
 	encoded, err := os.ReadFile(path) //nolint:gosec // a fixed path inside the repository
@@ -81,9 +85,9 @@ func Headings(root string) ([]string, error) {
 	return ids, nil
 }
 
-// Citations returns every reading cited anywhere in the repository except
+// errataCitations returns every reading cited anywhere in the repository except
 // ERRATA.md itself, mapped to the files that cite it.
-func Citations(root string) (map[string][]string, error) {
+func errataCitations(root string) (map[string][]string, error) {
 	cited := map[string][]string{}
 
 	err := filepath.WalkDir(root, collect(root, cited))

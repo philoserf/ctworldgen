@@ -53,8 +53,14 @@ linters:
           deny:
             - pkg: github.com/philoserf/ctworldgen/internal/fixture
               desc: the golden roster is test support, not architecture
-            - pkg: github.com/philoserf/ctworldgen/internal/audit
-              desc: the repository audit is test support, not architecture
+            # internal/audit is deliberately not listed. It holds no
+            # non-test file, so the compiler already refuses the import
+            # with "no non-test Go files" -- and by the rule three
+            # paragraphs up, a depguard entry for an edge the compiler
+            # refuses reads as enforcement and enforces nothing. The fence
+            # did not weaken; it moved from configuration into the shape
+            # of the directory, which is the stronger place for it.
+            # internal/fixture still has fixture.go, so its entry is live.
     errcheck:
       check-type-assertions: true
     govet:
