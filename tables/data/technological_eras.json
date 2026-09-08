@@ -1,0 +1,272 @@
+{
+  "table": "TECH LEVEL CHART",
+  "source": "Traveller5 Core Rules Book 2 Starships, pp. 230-232 (Tech Level Chart 1, 2 and 3), copyright (c) 2015-2019 Far Future Enterprises. Printed page and PDF page are the same number. Cited for description only, and named in every document that uses it (ERRATA E011).",
+  "comment": "Six of the charts' columns, which are the six the gloss reads. Levels 0-18: T5's scale runs to 21 and this tool's index caps at 18 (E004). The fractional levels are kept as printed -- no index equals one, but E009 reads the last entry at or below an index and 1.6 is below 2, so a world at index 2 has cities rather than villages. A null is read as the entry above it carrying forward (E009). Where the three pages disagree, the two that agree govern: level 3 is p. 231's 'Industrialization' on that page alone and 'Industrial Revolution' on pp. 230 and 232. Cells printed over two lines are joined with one space.",
+  "bands": {
+    "comment": "read off p. 232, where the brackets are tightest (E011)",
+    "Vlow": [
+      0,
+      3
+    ],
+    "Low": [
+      4,
+      6
+    ],
+    "Mid": [
+      7,
+      9
+    ],
+    "High": [
+      10,
+      12
+    ],
+    "Vhigh": [
+      13,
+      15
+    ],
+    "Xhigh": [
+      16,
+      18
+    ]
+  },
+  "columns": [
+    "era",
+    "energy",
+    "society",
+    "environ",
+    "transport",
+    "computers"
+  ],
+  "rows": [
+    {
+      "level": 0,
+      "band": "Vlow",
+      "era": "Primitive Stone Age",
+      "energy": "Personal Effort. Fire",
+      "society": "Tribe. Clan.",
+      "environ": "Natural. Crude Shelters.",
+      "transport": "Walking.",
+      "computers": "Counting."
+    },
+    {
+      "level": 1,
+      "band": "Vlow",
+      "era": "Bronze Age 3500 BC",
+      "energy": "Water Power",
+      "society": "Ethnic Groups.",
+      "environ": "Settlement. Villages.",
+      "transport": "Beasts of Burden.",
+      "computers": "Abacus Quipu."
+    },
+    {
+      "level": 1.3,
+      "band": "Vlow",
+      "era": "Iron Age 1300 BC",
+      "energy": null,
+      "society": null,
+      "environ": "Towns. Roads. Canals.",
+      "transport": "Wheel.",
+      "computers": null
+    },
+    {
+      "level": 1.6,
+      "band": "Vlow",
+      "era": "Middle Ages 600 AD",
+      "energy": null,
+      "society": "Kingdoms.",
+      "environ": "Cities.",
+      "transport": "Galleys.",
+      "computers": null
+    },
+    {
+      "level": 2,
+      "band": "Vlow",
+      "era": "Age Of Sail 1500 AD",
+      "energy": "Wind. Sail.",
+      "society": "Nations.",
+      "environ": null,
+      "transport": "Sailing Ships.",
+      "computers": "Algebra."
+    },
+    {
+      "level": 3,
+      "band": "Vlow",
+      "era": "Industrial Revolution 1700 AD",
+      "energy": "Coal. Steam.",
+      "society": "Democracies.",
+      "environ": null,
+      "transport": null,
+      "computers": "Calculus."
+    },
+    {
+      "level": 3.3,
+      "band": "Vlow",
+      "era": "1800 AD",
+      "energy": null,
+      "society": null,
+      "environ": null,
+      "transport": "Steamships.",
+      "computers": null
+    },
+    {
+      "level": 3.6,
+      "band": "Vlow",
+      "era": "1850 AD",
+      "energy": null,
+      "society": null,
+      "environ": null,
+      "transport": "Railroads.",
+      "computers": null
+    },
+    {
+      "level": 4,
+      "band": "Low",
+      "era": "Mechanization 1900 AD",
+      "energy": "Electricity.",
+      "society": null,
+      "environ": "Skyscrapers",
+      "transport": null,
+      "computers": "Analog Computers."
+    },
+    {
+      "level": 5,
+      "band": "Low",
+      "era": "1930 AD",
+      "energy": "Oil. Petrochemicals.",
+      "society": "Dictators.",
+      "environ": null,
+      "transport": "Groundcars.",
+      "computers": "Electric Calculators."
+    },
+    {
+      "level": 6,
+      "band": "Low",
+      "era": "Nuclear Age 1950 AD",
+      "energy": "Nuclear Fission.",
+      "society": "Superpowers.",
+      "environ": "Suburbs.",
+      "transport": null,
+      "computers": "Model /1."
+    },
+    {
+      "level": 7,
+      "band": "Mid",
+      "era": "1975 AD",
+      "energy": "Geothermal. Solar.",
+      "society": null,
+      "environ": null,
+      "transport": "Rockets to Orbit.",
+      "computers": "Model /2."
+    },
+    {
+      "level": 8,
+      "band": "Mid",
+      "era": "2000 AD",
+      "energy": "Renewables.",
+      "society": null,
+      "environ": null,
+      "transport": null,
+      "computers": null
+    },
+    {
+      "level": 9,
+      "band": "Mid",
+      "era": "2050 AD",
+      "energy": "Early Fusion.",
+      "society": null,
+      "environ": "Arcologies",
+      "transport": "NAFAL.",
+      "computers": "Model /3."
+    },
+    {
+      "level": 10,
+      "band": "High",
+      "era": "2100 AD",
+      "energy": "Practical Fusion.",
+      "society": "Non-Geographic Communities.",
+      "environ": null,
+      "transport": "Gravity Manipulation Lifters to Orbit.",
+      "computers": "Model /4."
+    },
+    {
+      "level": 11,
+      "band": "High",
+      "era": "Imperial Average Circa Year Zero",
+      "energy": "[FusionPlus].",
+      "society": null,
+      "environ": null,
+      "transport": null,
+      "computers": "Semi-Organic Brain. Model /5."
+    },
+    {
+      "level": 12,
+      "band": "High",
+      "era": null,
+      "energy": null,
+      "society": null,
+      "environ": null,
+      "transport": null,
+      "computers": "Positronic Brain. Model /6."
+    },
+    {
+      "level": 13,
+      "band": "Vhigh",
+      "era": "Imperial Maximum Circa 550",
+      "energy": null,
+      "society": "Robots.",
+      "environ": null,
+      "transport": null,
+      "computers": "Wafer Technology. Model /7."
+    },
+    {
+      "level": 14,
+      "band": "Vhigh",
+      "era": null,
+      "energy": "Exotics. Collectors.",
+      "society": "Temporary Personality Transfer",
+      "environ": null,
+      "transport": null,
+      "computers": "Self Aware Model /8."
+    },
+    {
+      "level": 15,
+      "band": "Vhigh",
+      "era": "Imperial Maximum Circa 1107",
+      "energy": null,
+      "society": "Mindwipe.",
+      "environ": null,
+      "transport": null,
+      "computers": "Model /9."
+    },
+    {
+      "level": 16,
+      "band": "Xhigh",
+      "era": "Darrian Maximum",
+      "energy": "Experimental AM.",
+      "society": "Artificial Persons. The Under Society.",
+      "environ": null,
+      "transport": null,
+      "computers": "True AI Artificial Intelligence."
+    },
+    {
+      "level": 17,
+      "band": "Xhigh",
+      "era": null,
+      "energy": null,
+      "society": "Permanent Personality Transfer",
+      "environ": null,
+      "transport": null,
+      "computers": null
+    },
+    {
+      "level": 18,
+      "band": "Xhigh",
+      "era": null,
+      "energy": "Exotics. Collectors.",
+      "society": null,
+      "environ": null,
+      "transport": null,
+      "computers": null
+    }
+  ]
+}

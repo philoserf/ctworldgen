@@ -423,3 +423,87 @@ func TestStarportChartDescriptions(t *testing.T) {
 		t.Error("the chart returned a scout throw for a starport the book does not print")
 	}
 }
+
+// TestATechnologicalLevelIsReadDownward is ERRATA E009. Both tables are
+// printed sparse, and the pages nowhere say how to read a row: taken
+// literally, a world at index 12 builds jump drives and has no weapon, no
+// armour and no radio. P. 10's prose says the tables give "the best which
+// may be produced locally", so each column is read by taking the last
+// entry at or below the index.
+//
+// Every case here is a cell whose value comes from a *different* level
+// than the one asked for. A reading that returned only the exact row
+// would answer none of them.
+func TestATechnologicalLevelIsReadDownward(t *testing.T) {
+	t.Parallel()
+
+	levels := load(t).TechLevels
+
+	// Book 3 pp. 10-11. The laser rifle is printed at 9 and reflec at 10;
+	// Model/6 is printed at 12 and is the one cell that is its own row.
+	twelve := levels.Level(12)
+	for _, check := range []struct {
+		what, got, want string
+	}{
+		{"the personal weapon", twelve.Held.Personal, "Laser Rifle"},
+		{"the armour", twelve.Held.Armor, "Reflec"},
+		{"the communication", twelve.Held.Communication, "Television"},
+		{"the computer", twelve.Held.Computers, "Model/6"},
+		{"the space drive", twelve.Held.Space, "Drives N or less"},
+	} {
+		if check.got != check.want {
+			t.Errorf("index 12: %s is %q, want %q", check.what, check.got, check.want)
+		}
+	}
+
+	// T5's fractional levels, which no index equals and E009 still
+	// reaches: cities are printed at 1.6 and railroads at 3.6 (E011).
+	if got := levels.Level(2).Borrowed.Environ; got != "Cities." {
+		t.Errorf("index 2 lives in %q; the chart prints cities at 1.6", got)
+	}
+
+	if got := levels.Level(4).Borrowed.Transport; got != "Railroads." {
+		t.Errorf("index 4 travels by %q; the chart prints railroads at 3.6", got)
+	}
+}
+
+// TestAHoleIsNotAnAbsence is ERRATA E010. A blank is the page inviting
+// the referee to fill it (p. 11), so where a column prints nothing at or
+// below an index the gloss says nothing rather than claiming the world
+// has none of that thing.
+func TestAHoleIsNotAnAbsence(t *testing.T) {
+	t.Parallel()
+
+	levels := load(t).TechLevels
+
+	// Armor is first printed at 1, computers at 1, space at 7. Below
+	// those the columns are empty and there is nothing to carry forward.
+	if got := levels.Level(0).Held.Armor; got != "" {
+		t.Errorf("index 0 wears %q; p. 10 prints no armour below level 1", got)
+	}
+
+	if got := levels.Level(0).Held.Computers; got != "" {
+		t.Errorf("index 0 computes with %q; p. 10 prints nothing below the abacus at 1", got)
+	}
+
+	if got := levels.Level(6).Held.Space; got != "" {
+		t.Errorf("index 6 flies %q; p. 11 prints nothing in space below level 7", got)
+	}
+
+	// Row 16's matter transport is printed across the water, land and air
+	// columns rather than in one of them, so it is carried as its own
+	// line and reaches from 16 up (E010 part 2).
+	for level, want := range map[int]bool{15: false, 16: true, 18: true} {
+		if got := levels.Level(level).Held.MatterTransport; got != want {
+			t.Errorf("index %d carries matter transport %v, want %v", level, got, want)
+		}
+	}
+
+	// And it does not become the entry for the columns it is printed
+	// across: hovercraft and grav belts still stand there.
+	sixteen := levels.Level(16)
+	if sixteen.Held.Water != "Hovercraft" || sixteen.Held.Air != "Grav belts" {
+		t.Errorf("matter transport displaced the columns it is printed across: water %q, air %q",
+			sixteen.Held.Water, sixteen.Held.Air)
+	}
+}
