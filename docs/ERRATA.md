@@ -589,8 +589,13 @@ across a copyright.
 Nothing that generates. T5 throws for its worlds differently and none of
 that is here.
 
-T5's fractional rows — 1.3, 1.6, 3.3 and 3.6 — are dropped. A
-technological index is an integer.
+T5's fractional rows — 1.3, 1.6, 3.3 and 3.6 — are **kept as printed**,
+which is the opposite of the obvious choice. A technological index is an
+integer, so no index ever equals one of them; but E009 reads the last
+entry at or below an index, and 1.6 is below 2. Dropping them would lose
+the ladder they carry — a world at index 2 would have villages rather
+than cities, and one at index 4 sailing ships rather than railroads — to
+make the file tidier.
 
 Bands Uhigh (19–21) and Fantastic (22+) are above this tool's cap of 18
 and are not carried.
