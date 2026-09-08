@@ -360,9 +360,22 @@ func checkChartRow(typ, description string, naval, scout *int) error {
 		return fmt.Errorf("%w: starport %s", errNoDescription, typ)
 	}
 
-	for name, throw := range map[string]*int{"naval base": naval, "scout base": scout} {
-		if throw != nil && (*throw < minThrow || *throw > maxThrow) {
-			return fmt.Errorf("%w: starport %s, %s throw of %d", errNotATwoDiceTarget, typ, name, *throw)
+	// Ordered as p. 5 prints the two columns rather than as a map ranges
+	// them. A row with both throws out of range has two true complaints,
+	// and a map picks between them differently on different runs: the same
+	// bad chart would report a different error each time it was loaded.
+	bases := []struct {
+		name  string
+		throw *int
+	}{
+		{name: "naval base", throw: naval},
+		{name: "scout base", throw: scout},
+	}
+
+	for _, base := range bases {
+		if base.throw != nil && (*base.throw < minThrow || *base.throw > maxThrow) {
+			return fmt.Errorf(
+				"%w: starport %s, %s throw of %d", errNotATwoDiceTarget, typ, base.name, *base.throw)
 		}
 	}
 

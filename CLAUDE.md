@@ -380,6 +380,21 @@ down.
   or `dice`, and production code may not reach `internal/fixture` or
   `internal/audit`. Removing either removes a real fence.
 
+- **`render.memberSeed`'s bounds guard stays, unreachable.** Every call
+  site is an exhaustive loop over the sixteen members, so the branch
+  cannot fire, and issue 25 proposed deleting it on exactly that ground.
+  Deleting it turns the gate red: the `index < 0` test is the bounds proof
+  gosec's G115 accepts for the int-to-uint64 conversion, and the only way
+  to keep the deletion is a lint disable, which the section above
+  forbids. `panic` is out under this repo's Go rules -- library code does
+  not panic -- and narrowing the parameter to `uint64` is clean in
+  isolation but only moves the conversion out to the call sites, because
+  `member.Index` is an `int` fed by `starmap.MemberOf`. The guard's
+  fallback does return a wrong seed, which is a real complaint and not a
+  fixable one: a renderer has no error path out, and no `uint64` reads as
+  "no seed". If the call sites ever stop being exhaustive, the answer is
+  an error, not a better constant.
+
 ## Commands
 
 `task` is the whole gate — tidy, vet, golangci-lint, NilAway, `go test

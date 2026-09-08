@@ -445,3 +445,31 @@ func load(t *testing.T) *Tables {
 
 	return loaded
 }
+
+// TestABadChartRowNamesTheSameThrowEveryTime holds the one thing about
+// checkChartRow a passing suite could not otherwise see. A row whose naval
+// and scout throws are both out of range has two true complaints and only
+// one is reported. Ranging a map to choose between them picks differently
+// on different runs, so the same bad chart produced a different error each
+// time it was loaded -- and a test that only asked "is this refused?" was
+// answered by either. p. 5 prints the naval base column first, so that is
+// the one the message names.
+//
+// The repeat is what makes this hold. One call cannot tell an ordered
+// slice from a two-entry map, because the map is right half the time.
+func TestABadChartRowNamesTheSameThrowEveryTime(t *testing.T) {
+	t.Parallel()
+
+	naval, scout := minThrow-1, maxThrow+1
+
+	for range 64 {
+		err := checkChartRow("A", "Excellent quality installation", &naval, &scout)
+		if err == nil {
+			t.Fatal("a row with both throws out of range was accepted")
+		}
+
+		if !strings.Contains(err.Error(), "naval base") {
+			t.Fatalf("checkChartRow reported %q; p. 5 prints the naval base column first", err)
+		}
+	}
+}

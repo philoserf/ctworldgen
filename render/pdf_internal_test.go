@@ -57,11 +57,13 @@ func TestClipCutsWholeCharacters(t *testing.T) {
 	}
 }
 
-// TestMemberSeedRefusesAnIndexThatIsNotAMembers holds the bound the
-// conversion in memberSeed relies on. A sector has sixteen members and
-// nothing asks for a seventeenth, but the guard is what makes converting
-// the index to the seed's width safe rather than merely true today.
-func TestMemberSeedRefusesAnIndexThatIsNotAMembers(t *testing.T) {
+// TestMemberSeedFallsBackToTheBaseSeed holds the bound the conversion in
+// memberSeed relies on. A sector has sixteen members and nothing asks for
+// a seventeenth, but the guard is what makes converting the index to the
+// seed's width safe rather than merely true today. The old name said the
+// function refuses such an index; it does not refuse, it falls back, and
+// the test asserted the fallback all along.
+func TestMemberSeedFallsBackToTheBaseSeed(t *testing.T) {
 	t.Parallel()
 
 	for _, index := range []int{-1, starmap.Members, starmap.Members + 1} {
@@ -127,4 +129,93 @@ func TestSplitMeasuresTheCharacterItWillDraw(t *testing.T) {
 	if strings.Join(quoted, "") != strings.Repeat("’", runLength) {
 		t.Errorf("wrapping did not carry the curly apostrophe: %q", quoted)
 	}
+}
+
+// TestFitMapIsTheLargestDrawingThatFitsItsBox holds fitMap to its own
+// promise -- the largest hexes that draw a whole window inside a box --
+// against geometry retyped from the p. 3 grid rather than read back out of
+// the constants fitMap divides by.
+//
+// The second transcription is the whole point. halfColumn and halfRow are
+// both 0.5, so a check written in terms of the constants passes whichever
+// one fitMap uses, and putting a width measure in the height term is
+// invisible to it. These four numbers come from the page: a window of C
+// columns is (1.5C + 0.5) sides across, and one of R rows is root3*(R +
+// 0.5) sides down.
+//
+// The height-bound case is not decoration. The width term binds for almost
+// every map this tool draws, so a box where height binds is the only way
+// the row half-step gets measured at all, and without one this test cannot
+// see the term it is about. That is why the case asserts which term bound
+// it: the day it stops being height-bound it must say so, not pass.
+func TestFitMapIsTheLargestDrawingThatFitsItsBox(t *testing.T) {
+	t.Parallel()
+
+	const (
+		widthTerm  = "width"
+		heightTerm = "height"
+
+		acrossPerColumn = 1.5
+		acrossOverhang  = 0.5
+		downPerRow      = 1.7320508075688772
+		downOverhang    = 0.5
+	)
+
+	for _, fit := range []struct {
+		what   string
+		draw   window
+		within box
+		binds  string
+	}{
+		{
+			what:   "a subsector's whole grid on a wide page",
+			draw:   window{FromCol: 1, ToCol: 8, FromRow: 1, ToRow: 10},
+			within: box{X: 0, Y: 0, Width: 468, Height: 700},
+			binds:  widthTerm,
+		},
+		{
+			what:   "the same grid in a box too short for it",
+			draw:   window{FromCol: 1, ToCol: 8, FromRow: 1, ToRow: 10},
+			within: box{X: 0, Y: 0, Width: 468, Height: 300},
+			binds:  heightTerm,
+		},
+		{
+			what:   "a member window and its ring in a narrow column",
+			draw:   window{FromCol: 0, ToCol: 9, FromRow: 0, ToRow: 11},
+			within: box{X: 0, Y: 0, Width: 200, Height: 700},
+			binds:  widthTerm,
+		},
+	} {
+		t.Run(fit.what, func(t *testing.T) {
+			t.Parallel()
+
+			across := fit.within.Width / (acrossPerColumn*float64(fit.draw.columns()) + acrossOverhang)
+			down := fit.within.Height / (downPerRow * (float64(fit.draw.rows()) + downOverhang))
+
+			binds := widthTerm
+			if down < across {
+				binds = heightTerm
+			}
+
+			if binds != fit.binds {
+				t.Fatalf("%s is %s-bound; the case was written for the %s term and cannot "+
+					"measure the other one", fit.what, binds, fit.binds)
+			}
+
+			want := min(across, down)
+			if got := fitMap(fit.draw, fit.within).Side; !closeEnough(got, want) {
+				t.Errorf("fitMap drew %s at a side of %g; the page's geometry makes it %g",
+					fit.what, got, want)
+			}
+		})
+	}
+}
+
+// closeEnough compares two side lengths in points. They are computed by
+// the same arithmetic in a different order, so they agree to far better
+// than a millionth of a point when they agree at all.
+func closeEnough(got, want float64) bool {
+	const tolerance = 1e-9
+
+	return got-want < tolerance && want-got < tolerance
 }
