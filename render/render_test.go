@@ -1369,3 +1369,86 @@ func noteLine(t *testing.T, written, heading string) string {
 
 	return line(strings.TrimLeft(section(t, written, heading), "\n"))
 }
+
+// TestTheSectorIndexMapSeamsSitOnMemberBoundaries measures the seam bars
+// of the sector's index map against the p. 3 parity, and it exists
+// because nothing else did. The sector listing's golden is one member's
+// section (fixture.SectorSlice), so the index map at the top of that
+// listing -- every starport letter and every seam bar on a 32x40 grid --
+// was compared with nothing at all. Changing the stride that places the
+// bars left the whole render suite green.
+//
+// What the page fixes: a member is eight columns wide, and a line of the
+// index carries only every second column, so every member contributes
+// exactly four cells to every line. Three bars, four groups of four. A
+// stride that is not 2 draws a bar where a member does not end, and the
+// groups stop being equal.
+func TestTheSectorIndexMapSeamsSitOnMemberBoundaries(t *testing.T) {
+	t.Parallel()
+
+	renderer, err := render.New(render.LegibleLanes)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var whole strings.Builder
+
+	err = renderer.Listing(&whole, sectorListingRecord(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	drawn := fencedTextBlock(t, whole.String())
+
+	lines := 0
+
+	for line := range strings.SplitSeq(drawn, "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+
+		lines++
+
+		// Two different fours, and they are not the same four: a line is
+		// cut into as many groups as there are members across a sector,
+		// and each group carries half a sub-sector's columns. Writing
+		// either one as the other is the coincidence this whole change is
+		// about.
+		groups := strings.Split(line, "|")
+		if len(groups) != starmap.SectorAcross {
+			t.Fatalf("index line %q has %d seam-separated groups; a sector is %d members across",
+				line, len(groups), starmap.SectorAcross)
+		}
+
+		for at, group := range groups {
+			if cells := len(strings.Fields(group)); cells != starmap.Columns/2 {
+				t.Errorf("group %d of index line %q carries %d cells; a member is %d columns "+
+					"wide and a line carries every second one, so it carries %d",
+					at, line, cells, starmap.Columns, starmap.Columns/2)
+			}
+		}
+	}
+
+	if want := starmap.SectorGrid().Rows * 2; lines != want {
+		t.Errorf("the index map drew %d lines; a %d-row sector draws two parities each, so %d",
+			lines, starmap.SectorGrid().Rows, want)
+	}
+}
+
+// fencedTextBlock cuts the first ```text block out of a document, which is
+// the index map when the document is a sector's listing.
+func fencedTextBlock(t *testing.T, document string) string {
+	t.Helper()
+
+	_, after, found := strings.Cut(document, "```text\n")
+	if !found {
+		t.Fatal("the listing has no fenced text block")
+	}
+
+	block, _, found := strings.Cut(after, "```")
+	if !found {
+		t.Fatal("the listing's fenced text block is not closed")
+	}
+
+	return block
+}

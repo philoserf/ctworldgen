@@ -29,6 +29,12 @@ const (
 	// reaches past the last column's centre, which is what makes a grid of
 	// C columns (1.5C + 0.5) sides wide.
 	halfColumn = 0.5
+
+	// halfRow is the half a row the even-numbered columns are pushed down
+	// by, hanging below the last odd column's bottom edge, which is what
+	// makes a grid of R rows root3*(R + 0.5) sides tall. It is halfColumn's
+	// number and not its quantity: one measures across, this one down.
+	halfRow = 0.5
 )
 
 // root3 is the height of a flat-top hexagon in sides: a row step, and
@@ -133,7 +139,7 @@ type mapFit struct {
 func fitMap(draw window, within box) mapFit {
 	side := min(
 		within.Width/(columnStep*float64(draw.columns())+halfColumn),
-		within.Height/(root3*(float64(draw.rows())+halfColumn)),
+		within.Height/(root3*(float64(draw.rows())+halfRow)),
 	)
 
 	// The origin is where the window's first hex sits if its column is an

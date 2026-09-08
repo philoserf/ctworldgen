@@ -112,8 +112,18 @@ func ends(route starmap.Route) (int, int, bool) {
 
 // memberSeed is the seed that writes a member on its own: the sector's
 // base plus the member's index (ERRATA E006 part 1). The index is one of
-// sixteen, so the conversion cannot overflow, and the bound is asserted
-// rather than asserted in a comment.
+// sixteen, so the conversion cannot overflow, and the bound is asserted in
+// code rather than in a comment.
+//
+// The guard cannot fire: every call site is an exhaustive loop over the
+// sixteen. It stays anyway, and issue 25 proposed removing it. It is the
+// bounds proof gosec's G115 accepts for the int-to-uint64 conversion, so
+// deleting it turns the gate red on a finding answerable only by a
+// disable. Its fallback returns the sector's base, which is member 0's
+// seed and so is itself a wrong seed -- but a renderer has no error path
+// out, and there is no value in uint64 that reads as "no seed". If the
+// call sites ever stop being exhaustive, the answer is an error, not a
+// better constant.
 func memberSeed(base uint64, index int) uint64 {
 	if index < 0 || index >= starmap.Members {
 		return base
@@ -195,6 +205,13 @@ const (
 	indexEmpty    = "."
 )
 
+// columnStride is how many columns apart two hexes on one drawn line are.
+// The p. 3 parity puts only every second column on a line, so it is 2.
+// That is indexSlot's number and not indexSlot's quantity -- one is a cell
+// width, this is a step across the grid -- and they are written separately
+// so that widening the cell cannot silently move a seam.
+const columnStride = 2
+
 // indexMap draws the whole sector as an index: starport letters, the seams
 // between the sixteen, and no hex numbers (ERRATA E008 part 4).
 func indexMap(built *strings.Builder, record *starmap.Record) {
@@ -245,7 +262,7 @@ func indexLine(marked map[starmap.Hex]starmap.Starport, grid starmap.Grid, row, 
 		// which is after column 7 on the high line and after column 8 on
 		// the low one -- a line carries only every second column, so a bar
 		// placed by column number alone draws a staircase.
-		next := starmap.Hex{Col: col + indexSlot, Row: row}
+		next := starmap.Hex{Col: col + columnStride, Row: row}
 		if grid.Contains(next) && starmap.MemberOf(hex) != starmap.MemberOf(next) {
 			line.WriteString("| ")
 		}
