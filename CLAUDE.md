@@ -206,6 +206,91 @@ disguised a dead check:
   on three fixtures by luck, because their probe hex happened to carry a
   letter, and survived outright on the fourth.
 
+## What looks like slack and is not
+
+Each of these has a visible cost -- lines, duplication, latency -- and an
+invisible benefit: a bug that did not happen, a check that can still fail,
+a seed that still reproduces. Optimise on what is measurable and all ten
+come out, and the suite stays green, because most of them guard against
+failures the suite is structurally unable to express. So they are written
+down.
+
+- **`render` is one package and stays one.** Two typesetters, a
+  decomposition, a lane rule and a page geometry, in 2,149 lines. The
+  middle they share -- `bullets`, `member`/`members`, `legible`,
+  `summary`, `named`, `bases` -- is what stops the two documents
+  diverging, and the comment above `bullets` records the time they did:
+  written out twice, agreeing by convention, and "a change to one was a
+  change the other's tests could not see." Inside one package sharing is
+  the default; across a boundary it becomes an export decision, which is
+  the pressure that produced the duplication the first time.
+
+- **The three parity harnesses stay separate.** The trap above says why
+  each encoding needs its own measurement against the page. The
+  consequence is that the test machinery taking those measurements --
+  `mapPlaces`/`hexStampsOn`, `mapGeometry`/`stepsOf`,
+  `closerPlace`/`closerStep` -- duplicates a great deal on purpose. A
+  merged harness compares the three against each other, and passes when
+  all three are flipped together. (`everyHexOf` and `everyHexOfGrid` are
+  not this. They enumerate a grid and measure nothing.)
+
+- **`Digit`, `Starport` and `Characteristic` do not become one generic
+  type.** They share a Go shape and nothing else: `Digit` is B1 p. 8's
+  hexadecimal extended by B3 p. 2's letters, `Starport` is the six types
+  of p. 4, `Characteristic` is the seven of the p. 4 box, written as names
+  rather than as characters. Three pages, three rules. A generic `enum[T]`
+  puts one type between the reader and three cites.
+
+- **A sector's sixteen members are generated in sequence.** Each draws its
+  own stream, so they are provably independent -- and that independence is
+  a correctness property, not an invitation. It is what makes member _i_
+  the subsector `new --seed N+i` writes, which is the thing that lets a
+  referee trust a sector at all. Generating them concurrently would add a
+  concurrency model to a program that has none, to save part of the 2.8
+  milliseconds a whole sector costs.
+
+- **No `context.Context`.** No cancellation, no deadline, no network, no
+  goroutine. The entire I/O surface is one `os.Open` in `renderCmd` and
+  one `os.OpenFile` in `writeFile`.
+
+- **`gen.seams` is O(n²) and stays O(n²).** A sector examines about two
+  hundred thousand pairs to find the few within four parsecs, and a
+  spatial index is the obvious fix. It is the consumption-order trap in
+  another costume: the loop's visit order is the order the seam stream is
+  drawn in, so an index reaching the same pairs in a different order
+  writes a different sector from the same seed, silently. If it ever
+  matters, the safe change is an early-out on column distance inside the
+  existing loop, which preserves the order exactly. Nothing waits on it.
+
+- **The error sentinels stay, unmatched.** Most are the subject of no
+  `errors.Is` anywhere. What they buy is not matchability but one
+  definition per rule of a message carrying a page cite -- `ErrOffGrid` is
+  wrapped at four sites across two packages. Inlining them writes the cite
+  four times or drops it from three, and the alpha report names
+  page-citing errors as what bought trust in the output.
+
+- **`go test -race` stays.** There is no concurrency in the product, so it
+  guards only the parallel harness. It is the check that catches the day
+  someone adds some, which the sixteen independent members make a live
+  temptation rather than a theoretical one. `gen.Engine` and
+  `render.Renderer` are in fact safe to share -- they hold only the
+  immutable charts, and each `Booklet` builds its own encoder -- which is
+  exactly what would make that change look free.
+
+- **The schema and `EngineVersion` move only for the reasons `record.go`
+  names.** The schema ships, with two examples beside it, and `Decode`
+  still reads records written before grids were recorded. A change to the
+  dice order invalidates every record anyone holds: the file still parses,
+  still renders, and no longer reproduces, which is the one corruption
+  undetectable from the file itself.
+
+- **`.golangci.yml`'s depguard rules are enforcement, not decoration.**
+  The config declines to write rules for the layering edges the compiler
+  already refuses as import cycles, and writes them only for the two
+  constraints that would otherwise compile: `cmd` may not reach `tables`
+  or `dice`, and production code may not reach `internal/fixture` or
+  `internal/audit`. Removing either removes a real fence.
+
 ## Commands
 
 `task` is the whole gate — tidy, vet, golangci-lint, NilAway, `go test
