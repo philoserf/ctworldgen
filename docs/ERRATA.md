@@ -19,6 +19,13 @@ _Characters and Combat_ pp. 2–3 and p. 8 (FFE reprints of the © 1977
 text). Page cites are Book 3 printed pages unless marked B1. Printed page
 N is PDF page N+5 in Book 3 and N+6 in Book 1.
 
+That is the whole authority for **generation**, and the list is closed: a
+seed's meaning depends on it. **Description** is a separate question, and
+E011 admits one later book for it -- T5 Core Book 2 pp. 230–232, cited as
+T5 wherever it is used, changing no throw, no record field and no stamp.
+Cites marked T5 are that book, where printed page and PDF page are the
+same number.
+
 ## E001 — Where the base throws sit in the procedure (pp. 1, 5, 12)
 
 The star mapping and world creation checklist (p. 12) has three steps and
@@ -347,7 +354,7 @@ never dropped: nothing is shorter than it.
 
 Equal lengths do not suppress each other. Two jump-2 lanes between the same
 pair of groups are equally good roads, and the page gives no basis for
-preferring one — its example is a *longer* lane made redundant by *shorter*
+preferring one — its example is a _longer_ lane made redundant by _shorter_
 ones, and nothing more.
 
 This is also the only reading that is a function of the record. Suppressing
@@ -384,7 +391,7 @@ both ways. The listing and the booklet cite it where they suppress._
 ## E008 — How a sector's documents present its sixteen sub-sectors (pp. 1–4)
 
 E006 assembles a sector the book does not print. Nothing on pp. 1–12 then
-says how to *read* one: p. 1 maps "in convenient segments, called
+says how to _read_ one: p. 1 maps "in convenient segments, called
 subsectors" and p. 4 asks the referee to keep "at least one (and preferably
 several) pages in a central notebook", and both sentences are about a
 subsector. The sector is the tool's, so how its documents are laid out is a
@@ -455,6 +462,187 @@ _Never stamped. Like E007 this reading governs the documents rather than
 the generation: the record is unchanged and carries no member field, and
 which sub-sector a world or a lane belongs to is read back off its hex.
 The listing and the booklet cite it where they present a member._
+
+## E009 — Reading a technological levels table downward (p. 10)
+
+Pp. 10–11 print TECHNOLOGICAL LEVELS: ten columns over rows 0 through 18 —
+Personal, Armor, Special, Computers and Communication on p. 10, Water,
+Land, Air, Space and Fuels on p. 11. Most cells are blank. A world at
+technological index 12 finds an entry in one column and nothing in the
+row beside it, and the pages nowhere say how to read that.
+
+Taken literally, a row is what the index means, and index 12 means grav
+belts, drives N or less, a Model/6 computer and nothing else at all — no
+weapon, no armour, no radio, on a world that builds jump drives.
+
+**The reading:** an entry printed at level _N_ is the best of its kind
+available at _N_ and at every level above it, until the next entry in
+that column. A world's technological index is read by taking, in each
+column, the **last entry at or below it**.
+
+P. 10's prose is what forces this. Under the table it says the tables
+"determine the general quality and capability of local industry", that
+they "indicate the general types or categories of goods in general use on
+the world", and that "in most cases, such goods are the best which may be
+produced locally." A superlative over what a world can make is not a
+statement about one printed row; it is a statement about everything at or
+below its level. The same sentence explains why the columns are sparse:
+the page prints a category where it changes and leaves it standing where
+it does not.
+
+So the index-12 world above has laser rifles (p. 10, level 9), reflec
+armour (10), a beam laser (9), a Model/6 (12) and television (6), and on
+p. 11 hovercraft on water and land (7), grav belts (12), drives N or less
+(12) and fusion (8).
+
+The same rule is applied to the borrowed charts of E011, which are sparse
+in the same way and for the same reason.
+
+_Never stamped. Like E007 and E008 this reading governs the documents
+rather than the generation: the index is thrown from the p. 9 matrix
+(R12) and no step of pp. 1–12 reads back from pp. 10–11. The record is
+unchanged._
+
+## E010 — A hole in the technological levels tables is not an absence (pp. 10–11)
+
+P. 11 closes the second table with this:
+
+> The technological level tables have several spaces or holes, and such
+> gaps should be filled in by the referee or the players when they
+> discover items or devices of interest.
+
+So a blank is deliberate. It is neither a transcription error nor a
+statement that the world has none of that thing, and the tables are
+printed incomplete on purpose. This is the invitation p. 8 makes for the
+descriptive tables, made again; E004 answers that one the same way.
+
+E009 covers most of it: a hole is the entry above it carrying forward.
+Two cases it does not cover are settled here.
+
+### 1. A column with nothing at or below the index
+
+Below level 1 the Computers column is empty, below 7 the Space column is,
+and Armor has nothing at 0. There is no entry to carry forward, and the
+page does not say the world has no computers — it says the referee fills
+the gap.
+
+**The reading:** the gloss omits the column. It does not print "none", and
+it does not print the entry from _above_ the index. Saying nothing is what
+the page does.
+
+### 2. The entry printed across the columns rather than in one
+
+Row 16 of p. 11 prints `———— Matter Transport ————` spanning the surface
+and atmosphere transport columns rather than sitting in Water, Land or
+Air. It belongs to no single column and cannot be carried forward in one.
+
+**The reading:** it is glossed as a line of its own, applying at index 16
+and above, and it is not treated as the Water, Land or Air entry for those
+levels — which keeps hovercraft (level 7) and grav belts (12) standing in
+their own columns, as the page prints them.
+
+_Never stamped, for E009's reasons._
+
+## E011 — A later edition may be cited for description, and T5 is the one that is (pp. 10–11; T5 Core Book 2 pp. 230–232)
+
+Everything else in this file is a reading of the held © 1977 pages. This
+entry admits a second book, and says exactly how far.
+
+**Generation and description are not the same authority.** Every throw,
+modifier, order and cap in this tool comes from Book 3 pp. 1–12 and Book 1
+pp. 2–3 and 8, and from nothing else; that list is closed, because a
+seed's meaning depends on it. What a value _means_ at the table is a
+different question, and pp. 10–11 are the one place where the held page
+answers it badly enough to matter. Read under E009 and E010 they still
+give a referee ten proper nouns of 1977 shorthand — `Model/1 bis`,
+`Ablat`, `Reflec`, `Drives N or less` — and no sense of what the world in
+front of him is like.
+
+**The reading:** a later edition may be cited for **description**, under
+three conditions. It is named in the document where it is used, so a
+reader knows whose statement he is reading. The borrowing is written down
+here, with its pages. And it changes no throw, no record field and no
+stamp.
+
+### What is taken, and from where
+
+**T5 Core Book 2, pp. 230–232** — `Tech Level Chart 1`, `2` and `3` — read
+visually. Twelve descriptive columns over TL 0 through 21: Era, Energy,
+Society, Environ and Comms (T1); Transport, Medicine, Science and
+Computers (T2); Speed and Personal and Heavy Weapons (T3). The band a
+level sits in is taken with them.
+
+Printed page and PDF page are the same number in T5, unlike Book 3, where
+printed N is PDF N+5.
+
+Three things recommend it over the other editions held. Its scale covers
+0 through 18 with room over, and 18 is where this tool's index caps
+(E004 part 3), so no level is left unglossed. Its charts are sparse in
+exactly the way pp. 10–11 are, so E009 reads both. And it is **Far Future
+Enterprises' own** — "Copyright © 2015-2019 Far Future Enterprises", T5
+Core Book 3 PDF p. 4, the page that also carries FFE's Fair Use Policy
+notice — so this is one FFE book glossing another rather than a borrowing
+across a copyright.
+
+### What is not taken
+
+Nothing that generates. T5 throws for its worlds differently and none of
+that is here.
+
+T5's fractional rows — 1.3, 1.6, 3.3 and 3.6 — are dropped. A
+technological index is an integer.
+
+Bands Uhigh (19–21) and Fantastic (22+) are above this tool's cap of 18
+and are not carried.
+
+### The same table is printed five times and no two printings agree
+
+T5 prints this table in Core Book 2 at pp. 230, 231 and 232, and a
+cut-down version in Core Book 3 at pp. 168 and 172. The Era column differs
+between them:
+
+| Level | Book 2 pp. 230–232               | Book 3 p. 168      | Book 3 p. 172                    |
+| ----- | -------------------------------- | ------------------ | -------------------------------- |
+| 9     | 2050 AD                          | 2020 AD            | 2020 AD                          |
+| 11    | Imperial Average Circa Year Zero | Imperial Year 0    | Imperial Average Circa Year Zero |
+| 13    | Imperial Maximum Circa 550       | Imperial Year 550  | Imperial Maximum Post Civil War  |
+| 15    | Imperial Maximum Circa 1107      | Imperial Year 1107 | Imperial Year 1107               |
+
+Book 2 also disagrees with itself at level 3: pp. 230 and 232 print
+"Industrial Revolution 1700 AD" and p. 231 prints "Industrialization
+1700 AD". Book 3's printings omit the 1.3 row that Book 2 carries, and
+print an Era at level 17 ("Circa 1902") that Book 2 leaves blank.
+
+**The reading:** **Book 2 pp. 230–232 govern.** They are the fullest
+printing and the only one carrying the descriptive columns, so taking the
+Era from anywhere else would mean reading one row out of two books. Where
+those three pages disagree with each other — level 3 — the two that agree
+are taken.
+
+### The bands
+
+Read off Book 2 p. 232, where the brackets are tightest: Low 4–6, Mid 7–9,
+High 10–12, Vhigh 13–15, Xhigh 16–18. Vlow is everything below Low, which
+is 0 through 3 plus the fractional rows — the one band four integers wide
+rather than three, because the fractional rows sit inside it.
+
+### The Imperial anchors are carried, and attributed
+
+T5's Era column is real-world history to level 10 — Stone Age, Age of
+Sail, Nuclear Age 1950 AD, 2100 AD — and Third Imperium history from 11 up
+— "Imperial Average Circa Year Zero", "Darrian Maximum". Book 3 pp. 1–12
+name no setting at all: they chart a subsector and say nothing about who
+lives in it.
+
+**The reading:** the Imperial anchors are carried rather than dropped, and
+the document says whose statement they are. Dropping them would leave
+eight of the nineteen levels with a band and no anchor, and the levels
+they cover are the ones a generated world reaches most often. A referee
+running the Third Imperium gets something; one running his own subsector
+gets a clause he can ignore, which is what the citation makes legible.
+
+_Never stamped, for E009's reasons. The record carries no gloss, and two
+referees rendering the same record read the same page._
 
 ## Noted discrepancies (not stamped)
 
