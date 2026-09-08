@@ -26,8 +26,8 @@ const faces = 6
 // made and discarded.
 type Stream struct{ r *rand.Rand }
 
-// NewStream seeds a PCG generator with the recorded seed in both words,
-// so that the single seed a record carries reproduces the whole stream.
+// NewStream seeds a PCG generator from the seed a record carries. Both
+// words take that seed, so the one number reproduces the whole stream.
 func NewStream(seed uint64) *Stream {
 	// A deterministic generator is the point: a record must reproduce from
 	// its recorded seed, which a cryptographic source cannot do.

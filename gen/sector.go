@@ -142,8 +142,8 @@ func routeOrder(a, b starmap.Route) int {
 }
 
 // CrossingRoutes returns the routes whose two ends sit in different
-// members: the ones a referee generating sixteen subsectors one at a time
-// could never have found. It is exported because it is what the sector
+// members. Those are the ones a referee generating sixteen subsectors one
+// at a time could never have found. It is exported because it is what the sector
 // golden pins and what the listing would highlight.
 func CrossingRoutes(record *starmap.Record) []starmap.Route {
 	crossing := []starmap.Route{}

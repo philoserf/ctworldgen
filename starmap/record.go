@@ -176,9 +176,9 @@ func (s *Record) Stamp(id string) {
 	}
 }
 
-// Decode reads a record and holds it to what record.schema.json states:
-// the three provenance constants, the fields it marks required, the two
-// grids it names, and no field it does not define.
+// Decode reads a record and holds it to what record.schema.json states.
+// That is the three provenance constants, the fields it marks required,
+// the two grids it names, and no field it does not define.
 //
 // Every one of those is two obligations -- the schema, and a check here --
 // because a schema alone rejects nothing at read time. Rejecting an
@@ -229,7 +229,7 @@ func Decode(r io.Reader) (*Record, error) {
 	return &record, nil
 }
 
-// pastTheRecord reads what follows the document Decode took, and says
+// pastTheRecord reads what follows the document [Decode] took, and says
 // which of the three things it was.
 //
 // Three rather than one, because collapsing them loses the diagnosis.
@@ -252,10 +252,10 @@ func pastTheRecord(dec *json.Decoder) error {
 	}
 }
 
-// Marshal renders a record as the JSON a golden holds: indented, with a
-// trailing newline, so that a fixture is readable and diffs line by line.
+// Marshal renders a record as the JSON a golden holds. It is indented and
+// ends in a newline, so that a fixture is readable and diffs line by line.
 //
-// It lives here, beside Decode, because the goldens are compared byte for
+// It lives here, beside [Decode], because the goldens are compared byte for
 // byte against what it writes: a second definition of this shape anywhere
 // would let a fixture and the command drift apart, and the diff would read
 // as a moved dice stream when the stream had not moved.
@@ -296,22 +296,22 @@ func (w World) DigitString() (string, error) {
 	return built.String(), nil
 }
 
-// Validate holds a record to what record.schema.json states: the two
-// grids it names, the three provenance constants, the fields it marks
+// Validate holds a record to what record.schema.json states. That is the
+// two grids it names, the three provenance constants, the fields it marks
 // required, and every hex on the record's own grid.
 //
-// It is exported so that both callers can reach it: Decode on the read
+// It is exported so that both callers can reach it: [Decode] on the read
 // path, and gen's six-hundred-seed sweep, which holds the engine's own
 // output to the contract the reader enforces. Checks private to this
 // package would leave that sweep testing the rules and never the schema,
 // covered instead by whatever the four goldens happen to exercise.
 //
-// Marshal does not call it, deliberately. Writing is the referee's
+// [Marshal] does not call it, deliberately. Writing is the referee's
 // notebook page and he is allowed to hand-edit it; the assertion belongs
 // in the test, not on the write path.
 //
 // It does not repair its input. A record written before grids were
-// recorded carries no grid, and Decode fills that in before calling here
+// recorded carries no grid, and [Decode] fills that in before calling here
 // (the reporter of issue 1 has sixteen such files) -- reading an older
 // shape is a read-path concern, and a zero grid fails this.
 func (s *Record) Validate() error {
@@ -446,7 +446,7 @@ func (s *Record) carriesTheFieldsTheSchemaRequires() error {
 }
 
 // onItsOwnGrid holds every hex the record carries against the grid the
-// record says it is on. Hex bounds itself by the largest grid there is --
+// record says it is on. [Hex] bounds itself by the largest grid there is --
 // an identifier is four digits whether it names a subsector or a sector --
 // so 0910 parses, and this is the only thing that refuses it on a p. 3
 // record.
