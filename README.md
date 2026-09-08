@@ -221,3 +221,11 @@ bypass -- so work lands on a branch and merges through CI.
 MIT. See `LICENSE`. Traveller is © Far Future Enterprises; this tool
 implements the rules and reproduces none of the text beyond the table
 labels a listing needs.
+
+One thing is cited rather than implemented. What a technological index
+_means_ is glossed from Traveller5 Core Book 2 pp. 230-232 (© 2015-2019
+Far Future Enterprises), because Book 3 pp. 10-11 print it as ten sparse
+columns of 1977 shorthand that cannot be read at a table. The borrowing
+is description only -- it changes no throw, no record field and no stamp
+-- and both books are FFE's, so this is one of their books glossing
+another. `docs/ERRATA.md` E011 states its whole extent.

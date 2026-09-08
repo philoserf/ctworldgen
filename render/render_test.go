@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -522,11 +523,20 @@ func line(s string) string {
 	return first
 }
 
-// TestTheListingSaysWhyTheTechnologicalIndexIsBare: pp. 10-11 are not
-// transcribed, so every world's technological index prints its digit
-// alone. That is 670 bare lines in a sector, and the
-// listing says once why, rather than in every one of them or nowhere.
-func TestTheListingSaysWhyTheTechnologicalIndexIsBare(t *testing.T) {
+// TestEveryWorldsTechnologicalIndexIsGlossedAsItsOwn: pp. 10-11 are read
+// now, so every world's index carries a description of what a world at
+// that level is like (issue 1 #4).
+//
+// The check is keyed to each world's own index and read off that world's
+// own detail page, because the shape that has failed here before is a
+// search of the whole section that another world's line answers. Dropping
+// half the roster passed a check written that way once, and a label check
+// written that way passed with the label of a different world.
+//
+// The band is retyped here from T5 p. 232 rather than asked of the
+// tables, so this holds the listing against the page and not against the
+// code that wrote it.
+func TestEveryWorldsTechnologicalIndexIsGlossedAsItsOwn(t *testing.T) {
 	t.Parallel()
 
 	for _, golden := range fixture.Goldens() {
@@ -534,28 +544,212 @@ func TestTheListingSaysWhyTheTechnologicalIndexIsBare(t *testing.T) {
 			t.Parallel()
 
 			record := generated(t, golden)
-			written := listing(t, record)
-
 			if len(record.Worlds) == 0 {
 				return
 			}
 
+			written := listing(t, record)
+
+			// The borrowed book is named once, where a reader meets it
+			// before he meets anything it says (ERRATA E011).
 			details := section(t, written, "The worlds in detail")
-			if said := strings.Count(details, "technological levels tables of pp. 10-11"); said != 1 {
-				t.Errorf("the detail section explains the bare technological index %d times, want once", said)
+			if said := strings.Count(details, "Core Book 2 pp. 230-232"); said != 1 {
+				t.Errorf("the detail section names the borrowed book %d times, want once", said)
 			}
 
-			for _, page := range detailPages(t, written) {
-				start := strings.Index(page, "- **Technological index ")
-				if start < 0 {
-					t.Fatalf("a detail page has no technological index line:\n%s", page)
-				}
+			pages := detailPages(t, written)
 
-				if got := line(page[start:]); !strings.HasSuffix(got, ".**") {
-					t.Errorf("the technological index line carries a description: %q", got)
-				}
+			for _, world := range record.Worlds {
+				assertGlossIsTheWorldsOwn(t, pages[world.Hex.String()], world)
 			}
 		})
+	}
+}
+
+func assertGlossIsTheWorldsOwn(t *testing.T, page string, world starmap.World) {
+	t.Helper()
+
+	if page == "" {
+		t.Fatalf("%s has no detail page", world.Hex)
+	}
+
+	start := strings.Index(page, "- **Technological index ")
+	if start < 0 {
+		t.Fatalf("%s has no technological index line:\n%s", world.Hex, page)
+	}
+
+	got := line(page[start:])
+
+	if want := fmt.Sprintf("- **Technological index %s.**", digitOf(t, world.TechIndex)); !strings.HasPrefix(got, want) {
+		t.Errorf("%s: the line is %q, want it to open %q", world.Hex, got, want)
+	}
+
+	if want := bandOn232(t, world.TechIndex) + " Tech (T5)"; !strings.Contains(got, want) {
+		t.Errorf("%s at index %d is glossed %q, and p. 232 brackets that level as %q",
+			world.Hex, world.TechIndex, got, want)
+	}
+
+	// A column the page prints nothing in is dropped, not joined as an
+	// empty clause (ERRATA E010). That failure is invisible to every
+	// check above and to the goldens, which are written by the code that
+	// would carry it.
+	for _, malformed := range []string{"; ;", ": ;", "; .", ";.", ": ."} {
+		if strings.Contains(got, malformed) {
+			t.Errorf("%s: the gloss joins an empty clause (%q): %q", world.Hex, malformed, got)
+		}
+	}
+}
+
+// bandOn232 is T5 Core Book 2 p. 232's bracket for a level, retyped.
+func bandOn232(t *testing.T, index int) string {
+	t.Helper()
+
+	for _, band := range []struct {
+		name     string
+		from, to int
+	}{
+		{"Vlow", 0, 3},
+		{"Low", 4, 6},
+		{"Mid", 7, 9},
+		{"High", 10, 12},
+		{"Vhigh", 13, 15},
+		{"Xhigh", 16, 18},
+	} {
+		if index >= band.from && index <= band.to {
+			return band.name
+		}
+	}
+
+	t.Fatalf("no band on p. 232 covers level %d", index)
+
+	return ""
+}
+
+// TestEveryBulletCarriesADescription is what let two branches go when the
+// technological index gained its gloss: the listing's bullet with no
+// description and the booklet's. Until then the technological index line
+// was the one bullet that ended at its label.
+//
+// Nothing outside bullets can promise that, so this sweeps the goldens
+// for a bullet that ends at its label. A bullet that lost its description
+// would otherwise draw a trailing space in the listing and, in the
+// booklet, a label with the pen never advancing past it.
+func TestEveryBulletCarriesADescription(t *testing.T) {
+	t.Parallel()
+
+	bare := regexp.MustCompile(`(?m)^- \*\*[^*]+\*\*\s*$`)
+
+	for _, golden := range fixture.Goldens() {
+		t.Run(golden.File, func(t *testing.T) {
+			t.Parallel()
+
+			written := listing(t, generated(t, golden))
+			if found := bare.FindString(written); found != "" {
+				t.Errorf("a bullet ends at its label: %q", found)
+			}
+		})
+	}
+}
+
+// TestTheGlossReadsBothTablesDownward is the reading itself, at five
+// levels chosen because four of them say something no other level does.
+//
+// The goldens between them carry indices 0 and 2 through 15 and 17, and
+// no world at 1, 16 or 18. So 16 -- where p. 11 prints matter transport,
+// the one entry that spans its columns -- could not be expressed by any
+// fixture at all, and neither could the cap. The record here is built to
+// carry them.
+func TestTheGlossReadsBothTablesDownward(t *testing.T) {
+	t.Parallel()
+
+	const matterTransport = "matter transport"
+
+	record := starmap.New(1, aramis, 0)
+
+	for index, level := range []int{0, 1, 12, 16, 18} {
+		world := world(t, hexOf(t, 1, index+1), "")
+
+		world.TechIndex = level
+
+		digits, err := world.DigitString()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		world.Digits = digits
+		record.Worlds = append(record.Worlds, world)
+	}
+
+	pages := detailPages(t, listing(t, record))
+
+	for _, want := range glossedLevels(matterTransport) {
+		page := pages[want.hex]
+		if page == "" {
+			t.Fatalf("%s has no detail page", want.hex)
+		}
+
+		start := strings.Index(page, "- **Technological index ")
+		if start < 0 {
+			t.Fatalf("%s has no technological index line", want.hex)
+		}
+
+		got := line(page[start:])
+
+		for _, says := range want.says {
+			if !strings.Contains(got, says) {
+				t.Errorf("%s (%s) does not say %q:\n%s", want.hex, want.reason, says, got)
+			}
+		}
+
+		for _, silent := range want.silent {
+			if strings.Contains(got, silent) {
+				t.Errorf("%s (%s) says %q and should not:\n%s", want.hex, want.reason, silent, got)
+			}
+		}
+	}
+}
+
+// glossedLevel is one level and what its gloss must and must not say.
+type glossedLevel struct {
+	hex    string
+	reason string
+	says   []string
+	silent []string
+}
+
+// glossedLevels is the five, and the reason each one is here.
+func glossedLevels(matterTransport string) []glossedLevel {
+	return []glossedLevel{
+		{
+			hex:    "0101",
+			reason: "level 0: three of Book 3's columns print nothing at or below it, and a hole is not an absence (E010)",
+			says:   []string{"Vlow Tech (T5), Primitive Stone Age", "Club, cudgel, Spear"},
+			silent: []string{"Jack", "Abacus", "Non-starships"},
+		},
+		{
+			hex:    "0102",
+			reason: "level 1: every entry is its own row, so nothing is carried",
+			says:   []string{"Bronze Age 3500 BC", "Dagger, pike, Sword", "Jack", "Abacus"},
+			silent: []string{"Cities"},
+		},
+		{
+			hex:    "0103",
+			reason: "level 12: the weapon is printed at 9 and the armour at 10; only the drive is its own row",
+			says:   []string{"High Tech (T5)", "Laser Rifle", "Reflec", "Model/6", "Drives N or less"},
+			silent: []string{matterTransport},
+		},
+		{
+			hex:    "0104",
+			reason: "level 16: p. 11 prints matter transport across the transport columns (E010 part 2)",
+			says:   []string{"Xhigh Tech (T5), Darrian Maximum", matterTransport, "Grav belts"},
+			silent: nil,
+		},
+		{
+			hex:    "0105",
+			reason: "level 18, the cap: nothing is printed at it, so everything is carried up",
+			says:   []string{"Xhigh Tech (T5)", "Laser Rifle", "Battle Dress", "All drives", matterTransport},
+			silent: nil,
+		},
 	}
 }
 

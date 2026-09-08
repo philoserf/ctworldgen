@@ -47,27 +47,40 @@ with a test named in it.
 ## Technological levels (pp. 10-11)
 
 These two pages carry no rule and so get no R-number, but they are inside
-pp. 1-12 and so get a row. They were declared out of scope by the
-retired PRD; issue 1 #4 reopened them, and they are now simply not built.
+pp. 1-12 and so get a row. They were declared out of scope by the retired
+PRD; issue 1 #4 reopened them, and they are built.
 
-| Pages                                      | Page  | Implementation                       | Test                                               | Status                  |
-| ------------------------------------------ | ----- | ------------------------------------ | -------------------------------------------------- | ----------------------- |
-| The technological levels tables, rows 0-18 | 10-11 | none; `render.techIndexNote` says so | `TestTheListingSaysWhyTheTechnologicalIndexIsBare` | not built -- issue 1 #4 |
+| Pages                                       | Page  | Implementation                                                    | Test                                                                                                                   | Status |
+| ------------------------------------------- | ----- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------ |
+| The technological levels tables, rows 0-18  | 10-11 | `tables.TechLevels`, `tables.Held`                                | `TestTheTechnologicalLevelsTableIsThePrintedPages`, `TestATechnologicalLevelIsReadDownward`, `TestAHoleIsNotAnAbsence` | done   |
+| The borrowed chart that glosses an index    | T5    | `tables.Borrowed`, `tables/data/technological_eras.json`          | `TestTheBorrowedTechnologyChartIsThePrintedPages`, `TestTheBandsAreTheBracketsOnPageTwoThirtyTwo`                      | done   |
+| The gloss on every world, in both documents | 10-11 | `render.technological`, `render.clauses`, `render.technologyNote` | `TestEveryWorldsTechnologicalIndexIsGlossedAsItsOwn`, `TestTheGlossReadsBothTablesDownward`                            | done   |
 
 Two tables, rows 0 through 18: Weapons (Personal, Armor, Special,
 Computers, Communication) on p. 10 and Transportation (Water, Land, Air,
-Space, Fuels) on p. 11. They say what a technological index _means_ during
-play -- what a world can build -- and they generate nothing: R12 produces
-the index from the p. 9 matrix, and no step of pp. 1-12 reads back from
-these two pages. So they are not transcribed, and the listing prints the
-index digit with no description and one sentence saying why.
+Space, Fuels) on p. 11. They generate nothing -- R12 produces the index
+from the p. 9 matrix, and no step of pp. 1-12 reads back from these two
+pages -- so everything here is description.
 
-The pages themselves are printed incomplete, and say so: "The
+Three readings make them usable. The pages never say how to read a row,
+and taken literally an index of 12 means a world that builds jump drives
+and has no weapon, no armour and no radio; **E009** takes the last entry
+at or below the index in each column, which is what p. 10's own prose
+asks for. The pages are printed incomplete and say so -- "The
 technological level tables have several spaces or holes, and such gaps
-should be filled in by the referee or the players when they discover items
-or devices of interest" (p. 11). That is the invitation p. 8 makes for the
-descriptive tables (E004), made again, and answered here the same way: by
-the referee at the table, not by the tool.
+should be filled in by the referee or the players when they discover
+items or devices of interest" (p. 11) -- and **E010** reads a hole as the
+entry above it carrying forward, or as nothing at all where no entry
+stands above it. That is the invitation p. 8 makes for the descriptive
+tables (E004), answered the same way.
+
+**E011** is the third and the largest: read as E009 and E010 read them,
+the pages still give a referee ten proper nouns of 1977 shorthand, so a
+later edition is cited for description alone. T5 Core Book 2 pp. 230-232
+supply the band a level sits in and what its era, energy, society and
+settlements are; the held page supplies what a world builds, and speaks
+wherever the two cover the same ground. Generation is untouched and its
+authority is unchanged.
 
 ## The tool
 
@@ -109,16 +122,19 @@ Each entry of `ERRATA.md` states its own stamping condition. The record's
 `errata` array grows with the milestones the way the schema does: a
 reading is stamped only once the engine implements the step it governs.
 
-| Reading | Governs                                                           | Cited in                                                                    | Stamped                                      |
-| ------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------- |
-| E001    | Where the base throws sit in the procedure                        | `gen/gen.go`, `tables/tables.go`                                            | where any base throw was made, now           |
-| E002    | The order of the passes, hexes and characteristics                | `gen/gen.go`, `starmap/hex.go`                                              | every record, now                            |
-| E003    | Which pairs are examined, when a die is thrown, in what order     | `gen/gen.go`, `tables/tables.go`                                            | records with two or more worlds, now         |
-| E004    | Floored at 0, capped only at the technological index              | `gen/gen.go`, `tables/tables.go`, `render/render.go`                        | where a floor or the cap actually bound, now |
-| E005    | The string of digits: order, alphabet, no separator               | `starmap/record.go`, `starmap/digit.go`                                     | records with at least one world, now         |
-| E006    | Sixteen subsectors on one grid, and the route pass at their seams | `gen/sector.go`, `starmap/hex.go`, `starmap/record.go`                      | every sector record                          |
-| E007    | Which lanes the documents draw                                    | `render/lanes.go`, `render/render.go`, `cmd/ctworldgen/main.go`             | never -- it governs the documents            |
-| E008    | How a sector's documents present its sixteen sub-sectors          | `render/sector.go`, `render/layout.go`, `render/render.go`, `render/pdf.go` | never -- it governs the documents            |
+| Reading | Governs                                                             | Cited in                                                                      | Stamped                                      |
+| ------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------- |
+| E001    | Where the base throws sit in the procedure                          | `gen/gen.go`, `tables/tables.go`                                              | where any base throw was made, now           |
+| E002    | The order of the passes, hexes and characteristics                  | `gen/gen.go`, `starmap/hex.go`                                                | every record, now                            |
+| E003    | Which pairs are examined, when a die is thrown, in what order       | `gen/gen.go`, `tables/tables.go`                                              | records with two or more worlds, now         |
+| E004    | Floored at 0, capped only at the technological index                | `gen/gen.go`, `tables/tables.go`, `render/render.go`                          | where a floor or the cap actually bound, now |
+| E005    | The string of digits: order, alphabet, no separator                 | `starmap/record.go`, `starmap/digit.go`                                       | records with at least one world, now         |
+| E006    | Sixteen subsectors on one grid, and the route pass at their seams   | `gen/sector.go`, `starmap/hex.go`, `starmap/record.go`                        | every sector record                          |
+| E007    | Which lanes the documents draw                                      | `render/lanes.go`, `render/render.go`, `cmd/ctworldgen/main.go`               | never -- it governs the documents            |
+| E008    | How a sector's documents present its sixteen sub-sectors            | `render/sector.go`, `render/layout.go`, `render/render.go`, `render/pdf.go`   | never -- it governs the documents            |
+| E009    | Reading a technological levels table downward                       | `tables/tables.go`, `render/render.go`                                        | never -- it governs the documents            |
+| E010    | A hole in those tables is not an absence                            | `tables/tables.go`, `render/render.go`                                        | never -- it governs the documents            |
+| E011    | A later edition may be cited for description; T5 is the one that is | `tables/tables.go`, `tables/data/technological_eras.json`, `render/render.go` | never -- it governs the documents            |
 
 Both directions are checked by `internal/audit`: every `E00N` cited in the
 code or the documents resolves to a heading in `ERRATA.md`, and every

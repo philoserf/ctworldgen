@@ -169,7 +169,7 @@ The p. 3 sub-sector hex grid. The odd-numbered columns sit high and the even-num
 
 ## The worlds in detail
 
-The technological index carries its digit and no description. The technological levels tables of pp. 10-11 say what an index means during play rather than how it is generated, so this tool does not read them; p. 11 asks the referee or the players to fill in their holes as play discovers them.
+What a technological index means is described in two halves. The first is T5's -- Core Book 2 pp. 230-232, cited for description alone and never for a throw (ERRATA E011): the band, the era it anchors the level to, and the level's energy, society and settlements. The second is pp. 10-11, read downward -- an entry printed at a level is the best of its kind until the next one (E009), and a hole is the page inviting the referee to fill it rather than an absence (E010). Where both books cover the same ground the held page speaks.
 
 ### 0101 &mdash; B63165A8
 
@@ -180,7 +180,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 6.** 1,000,000
 - **Government 5.** Feudal Technocracy. Ruling functions are performed by specific individuals for persons who agree to be ruled by them. Relationships are based on the performance of technical activities which are mutually beneficial.
 - **Law level A.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
-- **Technological index 8.**
+- **Technological index 8.** Mid Tech (T5), 2000 AD: Renewables; Superpowers; Suburbs. Pp. 10-11: Laser Carbine; Mesh; Model/2 bis; Air/Raft; Non-starships.
 - **Bases.** naval, scout
 
 ### 0103 &mdash; C4005638
@@ -192,7 +192,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 5.** 100,000
 - **Government 6.** Captive Government. Ruling functions are performed by an imposed leadership answerable to an outside group. A colony or conquered area.
 - **Law level 3.** Weapons of a strict military nature (such as machine guns or automatic rifles, though not submachine guns) are prohibited.
-- **Technological index 8.**
+- **Technological index 8.** Mid Tech (T5), 2000 AD: Renewables; Superpowers; Suburbs. Pp. 10-11: Laser Carbine; Mesh; Model/2 bis; Air/Raft; Non-starships.
 - **Bases.** --
 - **Clamped.** hydrographics threw -2 and is recorded as 0.
 
@@ -205,7 +205,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 5.** 100,000
 - **Government 5.** Feudal Technocracy. Ruling functions are performed by specific individuals for persons who agree to be ruled by them. Relationships are based on the performance of technical activities which are mutually beneficial.
 - **Law level 1.** Certain weapons are prohibited, including specifically 1) body pistols which are undetectable by standard detectors, 2) explosive weapons such as bombs or grenades, and 3) poison gas.
-- **Technological index 9.**
+- **Technological index 9.** Mid Tech (T5), 2050 AD: Early Fusion; Superpowers; Arcologies. Pp. 10-11: Laser Rifle; Ablat; Model/3; Air/Raft; Starships.
 - **Bases.** --
 - **Clamped.** hydrographics threw -3 and is recorded as 0.
 
@@ -218,7 +218,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 3.** 1,000
 - **Government 6.** Captive Government. Ruling functions are performed by an imposed leadership answerable to an outside group. A colony or conquered area.
 - **Law level 6.** Most firearms (all except shotguns) are prohibited. The carrying of any type of weapon openly is discouraged.
-- **Technological index 7.**
+- **Technological index 7.** Mid Tech (T5), 1975 AD: Geothermal. Solar; Superpowers; Suburbs. Pp. 10-11: Body Pistol; Mesh; Model/2; Rotary wing aircraft; Non-starships.
 - **Bases.** --
 
 ### 0107 &mdash; A9878769
@@ -230,7 +230,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 8.** 100,000,000
 - **Government 7.** Balkanization. No central ruling authority exists; rival governments compete for control. Law level refers to government nearest the starport.
 - **Law level 6.** Most firearms (all except shotguns) are prohibited. The carrying of any type of weapon openly is discouraged.
-- **Technological index 9.**
+- **Technological index 9.** Mid Tech (T5), 2050 AD: Early Fusion; Superpowers; Arcologies. Pp. 10-11: Laser Rifle; Ablat; Model/3; Air/Raft; Starships.
 - **Bases.** --
 
 ### 0109 &mdash; C5412206
@@ -242,7 +242,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 2.** 100
 - **Government 2.** Participating Democracy. Ruling function decisions are reached by the advice and consent of the citizenry directly.
 - **Law level 0.** No laws affecting weapons possession or weapons ownership.
-- **Technological index 6.**
+- **Technological index 6.** Low Tech (T5), Nuclear Age 1950 AD: Nuclear Fission; Superpowers; Suburbs. Pp. 10-11: Auto Rifle; Cloth; Model/1 bis; Rotary wing aircraft.
 - **Bases.** --
 - **Clamped.** law_level threw -1 and is recorded as 0.
 
@@ -255,7 +255,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 9.** 1,000,000,000
 - **Government A.** Charismatic Dictator. Ruling functions are performed by agencies directed by a single leader who enjoys the overwhelming confidence of the citizens.
 - **Law level B.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
-- **Technological index 6.**
+- **Technological index 6.** Low Tech (T5), Nuclear Age 1950 AD: Nuclear Fission; Superpowers; Suburbs. Pp. 10-11: Auto Rifle; Cloth; Model/1 bis; Rotary wing aircraft.
 - **Bases.** --
 
 ### 0202 &mdash; D8389977
@@ -267,7 +267,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 9.** 1,000,000,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
 - **Law level 7.** Shotguns are prohibited.
-- **Technological index 7.**
+- **Technological index 7.** Mid Tech (T5), 1975 AD: Geothermal. Solar; Superpowers; Suburbs. Pp. 10-11: Body Pistol; Mesh; Model/2; Rotary wing aircraft; Non-starships.
 - **Bases.** scout
 
 ### 0203 &mdash; E87459E2
@@ -279,7 +279,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 5.** 100,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
 - **Law level E.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
-- **Technological index 2.**
+- **Technological index 2.** Vlow Tech (T5), Age Of Sail 1500 AD: Wind. Sail; Nations; Cities. Pp. 10-11: Halberd, Broadsword; Jack; Abacus.
 - **Bases.** --
 
 ### 0204 &mdash; B974542A
@@ -291,7 +291,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 5.** 100,000
 - **Government 4.** Representative Democracy. Ruling functions are performed by elected representatives.
 - **Law level 2.** Portable energy weapons, such as laser rifles or carbines are prohibited. Ship's gunnery is not affected.
-- **Technological index A.**
+- **Technological index A.** High Tech (T5), 2100 AD: Practical Fusion; Non-Geographic Communities; Arcologies. Pp. 10-11: Laser Rifle; Reflec; Model/4; Air/Raft; Drives H or less.
 - **Bases.** --
 
 ### 0206 &mdash; E94E9B74
@@ -303,7 +303,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 9.** 1,000,000,000
 - **Government B.** Non-Charismatic Leader. A previous charismatic dictator has been replaced by a leader through normal channels.
 - **Law level 7.** Shotguns are prohibited.
-- **Technological index 4.**
+- **Technological index 4.** Low Tech (T5), Mechanization 1900 AD: Electricity; Democracies; Skyscrapers. Pp. 10-11: Revolver, Shotgun; Cloth; Adding Machine; Dirigibles.
 - **Bases.** --
 
 ### 0209 &mdash; E3384207
@@ -315,7 +315,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 4.** 10,000
 - **Government 2.** Participating Democracy. Ruling function decisions are reached by the advice and consent of the citizenry directly.
 - **Law level 0.** No laws affecting weapons possession or weapons ownership.
-- **Technological index 7.**
+- **Technological index 7.** Mid Tech (T5), 1975 AD: Geothermal. Solar; Superpowers; Suburbs. Pp. 10-11: Body Pistol; Mesh; Model/2; Rotary wing aircraft; Non-starships.
 - **Bases.** --
 
 ### 0302 &mdash; B200300B
@@ -327,7 +327,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 3.** 1,000
 - **Government 0.** No government structure. In many cases, family bonds will predominate.
 - **Law level 0.** No laws affecting weapons possession or weapons ownership.
-- **Technological index B.**
+- **Technological index B.** High Tech (T5), Imperial Average Circa Year Zero: [FusionPlus]; Non-Geographic Communities; Arcologies. Pp. 10-11: Laser Rifle; Reflec; Model/5; Air/Raft; Drives K or less.
 - **Bases.** --
 - **Clamped.** government threw -1 and is recorded as 0.
 - **Clamped.** law_level threw -3 and is recorded as 0.
@@ -341,7 +341,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 7.** 10,000,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
 - **Law level 8.** Long bladed weapons (all blade weapons except daggers) are strictly controlled. Open possession in public is prohibited. Ownership is, however, not restricted.
-- **Technological index F.**
+- **Technological index F.** Vhigh Tech (T5), Imperial Maximum Circa 1107: Exotics. Collectors; Mindwipe; Arcologies. Pp. 10-11: Laser Rifle; Battle Dress; Model/7; Grav belts; All drives.
 - **Bases.** --
 
 ### 0305 &mdash; C1006549
@@ -353,7 +353,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 6.** 1,000,000
 - **Government 5.** Feudal Technocracy. Ruling functions are performed by specific individuals for persons who agree to be ruled by them. Relationships are based on the performance of technical activities which are mutually beneficial.
 - **Law level 4.** Light assault weapons (such as submachine guns) are prohibited.
-- **Technological index 9.**
+- **Technological index 9.** Mid Tech (T5), 2050 AD: Early Fusion; Superpowers; Arcologies. Pp. 10-11: Laser Rifle; Ablat; Model/3; Air/Raft; Starships.
 - **Bases.** --
 - **Clamped.** atmosphere threw -1 and is recorded as 0.
 
@@ -366,7 +366,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 1.** 10
 - **Government 0.** No government structure. In many cases, family bonds will predominate.
 - **Law level 0.** No laws affecting weapons possession or weapons ownership.
-- **Technological index E.**
+- **Technological index E.** Vhigh Tech (T5), Imperial Maximum Circa 550: Exotics. Collectors; Temporary Personality Transfer; Arcologies. Pp. 10-11: Laser Rifle; Battle Dress; Model/7; Grav belts; Drives U or less.
 - **Bases.** --
 - **Clamped.** government threw -2 and is recorded as 0.
 - **Clamped.** law_level threw -4 and is recorded as 0.
@@ -380,7 +380,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 6.** 1,000,000
 - **Government 4.** Representative Democracy. Ruling functions are performed by elected representatives.
 - **Law level 3.** Weapons of a strict military nature (such as machine guns or automatic rifles, though not submachine guns) are prohibited.
-- **Technological index 8.**
+- **Technological index 8.** Mid Tech (T5), 2000 AD: Renewables; Superpowers; Suburbs. Pp. 10-11: Laser Carbine; Mesh; Model/2 bis; Air/Raft; Non-starships.
 - **Bases.** naval, scout
 
 ### 0309 &mdash; C5635758
@@ -392,7 +392,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 5.** 100,000
 - **Government 7.** Balkanization. No central ruling authority exists; rival governments compete for control. Law level refers to government nearest the starport.
 - **Law level 5.** Personal concealable firearms (such as pistols and revolvers) are prohibited.
-- **Technological index 8.**
+- **Technological index 8.** Mid Tech (T5), 2000 AD: Renewables; Superpowers; Suburbs. Pp. 10-11: Laser Carbine; Mesh; Model/2 bis; Air/Raft; Non-starships.
 - **Bases.** --
 
 ### 0401 &mdash; E3374359
@@ -404,7 +404,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 4.** 10,000
 - **Government 3.** Self-Perpetuating Oligarchy. Ruling functions are performed by a restricted minority, with little or no input from the mass of citizenry.
 - **Law level 5.** Personal concealable firearms (such as pistols and revolvers) are prohibited.
-- **Technological index 9.**
+- **Technological index 9.** Mid Tech (T5), 2050 AD: Early Fusion; Superpowers; Arcologies. Pp. 10-11: Laser Rifle; Ablat; Model/3; Air/Raft; Starships.
 - **Bases.** --
 
 ### 0405 &mdash; C4385667
@@ -416,7 +416,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 5.** 100,000
 - **Government 6.** Captive Government. Ruling functions are performed by an imposed leadership answerable to an outside group. A colony or conquered area.
 - **Law level 6.** Most firearms (all except shotguns) are prohibited. The carrying of any type of weapon openly is discouraged.
-- **Technological index 7.**
+- **Technological index 7.** Mid Tech (T5), 1975 AD: Geothermal. Solar; Superpowers; Suburbs. Pp. 10-11: Body Pistol; Mesh; Model/2; Rotary wing aircraft; Non-starships.
 - **Bases.** --
 
 ### 0406 &mdash; B110566E
@@ -428,7 +428,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 5.** 100,000
 - **Government 6.** Captive Government. Ruling functions are performed by an imposed leadership answerable to an outside group. A colony or conquered area.
 - **Law level 6.** Most firearms (all except shotguns) are prohibited. The carrying of any type of weapon openly is discouraged.
-- **Technological index E.**
+- **Technological index E.** Vhigh Tech (T5), Imperial Maximum Circa 550: Exotics. Collectors; Temporary Personality Transfer; Arcologies. Pp. 10-11: Laser Rifle; Battle Dress; Model/7; Grav belts; Drives U or less.
 - **Bases.** scout
 
 ### 0407 &mdash; D6466455
@@ -440,7 +440,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 6.** 1,000,000
 - **Government 4.** Representative Democracy. Ruling functions are performed by elected representatives.
 - **Law level 5.** Personal concealable firearms (such as pistols and revolvers) are prohibited.
-- **Technological index 5.**
+- **Technological index 5.** Low Tech (T5), 1930 AD: Oil. Petrochemicals; Dictators; Skyscrapers. Pp. 10-11: Carbine, Rifle, Pistol, SMG; Cloth; Model/1; Fixed wing aircraft.
 - **Bases.** --
 
 ### 0409 &mdash; B5538C86
@@ -452,7 +452,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 8.** 100,000,000
 - **Government C.** Charismatic Oligarchy. Ruling functions are performed by a select group of members of an organization or class which enjoys the overwhelming confidence of the citizenry.
 - **Law level 8.** Long bladed weapons (all blade weapons except daggers) are strictly controlled. Open possession in public is prohibited. Ownership is, however, not restricted.
-- **Technological index 6.**
+- **Technological index 6.** Low Tech (T5), Nuclear Age 1950 AD: Nuclear Fission; Superpowers; Suburbs. Pp. 10-11: Auto Rifle; Cloth; Model/1 bis; Rotary wing aircraft.
 - **Bases.** --
 
 ### 0501 &mdash; A310102D
@@ -464,7 +464,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 1.** 10
 - **Government 0.** No government structure. In many cases, family bonds will predominate.
 - **Law level 2.** Portable energy weapons, such as laser rifles or carbines are prohibited. Ship's gunnery is not affected.
-- **Technological index D.**
+- **Technological index D.** Vhigh Tech (T5), Imperial Maximum Circa 550: [FusionPlus]; Robots; Arcologies. Pp. 10-11: Laser Rifle; Battle Dress; Model/7; Grav belts; Drives O or less.
 - **Bases.** --
 - **Clamped.** hydrographics threw -4 and is recorded as 0.
 - **Clamped.** government threw -4 and is recorded as 0.
@@ -478,7 +478,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 5.** 100,000
 - **Government 8.** Civil Service Bureaucracy. Ruling functions are performed by government agencies employing individuals selected for their expertise.
 - **Law level 7.** Shotguns are prohibited.
-- **Technological index A.**
+- **Technological index A.** High Tech (T5), 2100 AD: Practical Fusion; Non-Geographic Communities; Arcologies. Pp. 10-11: Laser Rifle; Reflec; Model/4; Air/Raft; Drives H or less.
 - **Bases.** naval
 
 ### 0505 &mdash; B9B79979
@@ -490,7 +490,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 9.** 1,000,000,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
 - **Law level 7.** Shotguns are prohibited.
-- **Technological index 9.**
+- **Technological index 9.** Mid Tech (T5), 2050 AD: Early Fusion; Superpowers; Arcologies. Pp. 10-11: Laser Rifle; Ablat; Model/3; Air/Raft; Starships.
 - **Bases.** scout
 
 ### 0506 &mdash; C4882746
@@ -502,7 +502,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 2.** 100
 - **Government 7.** Balkanization. No central ruling authority exists; rival governments compete for control. Law level refers to government nearest the starport.
 - **Law level 4.** Light assault weapons (such as submachine guns) are prohibited.
-- **Technological index 6.**
+- **Technological index 6.** Low Tech (T5), Nuclear Age 1950 AD: Nuclear Fission; Superpowers; Suburbs. Pp. 10-11: Auto Rifle; Cloth; Model/1 bis; Rotary wing aircraft.
 - **Bases.** --
 
 ### 0507 &mdash; E6950006
@@ -514,7 +514,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 0.** 0. No inhabitants.
 - **Government 0.** No government structure. In many cases, family bonds will predominate.
 - **Law level 0.** No laws affecting weapons possession or weapons ownership.
-- **Technological index 6.**
+- **Technological index 6.** Low Tech (T5), Nuclear Age 1950 AD: Nuclear Fission; Superpowers; Suburbs. Pp. 10-11: Auto Rifle; Cloth; Model/1 bis; Rotary wing aircraft.
 - **Bases.** --
 - **Clamped.** government threw -1 and is recorded as 0.
 - **Clamped.** law_level threw -2 and is recorded as 0.
@@ -528,7 +528,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 6.** 1,000,000
 - **Government 6.** Captive Government. Ruling functions are performed by an imposed leadership answerable to an outside group. A colony or conquered area.
 - **Law level 4.** Light assault weapons (such as submachine guns) are prohibited.
-- **Technological index 5.**
+- **Technological index 5.** Low Tech (T5), 1930 AD: Oil. Petrochemicals; Dictators; Skyscrapers. Pp. 10-11: Carbine, Rifle, Pistol, SMG; Cloth; Model/1; Fixed wing aircraft.
 - **Bases.** --
 
 ### 0509 &mdash; B3471478
@@ -540,7 +540,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 1.** 10
 - **Government 4.** Representative Democracy. Ruling functions are performed by elected representatives.
 - **Law level 7.** Shotguns are prohibited.
-- **Technological index 8.**
+- **Technological index 8.** Mid Tech (T5), 2000 AD: Renewables; Superpowers; Suburbs. Pp. 10-11: Laser Carbine; Mesh; Model/2 bis; Air/Raft; Non-starships.
 - **Bases.** --
 
 ### 0510 &mdash; E4576983
@@ -552,7 +552,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 6.** 1,000,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
 - **Law level 8.** Long bladed weapons (all blade weapons except daggers) are strictly controlled. Open possession in public is prohibited. Ownership is, however, not restricted.
-- **Technological index 3.**
+- **Technological index 3.** Vlow Tech (T5), Industrial Revolution 1700 AD: Coal. Steam; Democracies; Cities. Pp. 10-11: Foil, cutlass, Blade, bayonet; Jack; Abacus; Hot air balloon.
 - **Bases.** --
 
 ### 0601 &mdash; B599300B
@@ -564,7 +564,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 3.** 1,000
 - **Government 0.** No government structure. In many cases, family bonds will predominate.
 - **Law level 0.** No laws affecting weapons possession or weapons ownership.
-- **Technological index B.**
+- **Technological index B.** High Tech (T5), Imperial Average Circa Year Zero: [FusionPlus]; Non-Geographic Communities; Arcologies. Pp. 10-11: Laser Rifle; Reflec; Model/5; Air/Raft; Drives K or less.
 - **Bases.** naval
 - **Clamped.** government threw -1 and is recorded as 0.
 
@@ -577,7 +577,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 6.** 1,000,000
 - **Government 9.** Impersonal Bureaucracy. Ruling functions are performed by agencies which have become insulated from the governed citizens.
 - **Law level B.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
-- **Technological index 7.**
+- **Technological index 7.** Mid Tech (T5), 1975 AD: Geothermal. Solar; Superpowers; Suburbs. Pp. 10-11: Body Pistol; Mesh; Model/2; Rotary wing aircraft; Non-starships.
 - **Bases.** scout
 
 ### 0605 &mdash; B3039DCA
@@ -589,7 +589,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 9.** 1,000,000,000
 - **Government D.** Religious Dictatorship. Ruling functions are performed by a religious organization without regard to the specific individual needs of the citizenry.
 - **Law level C.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
-- **Technological index A.**
+- **Technological index A.** High Tech (T5), 2100 AD: Practical Fusion; Non-Geographic Communities; Arcologies. Pp. 10-11: Laser Rifle; Reflec; Model/4; Air/Raft; Drives H or less.
 - **Bases.** naval, scout
 - **Clamped.** atmosphere threw -1 and is recorded as 0.
 
@@ -602,7 +602,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 5.** 100,000
 - **Government 2.** Participating Democracy. Ruling function decisions are reached by the advice and consent of the citizenry directly.
 - **Law level 0.** No laws affecting weapons possession or weapons ownership.
-- **Technological index C.**
+- **Technological index C.** High Tech (T5), Imperial Average Circa Year Zero: [FusionPlus]; Non-Geographic Communities; Arcologies. Pp. 10-11: Laser Rifle; Reflec; Model/6; Grav belts; Drives N or less.
 - **Bases.** --
 
 ### 0607 &mdash; A76A233E
@@ -614,7 +614,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 2.** 100
 - **Government 3.** Self-Perpetuating Oligarchy. Ruling functions are performed by a restricted minority, with little or no input from the mass of citizenry.
 - **Law level 3.** Weapons of a strict military nature (such as machine guns or automatic rifles, though not submachine guns) are prohibited.
-- **Technological index E.**
+- **Technological index E.** Vhigh Tech (T5), Imperial Maximum Circa 550: Exotics. Collectors; Temporary Personality Transfer; Arcologies. Pp. 10-11: Laser Rifle; Battle Dress; Model/7; Grav belts; Drives U or less.
 - **Bases.** --
 
 ### 0608 &mdash; X8C45783
@@ -626,7 +626,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 5.** 100,000
 - **Government 7.** Balkanization. No central ruling authority exists; rival governments compete for control. Law level refers to government nearest the starport.
 - **Law level 8.** Long bladed weapons (all blade weapons except daggers) are strictly controlled. Open possession in public is prohibited. Ownership is, however, not restricted.
-- **Technological index 3.**
+- **Technological index 3.** Vlow Tech (T5), Industrial Revolution 1700 AD: Coal. Steam; Democracies; Cities. Pp. 10-11: Foil, cutlass, Blade, bayonet; Jack; Abacus; Hot air balloon.
 - **Bases.** --
 
 ### 0702 &mdash; E6653385
@@ -638,7 +638,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 3.** 1,000
 - **Government 3.** Self-Perpetuating Oligarchy. Ruling functions are performed by a restricted minority, with little or no input from the mass of citizenry.
 - **Law level 8.** Long bladed weapons (all blade weapons except daggers) are strictly controlled. Open possession in public is prohibited. Ownership is, however, not restricted.
-- **Technological index 5.**
+- **Technological index 5.** Low Tech (T5), 1930 AD: Oil. Petrochemicals; Dictators; Skyscrapers. Pp. 10-11: Carbine, Rifle, Pistol, SMG; Cloth; Model/1; Fixed wing aircraft.
 - **Bases.** --
 
 ### 0704 &mdash; X7684313
@@ -650,7 +650,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 4.** 10,000
 - **Government 3.** Self-Perpetuating Oligarchy. Ruling functions are performed by a restricted minority, with little or no input from the mass of citizenry.
 - **Law level 1.** Certain weapons are prohibited, including specifically 1) body pistols which are undetectable by standard detectors, 2) explosive weapons such as bombs or grenades, and 3) poison gas.
-- **Technological index 3.**
+- **Technological index 3.** Vlow Tech (T5), Industrial Revolution 1700 AD: Coal. Steam; Democracies; Cities. Pp. 10-11: Foil, cutlass, Blade, bayonet; Jack; Abacus; Hot air balloon.
 - **Bases.** --
 
 ### 0705 &mdash; C2018767
@@ -662,7 +662,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 8.** 100,000,000
 - **Government 7.** Balkanization. No central ruling authority exists; rival governments compete for control. Law level refers to government nearest the starport.
 - **Law level 6.** Most firearms (all except shotguns) are prohibited. The carrying of any type of weapon openly is discouraged.
-- **Technological index 7.**
+- **Technological index 7.** Mid Tech (T5), 1975 AD: Geothermal. Solar; Superpowers; Suburbs. Pp. 10-11: Body Pistol; Mesh; Model/2; Rotary wing aircraft; Non-starships.
 - **Bases.** scout
 
 ### 0706 &mdash; C5484156
@@ -674,7 +674,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 4.** 10,000
 - **Government 1.** Company/Corporation. Ruling functions are assumed by a company managerial elite, and most citizenry are company employees or dependents.
 - **Law level 5.** Personal concealable firearms (such as pistols and revolvers) are prohibited.
-- **Technological index 6.**
+- **Technological index 6.** Low Tech (T5), Nuclear Age 1950 AD: Nuclear Fission; Superpowers; Suburbs. Pp. 10-11: Auto Rifle; Cloth; Model/1 bis; Rotary wing aircraft.
 - **Bases.** scout
 
 ### 0707 &mdash; B77B5666
@@ -686,7 +686,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 5.** 100,000
 - **Government 6.** Captive Government. Ruling functions are performed by an imposed leadership answerable to an outside group. A colony or conquered area.
 - **Law level 6.** Most firearms (all except shotguns) are prohibited. The carrying of any type of weapon openly is discouraged.
-- **Technological index 6.**
+- **Technological index 6.** Low Tech (T5), Nuclear Age 1950 AD: Nuclear Fission; Superpowers; Suburbs. Pp. 10-11: Auto Rifle; Cloth; Model/1 bis; Rotary wing aircraft.
 - **Bases.** naval
 
 ### 0708 &mdash; A6A0413A
@@ -698,7 +698,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 4.** 10,000
 - **Government 1.** Company/Corporation. Ruling functions are assumed by a company managerial elite, and most citizenry are company employees or dependents.
 - **Law level 3.** Weapons of a strict military nature (such as machine guns or automatic rifles, though not submachine guns) are prohibited.
-- **Technological index A.**
+- **Technological index A.** High Tech (T5), 2100 AD: Practical Fusion; Non-Geographic Communities; Arcologies. Pp. 10-11: Laser Rifle; Reflec; Model/4; Air/Raft; Drives H or less.
 - **Bases.** scout
 - **Clamped.** hydrographics threw -1 and is recorded as 0.
 
@@ -711,7 +711,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 5.** 100,000
 - **Government 8.** Civil Service Bureaucracy. Ruling functions are performed by government agencies employing individuals selected for their expertise.
 - **Law level 7.** Shotguns are prohibited.
-- **Technological index 3.**
+- **Technological index 3.** Vlow Tech (T5), Industrial Revolution 1700 AD: Coal. Steam; Democracies; Cities. Pp. 10-11: Foil, cutlass, Blade, bayonet; Jack; Abacus; Hot air balloon.
 - **Bases.** --
 
 ### 0710 &mdash; E5843202
@@ -723,7 +723,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 3.** 1,000
 - **Government 2.** Participating Democracy. Ruling function decisions are reached by the advice and consent of the citizenry directly.
 - **Law level 0.** No laws affecting weapons possession or weapons ownership.
-- **Technological index 2.**
+- **Technological index 2.** Vlow Tech (T5), Age Of Sail 1500 AD: Wind. Sail; Nations; Cities. Pp. 10-11: Halberd, Broadsword; Jack; Abacus.
 - **Bases.** --
 
 ### 0801 &mdash; A348688D
@@ -735,7 +735,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 6.** 1,000,000
 - **Government 8.** Civil Service Bureaucracy. Ruling functions are performed by government agencies employing individuals selected for their expertise.
 - **Law level 8.** Long bladed weapons (all blade weapons except daggers) are strictly controlled. Open possession in public is prohibited. Ownership is, however, not restricted.
-- **Technological index D.**
+- **Technological index D.** Vhigh Tech (T5), Imperial Maximum Circa 550: [FusionPlus]; Robots; Arcologies. Pp. 10-11: Laser Rifle; Battle Dress; Model/7; Grav belts; Drives O or less.
 - **Bases.** --
 
 ### 0802 &mdash; A327ABBH
@@ -747,7 +747,7 @@ The technological index carries its digit and no description. The technological 
 - **Population A.** 10,000,000,000
 - **Government B.** Non-Charismatic Leader. A previous charismatic dictator has been replaced by a leader through normal channels.
 - **Law level B.** Above the last row its table prints; p. 8 leaves the description to the referee, to explain or to replace (ERRATA E004).
-- **Technological index H.**
+- **Technological index H.** Xhigh Tech (T5), Darrian Maximum: Experimental AM; Permanent Personality Transfer; Arcologies. Pp. 10-11: Laser Rifle; Battle Dress; Artificial Intelligence; Grav belts; All drives; matter transport.
 - **Bases.** --
 
 ### 0804 &mdash; X5558762
@@ -759,7 +759,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 8.** 100,000,000
 - **Government 7.** Balkanization. No central ruling authority exists; rival governments compete for control. Law level refers to government nearest the starport.
 - **Law level 6.** Most firearms (all except shotguns) are prohibited. The carrying of any type of weapon openly is discouraged.
-- **Technological index 2.**
+- **Technological index 2.** Vlow Tech (T5), Age Of Sail 1500 AD: Wind. Sail; Nations; Cities. Pp. 10-11: Halberd, Broadsword; Jack; Abacus.
 - **Bases.** --
 
 ### 0806 &mdash; A636200B
@@ -771,7 +771,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 2.** 100
 - **Government 0.** No government structure. In many cases, family bonds will predominate.
 - **Law level 0.** No laws affecting weapons possession or weapons ownership.
-- **Technological index B.**
+- **Technological index B.** High Tech (T5), Imperial Average Circa Year Zero: [FusionPlus]; Non-Geographic Communities; Arcologies. Pp. 10-11: Laser Rifle; Reflec; Model/5; Air/Raft; Drives K or less.
 - **Bases.** --
 - **Clamped.** government threw -1 and is recorded as 0.
 
@@ -784,7 +784,7 @@ The technological index carries its digit and no description. The technological 
 - **Population 4.** 10,000
 - **Government 2.** Participating Democracy. Ruling function decisions are reached by the advice and consent of the citizenry directly.
 - **Law level 0.** No laws affecting weapons possession or weapons ownership.
-- **Technological index 6.**
+- **Technological index 6.** Low Tech (T5), Nuclear Age 1950 AD: Nuclear Fission; Superpowers; Suburbs. Pp. 10-11: Auto Rifle; Cloth; Model/1 bis; Rotary wing aircraft.
 - **Bases.** --
 - **Clamped.** law_level threw -2 and is recorded as 0.
 
@@ -797,6 +797,6 @@ The technological index carries its digit and no description. The technological 
 - **Population 6.** 1,000,000
 - **Government 7.** Balkanization. No central ruling authority exists; rival governments compete for control. Law level refers to government nearest the starport.
 - **Law level 4.** Light assault weapons (such as submachine guns) are prohibited.
-- **Technological index 6.**
+- **Technological index 6.** Low Tech (T5), Nuclear Age 1950 AD: Nuclear Fission; Superpowers; Suburbs. Pp. 10-11: Auto Rifle; Cloth; Model/1 bis; Rotary wing aircraft.
 - **Bases.** scout
 
