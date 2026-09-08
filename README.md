@@ -193,6 +193,13 @@ complete example beside it. `CLAUDE.md` carries the authority model in
 full, and the traps -- the font, the hex grid parity, the dice-stream
 consumption order -- that a change to this code has to respect.
 
+`THEORY.md` is the account of why the code is shaped as it is: what a
+maintainer has to hold in mind to change it without damaging it, and where
+that account is uncertain. `walkthrough.md` is the tour of how it runs,
+entry point to output, and every fenced block in it is executable -- `uvx
+showboat verify walkthrough.md` re-runs them all and diffs the captured
+output, so the document cannot quietly stop being true.
+
 ## Development
 
 ```sh

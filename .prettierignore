@@ -14,3 +14,8 @@ docs/examples/complete.json
 # Transcribed from the page and read by the loader; leave the shape alone
 # so a diff here is a transcription change and nothing else.
 tables/data/
+
+# Showboat manages this file's formatting, and every fenced block in it is
+# verified output. Prettier would reflow the blocks and break `showboat
+# verify`, which is the only thing that says the document still runs.
+walkthrough.md
