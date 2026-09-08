@@ -172,23 +172,23 @@ func (m *member) mapNote() string {
 
 // sectorIndex writes the map of the whole sector and the table of what is
 // in each of its sixteen (ERRATA E008 part 4).
-func (r *Renderer) sectorIndex(built *strings.Builder, record *starmap.Record, gathered []member) {
-	built.WriteString("## The sector\n\n")
-	built.WriteString(mapNote(record))
+func (l *listing) sectorIndex(gathered []member) {
+	l.built.WriteString("## The sector\n\n")
+	l.built.WriteString(mapNote(l.record))
 
-	indexMap(built, record)
+	indexMap(&l.built, l.record)
 
-	built.WriteString(sectorContentsNote)
-	built.WriteString("| Subsector | Hexes | Worlds | Lanes within | Crossing | Seed |\n")
-	built.WriteString("| --- | --- | --- | --- | --- | --- |\n")
+	l.built.WriteString(sectorContentsNote)
+	l.built.WriteString("| Subsector | Hexes | Worlds | Lanes within | Crossing | Seed |\n")
+	l.built.WriteString("| --- | --- | --- | --- | --- | --- |\n")
 
 	for _, part := range gathered {
-		fmt.Fprintf(built, "| %d | %s to %s | %d | %d | %d | %d |\n",
+		fmt.Fprintf(&l.built, "| %d | %s to %s | %d | %d | %d | %d |\n",
 			part.Index, part.First, part.Last, len(part.Worlds),
-			len(part.Carried)-part.Crossing, part.Crossing, memberSeed(record.Seed, part.Index))
+			len(part.Carried)-part.Crossing, part.Crossing, memberSeed(l.record.Seed, part.Index))
 	}
 
-	built.WriteString("\n")
+	l.built.WriteString("\n")
 }
 
 const sectorContentsNote = "A lane that crosses a seam is listed under both the sub-sectors it " +

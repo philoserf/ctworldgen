@@ -42,6 +42,28 @@ func New(lanes Lanes) (*Renderer, error) {
 	return &Renderer{charts: charts, lanes: lanes}, nil
 }
 
+// listing is the Markdown typesetter's document, and it is deliberately
+// the shape of booklet: the state a document is written from, held once,
+// rather than threaded through every section's parameters. The two
+// typesetters share a middle -- bullets, member/members, legible, summary,
+// named, bases -- and structural parallelism is what keeps that middle
+// discoverable. Before this, five of the Markdown sections took six
+// parameters on a *Renderer receiver they never touched, so the next thing
+// that has to agree between the two backends had an obvious home on one
+// side and none on the other.
+type listing struct {
+	built  strings.Builder
+	charts *tables.Tables
+	record *starmap.Record
+
+	// drawn is the lanes this listing shows, which is every one the record
+	// carries unless the renderer was built for legible lanes (ERRATA
+	// E007). The record itself is unchanged.
+	drawn []starmap.Route
+
+	names map[starmap.Hex]string
+}
+
 // Listing writes the Markdown listing.
 //
 // A subsector's listing is one map, one roster, one lane table and a block
@@ -50,23 +72,26 @@ func New(lanes Lanes) (*Renderer, error) {
 // referee runs from: he reads the sector to place a campaign and one
 // sub-sector to run a session (ERRATA E008).
 func (r *Renderer) Listing(out io.Writer, record *starmap.Record) error {
-	var built strings.Builder
-
-	names := namesByHex(record)
-	drawn := r.drawn(record.Routes)
-
-	r.heading(&built, record, drawn)
-
-	if record.Grid.IsSector() {
-		r.sectorSections(&built, names, record, drawn)
-	} else {
-		r.grid(&built, record, wholeGrid(record.Grid), everywhere, "## The map", mapNote(record))
-		r.roster(&built, "## Worlds", record.Worlds)
-		r.routes(&built, "## Routes", names, record.Routes, drawn, nil)
-		r.details(&built, "## The worlds in detail", "###", names, record.Worlds)
+	doc := &listing{
+		built:  strings.Builder{},
+		charts: r.charts,
+		record: record,
+		drawn:  r.drawn(record.Routes),
+		names:  namesByHex(record),
 	}
 
-	_, err := io.WriteString(out, built.String())
+	doc.heading()
+
+	if record.Grid.IsSector() {
+		doc.sectorSections()
+	} else {
+		doc.grid(wholeGrid(record.Grid), everywhere, "## The map", mapNote(record))
+		doc.roster("## Worlds", record.Worlds)
+		doc.routes("## Routes", record.Routes, doc.drawn, nil)
+		doc.details("## The worlds in detail", "###", record.Worlds)
+	}
+
+	_, err := io.WriteString(out, doc.built.String())
 	if err != nil {
 		return fmt.Errorf("writing the listing: %w", err)
 	}
@@ -76,32 +101,28 @@ func (r *Renderer) Listing(out io.Writer, record *starmap.Record) error {
 
 // sectorSections writes the index of the whole sector and then a section
 // per member (ERRATA E008).
-func (r *Renderer) sectorSections(
-	built *strings.Builder, names map[starmap.Hex]string, record *starmap.Record, drawn []starmap.Route,
-) {
-	gathered := members(record, drawn)
+func (l *listing) sectorSections() {
+	gathered := members(l.record, l.drawn)
 
-	r.sectorIndex(built, record, gathered)
+	l.sectorIndex(gathered)
 
 	for index := range gathered {
-		r.memberSection(built, names, record, &gathered[index])
+		l.memberSection(&gathered[index])
 	}
 }
 
 // memberSection writes one of a sector's sixteen sub-sectors as the
 // listing it would have had on its own: its own p. 3 grid, its own roster,
 // its own lanes and its own worlds in detail.
-func (r *Renderer) memberSection(
-	built *strings.Builder, names map[starmap.Hex]string, record *starmap.Record, part *member,
-) {
-	fmt.Fprintf(built, "## Subsector %d &mdash; %s to %s\n\n", part.Index, part.First, part.Last)
-	fmt.Fprintf(built, "%s\n\n", part.provenance(record.Seed))
-	fmt.Fprintf(built, "%s\n\n", part.summary())
+func (l *listing) memberSection(part *member) {
+	fmt.Fprintf(&l.built, "## Subsector %d &mdash; %s to %s\n\n", part.Index, part.First, part.Last)
+	fmt.Fprintf(&l.built, "%s\n\n", part.provenance(l.record.Seed))
+	fmt.Fprintf(&l.built, "%s\n\n", part.summary())
 
-	r.grid(built, record, memberWindow(part.Index), part.shows, "### The map", part.mapNote())
-	r.roster(built, "### Worlds", part.Worlds)
-	r.routes(built, "### Routes", names, part.Carried, part.Lanes, leavingFor(part.Index))
-	r.details(built, "### The worlds in detail", "####", names, part.Worlds)
+	l.grid(memberWindow(part.Index), part.shows, "### The map", part.mapNote())
+	l.roster("### Worlds", part.Worlds)
+	l.routes("### Routes", part.Carried, part.Lanes, leavingFor(part.Index))
+	l.details("### The worlds in detail", "####", part.Worlds)
 }
 
 // drawn returns the lanes this renderer puts on the page. The record is not
@@ -114,19 +135,19 @@ func (r *Renderer) drawn(routes []starmap.Route) []starmap.Route {
 	return legible(routes)
 }
 
-func (r *Renderer) heading(built *strings.Builder, record *starmap.Record, drawn []starmap.Route) {
-	name := record.Name
+func (l *listing) heading() {
+	name := l.record.Name
 	if name == "" {
-		name = untitled(record)
+		name = untitled(l.record)
 	}
 
-	fmt.Fprintf(built, "# %s\n\n", name)
-	fmt.Fprintf(built, "%s\n\n", summary(record, drawn))
+	fmt.Fprintf(&l.built, "# %s\n\n", name)
+	fmt.Fprintf(&l.built, "%s\n\n", summary(l.record, l.drawn))
 
 	// The referee's note about the map as a whole, under the summary and
 	// above everything the tool generated (issue 1 #6).
-	if record.Notes != "" {
-		fmt.Fprintf(built, "%s\n\n", oneLine(record.Notes))
+	if l.record.Notes != "" {
+		fmt.Fprintf(&l.built, "%s\n\n", oneLine(l.record.Notes))
 	}
 }
 
@@ -216,30 +237,27 @@ const mapNoteTail = " The odd-numbered columns sit high and the " +
 
 // grid draws the subsector map. It marks what p. 1 says to mark and
 // nothing else, so it is a render of the record like every other section.
-func (r *Renderer) grid(
-	built *strings.Builder, record *starmap.Record,
-	draw window, shows func(starmap.Hex) bool, heading, note string,
-) {
-	fmt.Fprintf(built, "%s\n\n%s", heading, note)
-	built.WriteString("```text\n")
+func (l *listing) grid(draw window, shows func(starmap.Hex) bool, heading, note string) {
+	fmt.Fprintf(&l.built, "%s\n\n%s", heading, note)
+	l.built.WriteString("```text\n")
 
-	marked := marks(record)
+	marked := marks(l.record)
 
 	for row := draw.FromRow; row <= draw.ToRow; row++ {
 		// A member's window rings it with a hex of bleed, and a member on
 		// the edge of the sector has none on that side: those rows are not
-		// on the record's grid and are not drawn.
-		if row < 1 || row > record.Grid.Rows {
+		// on the l.record's grid and are not drawn.
+		if row < 1 || row > l.record.Grid.Rows {
 			continue
 		}
 
 		// Odd columns first, then the even ones half a slot right: one
 		// printed row of the grid is two lines of the map.
-		built.WriteString(gridLine(marked, record.Grid, draw, shows, row, 1))
-		built.WriteString(gridLine(marked, record.Grid, draw, shows, row, 0))
+		l.built.WriteString(gridLine(marked, l.record.Grid, draw, shows, row, 1))
+		l.built.WriteString(gridLine(marked, l.record.Grid, draw, shows, row, 0))
 	}
 
-	built.WriteString("```\n\n")
+	l.built.WriteString("```\n\n")
 }
 
 // marks is the starport letter p. 1 says to write in each hex that has a
@@ -307,22 +325,22 @@ func gridLine(
 }
 
 // roster is the world roster: hexes, names, and strings of digits.
-func (r *Renderer) roster(built *strings.Builder, heading string, worlds []starmap.World) {
-	fmt.Fprintf(built, "%s\n\n", heading)
+func (l *listing) roster(heading string, worlds []starmap.World) {
+	fmt.Fprintf(&l.built, "%s\n\n", heading)
 
 	if len(worlds) == 0 {
-		fmt.Fprintf(built, "%s\n\n", noWorlds)
+		fmt.Fprintf(&l.built, "%s\n\n", noWorlds)
 
 		return
 	}
 
-	built.WriteString("| Hex | Name | Digits | Bases |\n| --- | --- | --- | --- |\n")
+	l.built.WriteString("| Hex | Name | Digits | Bases |\n| --- | --- | --- | --- |\n")
 
 	for _, world := range worlds {
-		fmt.Fprintf(built, "| %s | %s | %s | %s |\n", world.Hex, cell(world.Name), world.Digits, bases(world))
+		fmt.Fprintf(&l.built, "| %s | %s | %s | %s |\n", world.Hex, cell(world.Name), world.Digits, bases(world))
 	}
 
-	built.WriteString("\n")
+	l.built.WriteString("\n")
 }
 
 // lanesNote says what the table is not showing and how to see it. P. 2
@@ -415,40 +433,37 @@ func bases(world starmap.World) string {
 	return strings.Join(present, ", ")
 }
 
-func (r *Renderer) routes(
-	built *strings.Builder, heading string, names map[starmap.Hex]string,
-	carried, drawn []starmap.Route, into func(starmap.Route) string,
-) {
-	fmt.Fprintf(built, "%s\n\n", heading)
+func (l *listing) routes(heading string, carried, inked []starmap.Route, into func(starmap.Route) string) {
+	fmt.Fprintf(&l.built, "%s\n\n", heading)
 
 	if len(carried) == 0 {
-		built.WriteString("No route was drawn.\n\n")
+		l.built.WriteString("No route was drawn.\n\n")
 
 		return
 	}
 
-	if suppressed := len(carried) - len(drawn); suppressed > 0 {
-		fmt.Fprintf(built, "%s\n\n", lanesNote(len(carried), suppressed))
+	if suppressed := len(carried) - len(inked); suppressed > 0 {
+		fmt.Fprintf(&l.built, "%s\n\n", lanesNote(len(carried), suppressed))
 	}
 
 	if into == nil {
-		built.WriteString("| From | To | Parsecs |\n| --- | --- | --- |\n")
+		l.built.WriteString("| From | To | Parsecs |\n| --- | --- | --- |\n")
 	} else {
-		built.WriteString("| From | To | Parsecs | Into |\n| --- | --- | --- | --- |\n")
+		l.built.WriteString("| From | To | Parsecs | Into |\n| --- | --- | --- | --- |\n")
 	}
 
-	for _, route := range drawn {
-		fmt.Fprintf(built, "| %s | %s | %d",
-			cell(named(names, route.From)), cell(named(names, route.To)), route.Distance)
+	for _, route := range inked {
+		fmt.Fprintf(&l.built, "| %s | %s | %d",
+			cell(named(l.names, route.From)), cell(named(l.names, route.To)), route.Distance)
 
 		if into != nil {
-			fmt.Fprintf(built, " | %s", into(route))
+			fmt.Fprintf(&l.built, " | %s", into(route))
 		}
 
-		built.WriteString(" |\n")
+		l.built.WriteString(" |\n")
 	}
 
-	built.WriteString("\n")
+	l.built.WriteString("\n")
 }
 
 // leavingFor names the sub-sector a lane's far end sits in, which is the
@@ -466,17 +481,15 @@ func leavingFor(home int) func(starmap.Route) string {
 	}
 }
 
-func (r *Renderer) details(
-	built *strings.Builder, heading, level string, names map[starmap.Hex]string, worlds []starmap.World,
-) {
+func (l *listing) details(heading, level string, worlds []starmap.World) {
 	if len(worlds) == 0 {
 		return
 	}
 
-	fmt.Fprintf(built, "%s\n\n%s", heading, technologyNote)
+	fmt.Fprintf(&l.built, "%s\n\n%s", heading, technologyNote)
 
 	for _, world := range worlds {
-		r.world(built, level, names, world)
+		l.world(level, world)
 	}
 }
 
@@ -573,16 +586,14 @@ func clauses(entries ...string) []string {
 	return kept
 }
 
-func (r *Renderer) world(
-	built *strings.Builder, level string, names map[starmap.Hex]string, world starmap.World,
-) {
-	fmt.Fprintf(built, "%s %s &mdash; %s\n\n", level, named(names, world.Hex), world.Digits)
+func (l *listing) world(level string, world starmap.World) {
+	fmt.Fprintf(&l.built, "%s %s &mdash; %s\n\n", level, named(l.names, world.Hex), world.Digits)
 
-	for _, line := range bullets(r.charts, world) {
-		built.WriteString(line.markdown())
+	for _, line := range bullets(l.charts, world) {
+		l.built.WriteString(line.markdown())
 	}
 
-	built.WriteString("\n")
+	l.built.WriteString("\n")
 }
 
 // bullet is one line of a world's detail: the label both documents set in
