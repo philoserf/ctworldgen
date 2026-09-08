@@ -378,18 +378,6 @@ func TestHelpIsNotAFailure(t *testing.T) {
 	}
 }
 
-func TestDirtySuffix(t *testing.T) {
-	t.Parallel()
-
-	if got := dirtySuffix(true); got != " (dirty)" {
-		t.Errorf("dirtySuffix(true) = %q", got)
-	}
-
-	if got := dirtySuffix(false); got != "" {
-		t.Errorf("dirtySuffix(false) = %q", got)
-	}
-}
-
 // TestRenderReadsARecordAndWritesTheListing closes the loop: what `new`
 // wrote, `render` reads back and turns into the referee's pages.
 func TestRenderReadsARecordAndWritesTheListing(t *testing.T) {

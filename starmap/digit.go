@@ -1,7 +1,6 @@
 package starmap
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -65,37 +64,4 @@ func (d Digit) String() string {
 	}
 
 	return string(rune(d))
-}
-
-// MarshalJSON writes the single character.
-func (d Digit) MarshalJSON() ([]byte, error) {
-	if !d.Valid() {
-		return nil, fmt.Errorf("%w: %d", ErrNotADigit, byte(d))
-	}
-
-	b, err := json.Marshal(string(rune(d)))
-	if err != nil {
-		return nil, fmt.Errorf("marshaling digit %s: %w", d, err)
-	}
-
-	return b, nil
-}
-
-// UnmarshalJSON reads the single character.
-func (d *Digit) UnmarshalJSON(b []byte) error {
-	var text string
-
-	err := json.Unmarshal(b, &text)
-	if err != nil {
-		return fmt.Errorf("reading a digit: %w", err)
-	}
-
-	parsed, err := ParseDigit(text)
-	if err != nil {
-		return err
-	}
-
-	*d = parsed
-
-	return nil
 }

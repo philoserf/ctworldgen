@@ -320,8 +320,9 @@ down.
   `mapPlaces`/`hexStampsOn`, `mapGeometry`/`stepsOf`,
   `closerPlace`/`closerStep` -- duplicates a great deal on purpose. A
   merged harness compares the three against each other, and passes when
-  all three are flipped together. (`everyHexOf` and `everyHexOfGrid` are
-  not this. They enumerate a grid and measure nothing.)
+  all three are flipped together. (`everyHexOf` was not this, which is why
+  it and its character-identical twin `everyHexOfGrid` were merged into
+  one: it enumerates a grid and measures nothing.)
 
 - **`Digit`, `Starport` and `Characteristic` do not become one generic
   type.** They share a Go shape and nothing else: `Digit` is B1 p. 8's

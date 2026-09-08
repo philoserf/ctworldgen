@@ -100,23 +100,6 @@ func TestD2Range(t *testing.T) {
 	}
 }
 
-func TestSumIsCumulative(t *testing.T) {
-	t.Parallel()
-
-	if got := dice.Sum(); got != 0 {
-		t.Errorf("Sum() = %d, want 0", got)
-	}
-
-	// The greatest total the technological index matrix reaches (p. 9).
-	if got := dice.Sum(6, 2, 1, 0, 4, 1); got != 14 {
-		t.Errorf("Sum of the matrix maximum = %d, want 14", got)
-	}
-
-	if got := dice.Sum(-4, -2, 1); got != -5 {
-		t.Errorf("Sum(-4, -2, 1) = %d, want -5", got)
-	}
-}
-
 // TestTargetIsNPlus covers the only target kind Book 3 pp. 1-12 uses,
 // including the one-die targets the character procedure never has: world
 // occurrence at 4+ and the jump routes cells, which run from 1 to 6.

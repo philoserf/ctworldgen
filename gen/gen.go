@@ -202,14 +202,16 @@ func (e *Engine) detail(stream *dice.Stream, world *starmap.World) error {
 	// matrix gives for the starport, size, atmosphere, hydrographics,
 	// population and government (p. 9).
 	matrix := e.charts.TechIndexMatrix
-	modifier := dice.Sum(
-		matrix.StarportDM(world.Starport),
-		matrix.DM(tables.ColSize, world.Size),
-		matrix.DM(tables.ColAtmosphere, world.Atmosphere),
-		matrix.DM(tables.ColHydrographics, world.Hydrographics),
-		matrix.DM(tables.ColPopulation, world.Population),
-		matrix.DM(tables.ColGovernment, world.Government),
-	)
+
+	// The six DMs the matrix gives are summed into one total before the
+	// throw is read (p. 9); the book applies them to a single throw, not
+	// one after another.
+	modifier := matrix.StarportDM(world.Starport) +
+		matrix.DM(tables.ColSize, world.Size) +
+		matrix.DM(tables.ColAtmosphere, world.Atmosphere) +
+		matrix.DM(tables.ColHydrographics, world.Hydrographics) +
+		matrix.DM(tables.ColPopulation, world.Population) +
+		matrix.DM(tables.ColGovernment, world.Government)
 
 	world.TechIndex = clamp(world, starmap.TechIndex, stream.Die()+modifier, maxTechIndex)
 

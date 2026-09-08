@@ -46,19 +46,6 @@ func (s *Stream) Die() int { return s.r.IntN(faces) + 1 }
 // two dice the unqualified throw.
 func (s *Stream) D2() int { return s.Die() + s.Die() }
 
-// Sum returns the cumulative DM of its arguments. Book 3 applies several
-// DMs to a single throw -- the technological index matrix contributes six
-// (p. 9) -- and they are summed into one total DM before the throw is
-// read.
-func Sum(dms ...int) int {
-	total := 0
-	for _, dm := range dms {
-		total += dm
-	}
-
-	return total
-}
-
 // Target is a throw target of the form N+: the throw succeeds when it is
 // equal to or greater than N.
 //

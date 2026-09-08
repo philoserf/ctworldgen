@@ -1,7 +1,6 @@
 package starmap_test
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/philoserf/ctworldgen/starmap"
@@ -61,50 +60,55 @@ func TestDigitReaches20(t *testing.T) {
 	}
 }
 
-func TestDigitMarshals(t *testing.T) {
+// TestParseDigitReadsOneCharacterOfTheAlphabet covers the parse that
+// production actually calls -- tables.go reads every descriptive table's
+// value through it -- and it exists because deleting Digit's unused JSON
+// methods took the only starmap test that reached ParseDigit with it. The
+// round trip through json.Unmarshal was testing the parser sideways; this
+// tests it directly, which is what the tables package depends on.
+func TestParseDigitReadsOneCharacterOfTheAlphabet(t *testing.T) {
 	t.Parallel()
 
 	for value := 0; value <= starmap.MaxDigit; value++ {
-		digit, err := starmap.NewDigit(value)
+		written, err := starmap.NewDigit(value)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		encoded, err := json.Marshal(digit)
+		back, err := starmap.ParseDigit(written.String())
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("the digit for %d did not parse back: %v", value, err)
 		}
 
-		var back starmap.Digit
-
-		err = json.Unmarshal(encoded, &back)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if back != digit {
-			t.Errorf("value %d round-tripped from %q to %q", value, digit, back)
+		if back.Value() != value {
+			t.Errorf("value %d wrote %q and parsed back as %d", value, written, back.Value())
 		}
 	}
 
-	_, err := json.Marshal(starmap.Digit('I'))
-	if err == nil {
-		t.Error("marshaling an out-of-alphabet digit succeeded")
+	for _, refused := range []struct {
+		what string
+		text string
+	}{
+		{"no characters", ""},
+		{"two characters", "II"},
+		{"a character the alphabet omits", "I"},
+		{"the other character it omits", "O"},
+	} {
+		_, err := starmap.ParseDigit(refused.text)
+		if err == nil {
+			t.Errorf("ParseDigit accepted %s (%q)", refused.what, refused.text)
+		}
 	}
+}
 
-	var digit starmap.Digit
-
-	err = json.Unmarshal([]byte(`"II"`), &digit)
-	if err == nil {
-		t.Error("unmarshaling a two-character digit succeeded")
-	}
-
-	err = json.Unmarshal([]byte(`5`), &digit)
-	if err == nil {
-		t.Error("unmarshaling a number as a digit succeeded")
-	}
+// TestAnOutOfAlphabetDigitPrintsItsByte holds String's other branch. A
+// Digit built by conversion rather than through NewDigit can be outside
+// the alphabet, and it has to print as something a reader can debug
+// rather than as an unprintable byte.
+func TestAnOutOfAlphabetDigitPrintsItsByte(t *testing.T) {
+	t.Parallel()
 
 	if got := starmap.Digit('I').String(); got != "Digit(73)" {
-		t.Errorf("Digit('I').String() = %q", got)
+		t.Errorf("an out-of-alphabet digit printed as %q; want %q", got, "Digit(73)")
 	}
 }
