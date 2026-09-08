@@ -62,40 +62,41 @@ func run() error {
 		}
 	}
 
-	err = writeSeams(engine)
+	// The sector is generated once and handed to both writers. Deriving
+	// it separately in each made the seam golden and the listing slice
+	// agree only because two derivations happened to match -- and
+	// internal/fixture exists so that two goldens cannot come to describe
+	// different subsectors under one name. Here alone that held by
+	// coincidence rather than by construction.
+	sector := fixture.SectorGolden()
+
+	sectorRecord, err := engine.Sector(gen.Inputs{
+		Seed: sector.Seed, Name: sector.Name, OccurrenceDM: sector.OccurrenceDM,
+	})
+	if err != nil {
+		return fmt.Errorf("%s: %w", sector.File, err)
+	}
+
+	err = writeSeams(sectorRecord, sector.File)
 	if err != nil {
 		return err
 	}
 
-	err = writeSectorSlice(engine)
+	err = writeSectorSlice(renderer, sectorRecord)
 	if err != nil {
 		return err
 	}
 
-	return writeExample()
+	return writeExample(engine)
 }
 
 // writeSectorSlice pins one member's section of a sector's listing: the
 // decomposition, the ring of neighbours its map draws, and the crossing
 // lanes it shares with its neighbours (ERRATA E008).
-func writeSectorSlice(engine *gen.Engine) error {
-	golden := fixture.SectorGolden()
-
-	record, err := engine.Sector(gen.Inputs{
-		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
-	})
-	if err != nil {
-		return fmt.Errorf("the sector slice: %w", err)
-	}
-
-	renderer, err := render.New(render.LegibleLanes)
-	if err != nil {
-		return fmt.Errorf("building the renderer: %w", err)
-	}
-
+func writeSectorSlice(renderer *render.Renderer, record *starmap.Record) error {
 	var whole strings.Builder
 
-	err = renderer.Listing(&whole, record)
+	err := renderer.Listing(&whole, record)
 	if err != nil {
 		return fmt.Errorf("rendering the sector: %w", err)
 	}
@@ -116,19 +117,12 @@ func writeSectorSlice(engine *gen.Engine) error {
 // that straddle two members (ERRATA E006). The members themselves are
 // pinned by being identical to the subsectors `new` writes, which is a
 // test rather than a fixture.
-func writeSeams(engine *gen.Engine) error {
-	golden := fixture.SectorGolden()
+func writeSeams(record *starmap.Record, file string) error {
+	crossing := gen.CrossingRoutes(record)
 
-	record, err := engine.Sector(gen.Inputs{
-		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
-	})
+	encoded, err := json.MarshalIndent(crossing, "", "  ")
 	if err != nil {
-		return fmt.Errorf("%s: %w", golden.File, err)
-	}
-
-	encoded, err := json.MarshalIndent(gen.CrossingRoutes(record), "", "  ")
-	if err != nil {
-		return fmt.Errorf("%s: %w", golden.File, err)
+		return fmt.Errorf("%s: %w", file, err)
 	}
 
 	path := fixture.SeamsPath()
@@ -138,7 +132,7 @@ func writeSeams(engine *gen.Engine) error {
 		return fmt.Errorf("writing %s: %w", path, err)
 	}
 
-	_, _ = fmt.Fprintln(os.Stdout, "wrote", path, "--", len(gen.CrossingRoutes(record)), "routes at the seams")
+	_, _ = fmt.Fprintln(os.Stdout, "wrote", path, "--", len(crossing), "routes at the seams")
 
 	return nil
 }
@@ -189,13 +183,8 @@ func writeGolden(
 
 // writeExample rewrites the complete example record shipped beside the
 // schema. It is documentation, but it is documentation the engine writes.
-func writeExample() error {
+func writeExample(engine *gen.Engine) error {
 	example := fixture.CompleteExample()
-
-	engine, err := gen.New()
-	if err != nil {
-		return fmt.Errorf("building the engine: %w", err)
-	}
 
 	record, err := engine.Generate(gen.Inputs{Seed: example.Seed, Name: example.Name, OccurrenceDM: example.OccurrenceDM})
 	if err != nil {
