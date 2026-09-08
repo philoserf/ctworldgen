@@ -183,6 +183,7 @@ func TestInvariantsOverManySeeds(t *testing.T) {
 		for _, dm := range []int{-1, 0, 1} {
 			record := generate(t, engine, gen.Inputs{Seed: seed, Name: "", OccurrenceDM: dm})
 
+			assertValidatesAgainstTheSchema(t, record, seed)
 			assertWorldsWellFormed(t, record, seed)
 			assertRecordCarriesItsInputs(t, record, seed, dm)
 			assertBasesFollowTheChart(t, record, seed)
@@ -210,6 +211,25 @@ func TestInvariantsOverManySeeds(t *testing.T) {
 // assertWorldsWellFormed: every world sits on the p. 3 grid, once, in
 // ascending hex number (ERRATA E002), with a starport the book prints and
 // no name (p. 12 prints no naming table).
+// assertValidatesAgainstTheSchema holds what the engine wrote to the
+// contract the reader enforces (issue #24).
+//
+// The two were never joined. Decode held a record to record.schema.json
+// and the engine's own output was held to nothing, which was safe because
+// scan bounds every hex and the jump routes table caps distance -- true,
+// and empirical. What covered it was TestGoldensValidate running four
+// fixtures through the published schema, so a gen change that produced a
+// record Decode would refuse was caught by four records. It is caught by
+// six hundred now.
+func assertValidatesAgainstTheSchema(t *testing.T, record *starmap.Record, seed uint64) {
+	t.Helper()
+
+	err := record.Validate()
+	if err != nil {
+		t.Errorf("seed %d: the engine wrote a record Decode would refuse: %v", seed, err)
+	}
+}
+
 func assertWorldsWellFormed(t *testing.T, record *starmap.Record, seed uint64) {
 	t.Helper()
 

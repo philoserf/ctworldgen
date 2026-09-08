@@ -218,23 +218,7 @@ func Decode(r io.Reader) (*Record, error) {
 		record.Grid = PageThreeGrid()
 	}
 
-	// The schema names these two grids and nothing else, and unknown-shape
-	// rejection is two obligations: the schema, and this.
-	if record.Grid != PageThreeGrid() && record.Grid != SectorGrid() {
-		return nil, fmt.Errorf("%w: %dx%d", ErrNotAGrid, record.Grid.Columns, record.Grid.Rows)
-	}
-
-	err = record.carriesThisToolsProvenance()
-	if err != nil {
-		return nil, err
-	}
-
-	err = record.carriesTheFieldsTheSchemaRequires()
-	if err != nil {
-		return nil, err
-	}
-
-	err = record.onItsOwnGrid()
+	err = record.Validate()
 	if err != nil {
 		return nil, err
 	}
@@ -312,6 +296,46 @@ func (w World) DigitString() (string, error) {
 	}
 
 	return built.String(), nil
+}
+
+// Validate holds a record to what record.schema.json states: the two
+// grids it names, the three provenance constants, the fields it marks
+// required, and every hex on the record's own grid.
+//
+// Decode calls it, and it is exported because for a long time Decode was
+// the only caller there could be -- the checks were private methods and
+// the engine's own output was never held to the contract the reader
+// enforces. That was safe empirically rather than structurally: the
+// goldens are four records, while the sweep in gen runs six hundred and
+// held them to the rules and never to the schema. It now runs them
+// through here.
+//
+// Marshal does not call it, deliberately. Writing is the referee's
+// notebook page and he is allowed to hand-edit it; the assertion belongs
+// in the test, not on the write path.
+//
+// It does not repair its input. A record written before grids were
+// recorded carries no grid, and Decode fills that in before calling here
+// (the reporter of issue 1 has sixteen such files) -- reading an older
+// shape is a read-path concern, and a zero grid fails this.
+func (s *Record) Validate() error {
+	// The schema names these two grids and nothing else, and unknown-shape
+	// rejection is two obligations: the schema, and this.
+	if !s.Grid.IsSector() && s.Grid != PageThreeGrid() {
+		return fmt.Errorf("%w: %dx%d", ErrNotAGrid, s.Grid.Columns, s.Grid.Rows)
+	}
+
+	err := s.carriesThisToolsProvenance()
+	if err != nil {
+		return err
+	}
+
+	err = s.carriesTheFieldsTheSchemaRequires()
+	if err != nil {
+		return err
+	}
+
+	return s.onItsOwnGrid()
 }
 
 // carriesThisToolsProvenance holds the three stamps record.schema.json
