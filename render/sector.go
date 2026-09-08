@@ -278,7 +278,7 @@ func (b *booklet) indexPage() {
 		name = untitled(b.record)
 	}
 
-	b.pdf.SetTitle(b.encode(name), false)
+	b.pdf.SetTitle(encode(name), false)
 	b.pdf.SetFont("Helvetica", "B", titleSize)
 	b.pdf.SetTextColor(inkBlack, inkBlack, inkBlack)
 	b.text(pageMargin, b.y+titleSize, name)

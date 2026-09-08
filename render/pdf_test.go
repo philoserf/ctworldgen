@@ -934,7 +934,7 @@ func TestAFullSubsectorPaginates(t *testing.T) {
 func everyHexAWorld(t *testing.T) *starmap.Record {
 	t.Helper()
 
-	record := starmap.New(1, "Aramis", 0)
+	record := starmap.New(1, aramis, 0)
 
 	for col := 1; col <= starmap.Columns; col++ {
 		for row := 1; row <= starmap.Rows; row++ {
@@ -1016,7 +1016,7 @@ func TestABookletHoldsARefereesOwnName(t *testing.T) {
 	// wide, so the trim can only land inside one.
 	accentedAndOverlong := strings.Repeat("é", 60)
 
-	record := starmap.New(1, "Aramis", 0)
+	record := starmap.New(1, aramis, 0)
 
 	for index, name := range []string{accented, unwriteable, overlong, piped, accentedAndOverlong} {
 		record.Worlds = append(record.Worlds, world(t, hexOf(t, 1, index+1), name))
@@ -1097,6 +1097,72 @@ func assertTrimmingKeepsWholeCharacters(t *testing.T, written []stamp) {
 	}
 }
 
+// TestABookletDrawsTheCharactersAppleKeyboardsType: macOS and iOS turn
+// every typed apostrophe into U+2019 and every double hyphen into an
+// em-dash, so a referee who writes his notes in any Apple text field
+// writes them in characters this booklet has to draw (issue 1 #6).
+//
+// It could not. A wrapped paragraph is measured by fpdf.SplitText, which
+// indexes a 256-entry width table by rune, and the guard meant to keep it
+// safe tested whether Windows-1252 could carry the rune rather than
+// whether the rune was below 256. The whole 0x80-0x9F block passed
+// through untouched and `render --format pdf` panicked outright on
+// cw[8217] (issue #17). The suite covered a non-ASCII note already, but
+// with an arrow and an L-with-stroke -- characters Windows-1252 cannot
+// carry, which took the question-mark branch and passed. The crashing set
+// was exactly the characters the encoding handles best.
+//
+// Both entry points are asserted, because they reach split by different
+// paths: the record's own note through firstPage's body, and a world's
+// through bullets and bulletLine. And the characters are asserted to
+// arrive as themselves -- 0x92 and 0x97, the bytes Windows-1252 draws
+// them as -- because a guard that merely replaced them with question
+// marks would stop the panic and lose the apostrophe out of every note a
+// Mac wrote.
+func TestABookletDrawsTheCharactersAppleKeyboardsType(t *testing.T) {
+	t.Parallel()
+
+	// Each note is asserted by its own text, not by the characters alone:
+	// a search for the apostrophe would be answered by whichever note
+	// carried one, and dropping the other would pass.
+	const (
+		onTheMap   = "the sector\u2019s far side \u2014 unvisited"
+		onTheWorld = "the world\u2019s capital \u2014 its only port"
+
+		// The same two notes as Windows-1252 draws them: the curly
+		// apostrophe at 0x92 and the em-dash at 0x97.
+		mapAsDrawn   = "the sector\x92s far side \x97 unvisited"
+		worldAsDrawn = "the world\x92s capital \x97 its only port"
+	)
+
+	// A generated record rather than a hand-built one: a booklet with no
+	// worlds in it draws no bullet, so the world's note could not be
+	// expressed at all.
+	record := generated(t, fixture.Golden{File: "dm-zero", Seed: 1, Name: aramis, OccurrenceDM: 0})
+
+	if len(record.Worlds) == 0 {
+		t.Fatal("the fixture has no worlds, so a world's note cannot reach the page")
+	}
+
+	record.Notes = onTheMap
+	record.Worlds[0].Notes = onTheWorld
+
+	written := everyStamp(t, drawn(t, record))
+
+	for _, want := range []struct {
+		drawn string
+		what  string
+	}{
+		{mapAsDrawn, "the record's own note"},
+		{worldAsDrawn, "a world's note"},
+	} {
+		if !anyStampWith(written, want.drawn) {
+			t.Errorf("%s did not reach the page as the referee wrote it; want %q drawn",
+				want.what, want.drawn)
+		}
+	}
+}
+
 // TestTheRouteTableIsLabelledOnEveryPageItReaches: a subsector at DM +1
 // carries a hundred and fifty routes and a sector carries hundreds, so the
 // table runs past one page. The roster beside it repeats its head; this
@@ -1105,7 +1171,7 @@ func assertTrimmingKeepsWholeCharacters(t *testing.T, written []stamp) {
 func TestTheRouteTableIsLabelledOnEveryPageItReaches(t *testing.T) {
 	t.Parallel()
 
-	record := generated(t, fixture.Golden{File: "dm-plus-one", Seed: 1, Name: "Aramis", OccurrenceDM: 1})
+	record := generated(t, fixture.Golden{File: "dm-plus-one", Seed: 1, Name: aramis, OccurrenceDM: 1})
 
 	sheets := pages(t, drawn(t, record))
 	labelled := 0
@@ -1152,7 +1218,7 @@ func carriesARouteRow(written []stamp) bool {
 func TestAnEmptyBookletSaysSo(t *testing.T) {
 	t.Parallel()
 
-	record := starmap.New(1, "Aramis", 0)
+	record := starmap.New(1, aramis, 0)
 
 	written := everyStamp(t, drawn(t, record))
 

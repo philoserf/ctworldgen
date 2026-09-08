@@ -9,7 +9,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/go-pdf/fpdf"
-	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/charmap"
 
 	"github.com/philoserf/ctworldgen/starmap"
@@ -135,13 +134,13 @@ func epoch() time.Time { return time.Unix(0, 0).UTC() }
 // the map" -- which a monospace grid has nowhere to put.
 func (r *Renderer) Booklet(out io.Writer, record *starmap.Record) error {
 	book := &booklet{
-		pdf:    newPDF(),
-		charts: r.charts,
-		record: record,
-		drawn:  r.drawn(record.Routes),
-		names:  namesByHex(record),
-		latin:  windows1252(),
-		y:      pageMargin,
+		pdf:      newPDF(),
+		charts:   r.charts,
+		record:   record,
+		drawn:    r.drawn(record.Routes),
+		names:    namesByHex(record),
+		alphabet: drawnAlphabet(),
+		y:        pageMargin,
 	}
 
 	if record.Grid == starmap.SectorGrid() {
@@ -185,15 +184,32 @@ func newPDF() *fpdf.Fpdf {
 	return pdf
 }
 
-// windows1252 is the encoding fpdf's core fonts are indexed by: a PDF
-// drawn with Helvetica carries single bytes, not UTF-8, so an em-dash
-// handed straight to fpdf is drawn as the three characters its UTF-8
-// spells.
+// pageByte is the alphabet this page can draw, and the one place that
+// says what byte a rune is drawn as. fpdf's core fonts are indexed by
+// Windows-1252: a PDF drawn with Helvetica carries single bytes, not
+// UTF-8, so an em-dash handed straight to fpdf is drawn as the three
+// characters its UTF-8 spells.
 //
-// One is made per booklet and held on it. The encoding is stateless, and
-// every string drawn goes through it -- a sector draws its 1280 hex
-// numbers alone -- so building one for each was an allocation per stamp.
-func windows1252() *encoding.Encoder { return charmap.Windows1252.NewEncoder() }
+// One function, because there are two ways into fpdf and they must agree.
+// Drawing hands it bytes. Measuring hands SplitText runes, which it
+// indexes into the same 256-entry table. They did not agree once: the
+// guard measuring used asked whether Windows-1252 could carry a rune
+// rather than whether the rune was below 256, so the whole 0x80-0x9F
+// block -- curly quotes, the em-dash, the ellipsis -- passed through
+// untouched and fpdf indexed cw[8217] into a slice of 256. macOS types
+// U+2019 for every apostrophe, so a referee's note crashed the render
+// (issue #17).
+//
+// A character the encoding cannot carry is written as a question mark
+// rather than dropped, so a line keeps the length and shape he gave it.
+func pageByte(char rune) byte {
+	drawn, ok := charmap.Windows1252.EncodeRune(char)
+	if !ok {
+		return '?'
+	}
+
+	return drawn
+}
 
 // encode writes a string in the alphabet the page can draw.
 //
@@ -201,28 +217,38 @@ func windows1252() *encoding.Encoder { return charmap.Windows1252.NewEncoder() }
 // things are not: the em-dash and ellipsis this file sets deliberately,
 // which Windows-1252 has characters for, and a referee's own name for a
 // world, which is the one field with no alphabet the record can promise.
-// A character the encoding cannot carry is written as a question mark
-// rather than dropped, so a name stays the length and shape he gave it.
-func (b *booklet) encode(text string) string {
-	written, err := b.latin.String(text)
-	if err == nil {
-		return written
-	}
-
-	var built strings.Builder
+//
+// Invalid UTF-8 ranges as the replacement rune, which Windows-1252 cannot
+// carry, so a string cut inside a character draws as a question mark --
+// which is what clip relies on.
+func encode(text string) string {
+	built := make([]byte, 0, len(text))
 
 	for _, char := range text {
-		one, oneErr := b.latin.String(string(char))
-		if oneErr != nil {
-			built.WriteByte('?')
-
-			continue
-		}
-
-		built.WriteString(one)
+		built = append(built, pageByte(char))
 	}
 
-	return built.String()
+	return string(built)
+}
+
+// drawnAlphabet is pageByte's inverse: for each byte the page can draw,
+// the character it spells. Only split reads it, and it is a table rather
+// than a call because the runes it reads back are the ordinals of those
+// bytes, which indexes an array and converts nothing.
+//
+// One is made per booklet and held on it, as the encoder it replaced was.
+func drawnAlphabet() [256]rune {
+	var (
+		alphabet [256]rune
+		drawn    byte
+	)
+
+	for index := range alphabet {
+		alphabet[index] = charmap.Windows1252.DecodeByte(drawn)
+		drawn++
+	}
+
+	return alphabet
 }
 
 // booklet is one document being laid out. y is the pen: every section
@@ -238,56 +264,61 @@ type booklet struct {
 	drawn []starmap.Route
 
 	names map[starmap.Hex]string
-	latin *encoding.Encoder
-	y     float64
+
+	// alphabet is what split reads its wrapped lines back through.
+	alphabet [256]rune
+
+	y float64
 }
 
 // text draws a string, and width measures one, in the page's own
 // alphabet. Every string drawn goes through here: fpdf takes the bytes it
 // is given, so a single Text call that skipped this would be the one that
 // mojibakes.
-func (b *booklet) text(x, y float64, s string) { b.pdf.Text(x, y, b.encode(s)) }
+func (b *booklet) text(x, y float64, s string) { b.pdf.Text(x, y, encode(s)) }
 
-func (b *booklet) width(s string) float64 { return b.pdf.GetStringWidth(b.encode(s)) }
+func (b *booklet) width(s string) float64 { return b.pdf.GetStringWidth(encode(s)) }
 
-// drawable rewrites a string in the alphabet the page can draw: every rune
-// Windows-1252 has no character for becomes a question mark, and the result
-// is still UTF-8. A question mark rather than nothing, so a line keeps the
-// length and shape the referee gave it -- the same promise encode makes.
+// split wraps a paragraph to a width.
 //
-// This is not only tidiness. fpdf indexes its character widths into a
-// 256-entry table by rune, so measuring a rune above 255 panics outright.
-// That was unreachable while every wrapped paragraph was a Book 3 table
-// label; notes let the referee's own text reach one, and an arrow in a
-// note crashed the render.
-func (b *booklet) drawable(text string) string {
-	_, err := b.latin.String(text)
-	if err == nil {
-		return text
+// It measures a proxy rather than the string as written, because the two
+// ways into fpdf disagree about what a character is: drawing takes the
+// Windows-1252 bytes encode makes, and SplitText indexes the same
+// 256-entry width table by rune. So the string is encoded to the bytes
+// the page will draw, each byte is widened to the rune of that ordinal,
+// and SplitText measures those -- every one below 256, and every one the
+// width of the character that will actually be inked. The lines come back
+// through the same map in reverse, as UTF-8, so a caller draws them
+// through text like everything else.
+//
+// One consequence, accepted rather than worked around: SplitText asks
+// unicode.IsSpace of the runes it is given, and the proxy for
+// Windows-1252's ellipsis at 0x85 and its non-breaking space at 0xA0 are
+// U+0085 and U+00A0, which are both spaces. So a wrap landing on an
+// ellipsis in a referee's note may break there and eat it.
+func (b *booklet) split(s string, width float64) []string {
+	encoded := encode(s)
+
+	proxy := make([]rune, len(encoded))
+	for i := range encoded {
+		proxy[i] = rune(encoded[i])
 	}
 
-	var built strings.Builder
+	lines := b.pdf.SplitText(string(proxy), width)
 
-	for _, char := range text {
-		_, charErr := b.latin.String(string(char))
-		if charErr != nil {
-			built.WriteByte('?')
+	for index, line := range lines {
+		var built strings.Builder
 
-			continue
+		// Every rune here is one of the proxy's own, so every one of them
+		// indexes the alphabet.
+		for _, char := range line {
+			built.WriteRune(b.alphabet[char])
 		}
 
-		built.WriteRune(char)
+		lines[index] = built.String()
 	}
 
-	return built.String()
-}
-
-// split wraps a paragraph to a width. It measures the drawable form rather
-// than the encoded one, because fpdf indexes its widths by rune -- and
-// rather than the string as written, because a rune the page cannot draw
-// is a rune fpdf cannot measure.
-func (b *booklet) split(s string, width float64) []string {
-	return b.pdf.SplitText(b.drawable(s), width)
+	return lines
 }
 
 // firstPage is the booklet page: the title, the summary the listing opens
@@ -300,7 +331,7 @@ func (b *booklet) firstPage() {
 		name = untitled(b.record)
 	}
 
-	b.pdf.SetTitle(b.encode(name), false)
+	b.pdf.SetTitle(encode(name), false)
 	b.pdf.SetFont("Helvetica", "B", titleSize)
 	b.pdf.SetTextColor(inkBlack, inkBlack, inkBlack)
 	b.text(pageMargin, b.y+titleSize, name)
