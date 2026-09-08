@@ -24,10 +24,10 @@ vars:
   # guarded branch adds one covered statement and one uncovered, and it
   # grows more forgiving as the repository grows.
   #
-  # LC_ALL=C is byte order, which is what sort.Strings gave the Go program
-  # this replaced, so the checked-in baseline needed no reordering. BSD and
-  # GNU sort happen to agree on these names in a UTF-8 locale -- this is
-  # insurance against a package name where they would not, not a fix.
+  # LC_ALL=C is byte order, which is the one collation BSD and GNU sort
+  # are certain to agree on. They happen to agree on these package names
+  # in a UTF-8 locale as well -- this is insurance against a name where
+  # they would not, not a fix.
   #
   # The profile is named inside the variable rather than redirected at the
   # call site: this ends in a pipe to sort, so a caller's `< profile` would

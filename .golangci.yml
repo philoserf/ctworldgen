@@ -14,9 +14,10 @@ linters:
     # about it -- so this is the whole disable list, and it disables no
     # check that is not already being made.
     #
-    # Everything else in this file's history has been measured and either
-    # fixed or configured. If a linter is added to this list, it needs the
-    # same: a count, and a reason that survives reading the findings.
+    # Every other linter `default: all` enables is on, and its findings
+    # are answered rather than configured away. A linter added to this
+    # list needs the same: a count, and a reason that survives reading the
+    # findings.
     - exhaustruct
     - wsl
     - gomodguard
@@ -24,8 +25,8 @@ linters:
   settings:
     depguard:
       # depguard's own default is a deny-all "Main" list that flags this
-      # module's own imports, so the choice was never "on or off" -- it was
-      # "configured or meaningless".
+      # module's own imports, so the choice here is not "on or off" -- it
+      # is "configured or meaningless".
       #
       # Note what is deliberately NOT here: rules against dice importing
       # starmap, or starmap importing tables, and so on down the package
@@ -53,14 +54,6 @@ linters:
           deny:
             - pkg: github.com/philoserf/ctworldgen/internal/fixture
               desc: the golden roster is test support, not architecture
-            # internal/audit is deliberately not listed. It holds no
-            # non-test file, so the compiler already refuses the import
-            # with "no non-test Go files" -- and by the rule three
-            # paragraphs up, a depguard entry for an edge the compiler
-            # refuses reads as enforcement and enforces nothing. The fence
-            # did not weaken; it moved from configuration into the shape
-            # of the directory, which is the stronger place for it.
-            # internal/fixture still has fixture.go, so its entry is live.
     errcheck:
       check-type-assertions: true
     govet:

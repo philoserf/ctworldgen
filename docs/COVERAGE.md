@@ -47,8 +47,8 @@ with a test named in it.
 ## Technological levels (pp. 10-11)
 
 These two pages carry no rule and so get no R-number, but they are inside
-pp. 1-12 and so get a row. The original contract declared them out of
-scope; issue 1 #4 reopened them, and they are built.
+pp. 1-12 and so get a row. A referee asked for them at the table (issue 1
+#4) and they are built.
 
 | Pages                                       | Page  | Implementation                                                    | Test                                                                                                                   | Status |
 | ------------------------------------------- | ----- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------ |
@@ -109,12 +109,11 @@ authority is unchanged.
 | Coverage does not drift                            | `Taskfile.yml` `ratchet`/`ratchet:update`    | --                                                                 |
 
 The one row in this document with no test named, and the only honest way
-to write it: the ratchet is now an awk program and a `diff` in the gate
+to write it: the ratchet is an awk program and a `diff` in the gate
 itself, so the check runs on every `task` and every CI run rather than in
-a suite. It was 391 lines of Go with five tests of its own until issue 15;
-those tests measured a tool that no longer exists. What replaced them is
-the mutation matrix in that issue's pull request -- each way the baseline
-can move, shown to fail the gate.
+a suite, and there is no unit of it to hold a test against. The evidence
+that it holds is the mutation matrix in issue 15's pull request -- each
+way the baseline can move, shown to fail the gate.
 
 ## Readings
 
