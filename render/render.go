@@ -473,25 +473,105 @@ func (r *Renderer) details(
 		return
 	}
 
-	fmt.Fprintf(built, "%s\n\n%s", heading, techIndexNote)
+	fmt.Fprintf(built, "%s\n\n%s", heading, technologyNote)
 
 	for _, world := range worlds {
 		r.world(built, level, names, world)
 	}
 }
 
-// techIndexNote says once what the technological index line does not
-// repeat on every world: the index is generated (p. 9), but the tables
-// saying what one means during play (pp. 10-11) are not transcribed, so
-// the listing carries the digit alone. That is a gap and not a boundary
-// -- issue 1 asks for the gloss, and p. 11 is the line players ask about
-// -- and the tables are printed with holes besides, which p. 11 asks the
-// referee or the players to fill in as play discovers them.
-const techIndexNote = "The technological index carries its digit and no description. " +
-	"The technological levels tables of pp. 10-11 say what an index means " +
-	"during play rather than how it is generated, so this tool does not read " +
-	"them; p. 11 asks the referee or the players to fill in their holes as " +
-	"play discovers them.\n\n"
+// technologyNote says once, at the head of the section, what the
+// technological index line on every world is made of. It is the citation
+// ERRATA E011 requires: a reader meets the borrowed book here, before he
+// meets anything it says.
+const technologyNote = "What a technological index means is described in two halves. " +
+	"The first is T5's -- Core Book 2 pp. 230-232, cited for description alone and never " +
+	"for a throw (ERRATA E011): the band, the era it anchors the level to, and the level's " +
+	"energy, society and settlements. The second is pp. 10-11, read downward -- an entry " +
+	"printed at a level is the best of its kind until the next one (E009), and a hole is the " +
+	"page inviting the referee to fill it rather than an absence (E010). Where both books " +
+	"cover the same ground the held page speaks.\n\n"
+
+// technological glosses an index: what a world at that level is like, and
+// what it can build.
+//
+// The index is thrown from the p. 9 matrix (R12) and neither table
+// generates anything, so this is description and only description.
+//
+// It is in two halves because it comes from two books, and it says so:
+// the first names T5, which technologyNote has already introduced. The
+// halves are also divided by subject rather than arbitrarily. **Where the
+// two books cover the same ground, the held page speaks.** T5's transport
+// and computing columns are the two this does not print, because Book 3's
+// own air, space and computers columns say the same thing in the held
+// page's words -- grav belts and drives N or less against "gravity
+// manipulation lifters to orbit", Model/6 against "Model /6".
+func technological(charts *tables.Tables, index int) string {
+	level := charts.TechLevels.Level(index)
+
+	borrowed := clauses(
+		level.Borrowed.Energy,
+		level.Borrowed.Society,
+		level.Borrowed.Environ,
+	)
+
+	held := clauses(
+		level.Held.Personal,
+		level.Held.Armor,
+		level.Held.Computers,
+		level.Held.Air,
+		level.Held.Space,
+	)
+
+	if level.Held.MatterTransport {
+		held = append(held, "matter transport")
+	}
+
+	var built strings.Builder
+
+	fmt.Fprintf(&built, "%s Tech (T5), %s",
+		level.Borrowed.Band, strings.TrimSuffix(level.Borrowed.Era, "."))
+
+	if len(borrowed) > 0 {
+		fmt.Fprintf(&built, ": %s", strings.Join(borrowed, "; "))
+	}
+
+	built.WriteString(".")
+
+	if len(held) > 0 {
+		fmt.Fprintf(&built, " Pp. 10-11: %s.", strings.Join(held, "; "))
+	}
+
+	return built.String()
+}
+
+// clauses drops the columns a page prints nothing in at or below the
+// level -- a hole is not an absence, and saying nothing is what the page
+// does (ERRATA E010) -- and drops the full stop each T5 cell ends in, so
+// that a run of them reads as one sentence rather than as five.
+//
+// It also collapses a run of neighbouring columns carrying the same
+// entry. Water and land are both Hovercraft from level 7, and "Hovercraft;
+// Hovercraft" reads as a fault in the tool rather than as the page.
+//
+// The clauses are joined with semicolons rather than commas because half
+// of these cells are lists already -- "Carbine, Rifle, Pistol, SMG" is one
+// cell of p. 10 -- and a comma between them hides where one column ends
+// and the next begins.
+func clauses(entries ...string) []string {
+	kept := make([]string, 0, len(entries))
+
+	for _, entry := range entries {
+		trimmed := strings.TrimSuffix(entry, ".")
+		if trimmed == "" || (len(kept) > 0 && kept[len(kept)-1] == trimmed) {
+			continue
+		}
+
+		kept = append(kept, trimmed)
+	}
+
+	return kept
+}
 
 func (r *Renderer) world(
 	built *strings.Builder, level string, names map[starmap.Hex]string, world starmap.World,
@@ -515,14 +595,13 @@ type bullet struct {
 }
 
 // markdown writes one bullet as the listing sets it: the label in bold,
-// then a single space and the description where there is one. A bullet
-// with no description ends at the label, which is what the technological
-// index line has always done.
+// then a single space and the description.
+//
+// Every bullet has one. The technological index line was the exception
+// until pp. 10-11 were read, and the branch that carried it is gone with
+// it; bullets is what holds the promise, and a test sweeps the goldens
+// for a bullet that ends at its label.
 func (b bullet) markdown() string {
-	if b.description == "" {
-		return "- **" + b.label + "**\n"
-	}
-
 	return "- **" + b.label + "** " + b.description + "\n"
 }
 
@@ -573,10 +652,11 @@ func bullets(charts *tables.Tables, world starmap.World) []bullet {
 		})
 	}
 
-	// No description: techIndexNote said once, at the head of the section,
-	// why pp. 10-11 supply none.
 	lines = append(lines,
-		bullet{label: fmt.Sprintf("Technological index %s.", digit(world.TechIndex)), description: ""},
+		bullet{
+			label:       fmt.Sprintf("Technological index %s.", digit(world.TechIndex)),
+			description: technological(charts, world.TechIndex),
+		},
 		bullet{label: "Bases.", description: bases(world)},
 	)
 

@@ -42,9 +42,10 @@ rather than the generation, so like E007 it is never stamped.
 joined by shorter routes is not drawn (E007) -- and `--lanes all` draws
 every one. The record carries them all either way.
 
-`docs/COVERAGE.md` is the live map of rule to code to test. The
-technological levels tables of pp. 10-11 are the one thing inside pp. 1-12
-that is not built (issue 1 #4).
+`docs/COVERAGE.md` is the live map of rule to code to test. Every page of
+pp. 1-12 is now built: pp. 10-11 gloss each world's technological index,
+read downward (E009) with their holes left as holes (E010), and with the
+band and era T5 supplies for description alone (E011).
 
 There are two golden trees now -- the JSON records in `gen/testdata` and
 the Markdown listings in `render/testdata` -- and both are driven from the

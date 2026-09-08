@@ -741,7 +741,7 @@ func (b *booklet) detailsSection(heading string, worlds []starmap.World) {
 	}
 
 	b.heading(heading)
-	b.body(techIndexNote)
+	b.body(technologyNote)
 
 	for _, world := range worlds {
 		b.worldBlock(world)
@@ -784,23 +784,16 @@ func (b *booklet) bulletLine(line bullet) {
 
 	b.pdf.SetFont("Helvetica", "", bodySize)
 
+	// Every bullet has a description, so this is at least one line; the
+	// branch for a bullet without one went when the technological index
+	// gained its gloss.
 	wrapped := b.split(line.description, contentRight-textX)
 
-	if line.description == "" {
-		wrapped = nil
-	}
-
-	b.ensure(bodyLead * float64(max(len(wrapped), 1)))
+	b.ensure(bodyLead * float64(len(wrapped)))
 
 	b.pdf.SetFont("Helvetica", "B", bodySize)
 	b.pdf.SetTextColor(inkBlack, inkBlack, inkBlack)
 	b.text(pageMargin+bulletIndent, b.y+bodySize, line.label)
-
-	if len(wrapped) == 0 {
-		b.y += bodyLead
-
-		return
-	}
 
 	b.pdf.SetFont("Helvetica", "", bodySize)
 
