@@ -319,7 +319,12 @@ func versionCmd(stdout io.Writer) error {
 	fmt.Fprintf(&out, "ctworldgen %s\n", build)
 
 	if revision != "" {
-		fmt.Fprintf(&out, "revision   %s%s\n", revision, dirtySuffix(dirty))
+		suffix := ""
+		if dirty {
+			suffix = " (dirty)"
+		}
+
+		fmt.Fprintf(&out, "revision   %s%s\n", revision, suffix)
 	}
 
 	fmt.Fprintf(&out, "engine     %s\n", starmap.EngineVersion)
@@ -332,14 +337,6 @@ func versionCmd(stdout io.Writer) error {
 	}
 
 	return nil
-}
-
-func dirtySuffix(dirty bool) string {
-	if dirty {
-		return " (dirty)"
-	}
-
-	return ""
 }
 
 func buildInfo() (string, string, bool) {

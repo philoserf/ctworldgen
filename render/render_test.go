@@ -897,14 +897,14 @@ func TestTheMapIsTheGridPrintedOnPageThree(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		t.Parallel()
 		assertTheMapIsThePrintedGrid(t, section(t, listing(t, starmap.New(1, aramis, 0)), "The map"),
-			everyHexOfGrid(starmap.PageThreeGrid()))
+			everyHexOf(starmap.PageThreeGrid()))
 	})
 
 	for _, golden := range fixture.Goldens() {
 		t.Run(golden.File, func(t *testing.T) {
 			t.Parallel()
 			assertTheMapIsThePrintedGrid(t, section(t, listing(t, generated(t, golden)), "The map"),
-				everyHexOfGrid(starmap.PageThreeGrid()))
+				everyHexOf(starmap.PageThreeGrid()))
 		})
 	}
 }
@@ -1014,19 +1014,6 @@ func TestTheMapMarksWhatPageOneSaysToMark(t *testing.T) {
 // line was written.
 func drawnSlot(line string, char, slot int) string {
 	return strings.TrimSpace(line[char:min(char+slot, len(line))])
-}
-
-// everyHexOfGrid is the set a map of a whole grid draws.
-func everyHexOfGrid(grid starmap.Grid) map[starmap.Hex]bool {
-	want := map[starmap.Hex]bool{}
-
-	for col := 1; col <= grid.Columns; col++ {
-		for row := 1; row <= grid.Rows; row++ {
-			want[starmap.Hex{Col: col, Row: row}] = true
-		}
-	}
-
-	return want
 }
 
 // memberAndItsRingHexes is the set one member's map draws: its own eighty
