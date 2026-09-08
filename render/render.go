@@ -47,10 +47,8 @@ func New(lanes Lanes) (*Renderer, error) {
 // rather than threaded through every section's parameters. The two
 // typesetters share a middle -- bullets, member/members, legible, summary,
 // named, bases -- and structural parallelism is what keeps that middle
-// discoverable. Before this, five of the Markdown sections took six
-// parameters on a *Renderer receiver they never touched, so the next thing
-// that has to agree between the two backends had an obvious home on one
-// side and none on the other.
+// discoverable: the next thing that has to agree between the two backends
+// has an obvious home on both sides.
 type listing struct {
 	built  strings.Builder
 	charts *tables.Tables
@@ -377,9 +375,10 @@ func oneLine(value string) string {
 // otherwise break the row into columns the table does not have.
 //
 // This is Markdown's own syntax and nothing else's: the escape must not
-// reach a document with no pipes to escape. It did once -- named() called
-// this, so the PDF booklet drew a backslash the referee never typed,
-// while the roster and the map beside it drew the same name plain.
+// reach a document with no pipes to escape. That is why named() does not
+// call it -- named() feeds the booklet too, which would draw a backslash
+// the referee never typed, beside a roster and a map drawing the same
+// name plain.
 func cell(value string) string {
 	return strings.ReplaceAll(oneLine(value), "|", `\|`)
 }
@@ -621,10 +620,10 @@ func (b bullet) markdown() string {
 //
 // One list, two typesetters. The Markdown listing sets these as bold
 // labels through markdown() above, and the booklet lays the same slice out
-// as a block of wrapped lines. They were written out twice and had to
-// agree by convention -- two suites checking two copies -- and a change to
-// one was a change the other's tests could not see. Now they agree by
-// construction.
+// as a block of wrapped lines. They agree by construction because there is
+// one slice. Two copies would have to agree by convention instead -- two
+// suites checking two lists -- and a change to one would be a change the
+// other's tests could not see.
 func bullets(charts *tables.Tables, world starmap.World) []bullet {
 	starport := "no chart row"
 

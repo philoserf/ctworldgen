@@ -366,7 +366,7 @@ func assertOneMemberKeptItsRoutes(
 // seam pass appended them (ERRATA E002, E006 part 3).
 //
 // The order is what a referee reads down and what makes two renders of one
-// record the same document. It was pinned only by the goldens, which say a
+// record the same document. The goldens pin it too, but a golden says a
 // file changed rather than what about it is wrong.
 func TestASectorIsInTheOrderPageTwoReads(t *testing.T) {
 	t.Parallel()

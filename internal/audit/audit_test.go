@@ -4,9 +4,9 @@
 // documents are exactly the readings ERRATA.md records.
 //
 // It is test support, not architecture, and the directory holds no
-// non-test file, so there is no package here for production code to
-// import even by mistake. That is the point: the fence used to be a
-// depguard rule, and it is now the absence of anything to reach.
+// non-test file. There is therefore no package here for production code
+// to import even by mistake: the import fails to compile with "no
+// non-test Go files", which is a firmer fence than a lint rule.
 package audit_test
 
 import (

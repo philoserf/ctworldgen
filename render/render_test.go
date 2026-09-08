@@ -388,9 +388,9 @@ func TestARefereesOwnNameStaysInOneCell(t *testing.T) {
 //
 // It is asserted separately because the escape lives in a different place
 // from the roster's. named() does not escape -- it feeds the PDF booklet
-// too, which has no pipes to escape and drew a backslash the referee
-// never typed while named() did -- so the Markdown route emitter applies
-// cell() itself, and this is what holds it there.
+// too, which has no pipes to escape and would draw a backslash the
+// referee never typed -- so the Markdown route emitter applies cell()
+// itself, and this is what holds it there.
 func assertTheRouteTableStaysInThreeCells(t *testing.T, record *starmap.Record, from starmap.Hex) {
 	t.Helper()
 
@@ -625,14 +625,11 @@ func bandOn232(t *testing.T, index int) string {
 	return ""
 }
 
-// TestEveryBulletCarriesADescription is what let two branches go when the
-// technological index gained its gloss: the listing's bullet with no
-// description and the booklet's. Until then the technological index line
-// was the one bullet that ended at its label.
+// TestEveryBulletCarriesADescription sweeps the goldens for a bullet that
+// ends at its label.
 //
-// Nothing outside bullets can promise that, so this sweeps the goldens
-// for a bullet that ends at its label. A bullet that lost its description
-// would otherwise draw a trailing space in the listing and, in the
+// Nothing outside bullets can promise there is not one, and a bullet with
+// no description draws a trailing space in the listing and, in the
 // booklet, a label with the pen never advancing past it.
 func TestEveryBulletCarriesADescription(t *testing.T) {
 	t.Parallel()
@@ -1358,12 +1355,11 @@ func noteLine(t *testing.T, written, heading string) string {
 }
 
 // TestTheSectorIndexMapSeamsSitOnMemberBoundaries measures the seam bars
-// of the sector's index map against the p. 3 parity, and it exists
-// because nothing else did. The sector listing's golden is one member's
-// section (fixture.SectorSlice), so the index map at the top of that
-// listing -- every starport letter and every seam bar on a 32x40 grid --
-// was compared with nothing at all. Changing the stride that places the
-// bars left the whole render suite green.
+// of the sector's index map against the p. 3 parity, and nothing else
+// holds them. The sector listing's golden is one member's section
+// (fixture.SectorSlice), so the index map at the top of that listing --
+// every starport letter and every seam bar on a 32x40 grid -- is outside
+// every golden this package keeps.
 //
 // What the page fixes: a member is eight columns wide, and a line of the
 // index carries only every second column, so every member contributes

@@ -248,8 +248,7 @@ ever becomes data, that is a different tool.
 
 ## A test that cannot fail looks exactly like one that passes
 
-This has bitten five times now, and never once showed up as a failing
-suite:
+This keeps happening, and it has never once shown up as a failing suite:
 
 - The base and route throws could have their sense inverted and every
   invariant still passed, because the checks only asked whether the routes
@@ -308,11 +307,11 @@ down.
   decomposition, a lane rule and a page geometry, in 2,149 lines. The
   middle they share -- `bullets`, `member`/`members`, `legible`,
   `summary`, `named`, `bases` -- is what stops the two documents
-  diverging, and the comment above `bullets` records the time they did:
-  written out twice, agreeing by convention, and "a change to one was a
-  change the other's tests could not see." Inside one package sharing is
-  the default; across a boundary it becomes an export decision, which is
-  the pressure that produced the duplication the first time.
+  diverging. They did diverge once: the bullet list was written out twice,
+  agreed by convention, and a change to one was a change the other's tests
+  could not see. Inside one package sharing is the default; across a
+  boundary it becomes an export decision, which is the pressure that
+  produced the duplication the first time.
 
 - **The three parity harnesses stay separate.** The trap above says why
   each encoding needs its own measurement against the page. The

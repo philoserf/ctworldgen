@@ -258,25 +258,25 @@ func writeFile(path string, contents []byte, force bool) error {
 // replaceFile puts contents where path is, and leaves what is already
 // there alone unless the whole of the new file was written.
 //
-// --force used to open the target O_TRUNC and write into it, so a write
-// that failed partway -- a full disk, a signal, an I/O error -- left the
-// referee with a truncated file where his record had been. The command
-// reported the error and the old content was already gone. That is the
-// one file the tool asks him to keep: it is what render reads, and it may
-// carry names and notes he wrote into it over several sessions.
+// Opening the target O_TRUNC and writing into it means a write that fails
+// partway -- a full disk, a signal, an I/O error -- leaves the referee
+// with a truncated file where his record was: the command reports the
+// error and the old content is already gone. That is the one file the
+// tool asks him to keep. It is what render reads, and it may carry names
+// and notes he wrote into it over several sessions.
 //
 // So the new record is written beside the old one and renamed over it,
 // which is atomic on one filesystem. os.CreateTemp creates at 0600, which
 // is recordMode, so the record is not widened on its way through.
 //
-// Two differences from the open it replaces, and they are the cost of
-// the pattern. A rename needs write permission on the directory rather
-// than on the file, so --force into a directory the referee cannot write
-// now fails where a truncating open would have succeeded -- and that case
-// could not have kept his old file either. And where the target is a
-// symbolic or hard link, a truncating open wrote through it into the file
-// it named, where a rename replaces the link with the new record and
-// leaves what it pointed at alone.
+// Two differences from a truncating open, and they are the cost of the
+// pattern. A rename needs write permission on the directory rather than
+// on the file, so --force into a directory the referee cannot write fails
+// where a truncating open would succeed -- and that case could not keep
+// his old file either. And where the target is a symbolic or hard link, a
+// truncating open writes through it into the file it names, where a
+// rename replaces the link with the new record and leaves what it pointed
+// at alone.
 func replaceFile(path string, contents []byte) error {
 	dir := filepath.Dir(path)
 

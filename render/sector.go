@@ -116,14 +116,13 @@ func ends(route starmap.Route) (int, int, bool) {
 // code rather than in a comment.
 //
 // The guard cannot fire: every call site is an exhaustive loop over the
-// sixteen. It stays anyway, and issue 25 proposed removing it. It is the
-// bounds proof gosec's G115 accepts for the int-to-uint64 conversion, so
-// deleting it turns the gate red on a finding answerable only by a
-// disable. Its fallback returns the sector's base, which is member 0's
-// seed and so is itself a wrong seed -- but a renderer has no error path
-// out, and there is no value in uint64 that reads as "no seed". If the
-// call sites ever stop being exhaustive, the answer is an error, not a
-// better constant.
+// sixteen. It stays because it is the bounds proof gosec's G115 accepts
+// for the int-to-uint64 conversion, and a version without it fails the
+// gate on a finding answerable only by a lint disable. Its fallback
+// returns the sector's base, which is member 0's seed and so is itself a
+// wrong seed -- but a renderer has no error path out, and no uint64 reads
+// as "no seed". If the call sites ever stop being exhaustive, the answer
+// is an error, not a better constant.
 func memberSeed(base uint64, index int) uint64 {
 	if index < 0 || index >= starmap.Members {
 		return base
