@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime/debug"
 	"strings"
 
@@ -220,13 +221,17 @@ func write(record *starmap.Record, path string, force bool, stdout io.Writer) er
 // writeFile is the one place a file is written, so that "existing files
 // are never overwritten without --force" holds for every subcommand
 // rather than for whichever one remembered it.
+//
+// Without --force, O_EXCL is that promise itself: the file is created or
+// nothing happens. With --force it is replaceFile's, because a record is
+// the one file the tool asks a referee to keep.
 func writeFile(path string, contents []byte, force bool) error {
-	flags := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
-	if !force {
-		flags = os.O_WRONLY | os.O_CREATE | os.O_EXCL
+	if force {
+		return replaceFile(path, contents)
 	}
 
-	file, err := os.OpenFile(path, flags, recordMode) //nolint:gosec // path is the operator's own -o argument
+	//nolint:gosec // path is the operator's own -o argument
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, recordMode)
 	if err != nil {
 		if errors.Is(err, os.ErrExist) {
 			return fmt.Errorf("%w: %s; pass --force to overwrite it", errFileExists, path)
@@ -245,6 +250,60 @@ func writeFile(path string, contents []byte, force bool) error {
 	err = file.Close()
 	if err != nil {
 		return fmt.Errorf("closing %s: %w", path, err)
+	}
+
+	return nil
+}
+
+// replaceFile puts contents where path is, and leaves what is already
+// there alone unless the whole of the new file was written.
+//
+// --force used to open the target O_TRUNC and write into it, so a write
+// that failed partway -- a full disk, a signal, an I/O error -- left the
+// referee with a truncated file where his record had been. The command
+// reported the error and the old content was already gone. That is the
+// one file the tool asks him to keep: it is what render reads, and it may
+// carry names and notes he wrote into it over several sessions.
+//
+// So the new record is written beside the old one and renamed over it,
+// which is atomic on one filesystem. os.CreateTemp creates at 0600, which
+// is recordMode, so the record is not widened on its way through.
+//
+// Two differences from the open it replaces, and they are the cost of
+// the pattern. A rename needs write permission on the directory rather
+// than on the file, so --force into a directory the referee cannot write
+// now fails where a truncating open would have succeeded -- and that case
+// could not have kept his old file either. And where the target is a
+// symbolic or hard link, a truncating open wrote through it into the file
+// it named, where a rename replaces the link with the new record and
+// leaves what it pointed at alone.
+func replaceFile(path string, contents []byte) error {
+	dir := filepath.Dir(path)
+
+	tmp, err := os.CreateTemp(dir, ".ctworldgen-*")
+	if err != nil {
+		return fmt.Errorf("opening a temporary file in %s: %w", dir, err)
+	}
+
+	// On every path out, including the one where the rename already
+	// carried the file off this name and there is nothing left to remove.
+	defer func() { _ = os.Remove(tmp.Name()) }()
+
+	_, writeErr := tmp.Write(contents)
+	if writeErr != nil {
+		_ = tmp.Close()
+
+		return fmt.Errorf("writing %s: %w", tmp.Name(), writeErr)
+	}
+
+	err = tmp.Close()
+	if err != nil {
+		return fmt.Errorf("closing %s: %w", tmp.Name(), err)
+	}
+
+	err = os.Rename(tmp.Name(), path)
+	if err != nil {
+		return fmt.Errorf("putting %s in place: %w", path, err)
 	}
 
 	return nil
