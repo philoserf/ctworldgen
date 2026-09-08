@@ -15,12 +15,6 @@ built, and what it lacked is the backlog. `docs/ERRATA.md` holds the
 recorded readings; `docs/COVERAGE.md` maps rules to implementation and
 tests. Both are live.
 
-`docs/PRD.md` is **historical**. It was the contract through
-`v1.0.0-alpha.1` and governs nothing now; read it for why a thing is the
-way it is, never for whether a thing may be built. Its scope fence in
-particular is retired — several of its "Not in scope" bullets are open
-backlog items.
-
 [issue 1]: https://github.com/philoserf/ctworldgen/issues/1
 
 **Status.** The engine walks the whole of pp. 1-12; `render` writes the
@@ -66,7 +60,7 @@ output could be trusted at all: "The numbers are the page's numbers",
 "Error messages cite the page — this bought trust in the rest of the
 output before I had checked any of it", and "The errata loop works …
 this is the best thing in the alpha." Page accuracy is a user need. What
-retired with the PRD was its scope fence, not this.
+retired with the original contract was its scope fence, not this.
 
 **What is in authority for generation**, and nothing else is:
 
@@ -168,7 +162,68 @@ a tool moves rather than drift behind it. That is the signal working.
 Answer the finding; do not pin a tool or add a linter disable to silence
 it.
 
-## Two traps the PRD names and an agent will still hit
+## The decisions the design turns on
+
+Four decisions shaped this code, and until now they were written down in
+one place only: the contract that governed through `v1.0.0-alpha.1`, which
+is deleted. They are kept here because each is still load-bearing and none
+of them can be read back off the source -- code shows what was decided,
+never what was rejected.
+
+**The subsector is the record. Not the world.** Star mapping is
+subsector-scoped: the p. 3 grid is what the occurrence throw is made
+against, and a lane cannot be drawn until its neighbours exist. A
+world-shaped record could carry neither, so the record is the subsector and
+a world is a row inside it. `sector` layers on top of that without
+disturbing it -- sixteen records, each still whole, which is what lets
+member _i_ be the subsector `new --seed N+i` writes.
+
+**An empty subsector is a result.** A run whose eighty throws place no
+world produces a valid record with no worlds and no lanes. Nothing rerolls,
+and nothing errors. This is why `internal/fixture` carries an empty record
+and why the schema's minimal example is one.
+
+**There is no log.** The record carries outcomes, not the throws that
+reached them. A referee who wants the throws shown makes them himself.
+The dice stream is reproducible from the seed, which is the property a log
+would be a second, driftable copy of.
+
+**Types for identity, data for ranges.** The dividing rule is that a type
+carries identity and never a rule invariant. `Hex`, `Starport`, `Digit`,
+`Characteristic`, `Parsecs` and `dice.Target` are types: each parses at the
+program's edge, marshals to the string the record prints, and makes a class
+of defect uncompilable rather than runtime-checked. Size, atmosphere,
+hydrographics, population, government, law level and the technological
+index are `int`.
+
+Three consequences, all of which look like oversights and are not:
+
+- **Characteristic values stay `int`.** A `type Atmosphere int` with a
+  compile-time range of 0-12 would put the p. 5 table's last row into Go
+  source, beside the data file and the test that transcribes it -- a third
+  copy of a number the book prints once, which is the drift this design
+  exists to prevent. It would also be **wrong**: R14 caps nothing at a
+  descriptive table's last row, so a generated atmosphere reaches 15 and
+  the type would reject a legal value. A range in a type is a rules claim,
+  and a rules claim belongs on a page with a cite.
+- **`Digit` spans the whole p. 2 alphabet** -- 0 through 33, O and I
+  omitted -- and does not stop at 20. R15's "it must reach 20" is a floor
+  on the notation, not a bound on it.
+- **`Characteristic` is the seven values Size through TechIndex, and
+  starport is not among them.** Starport is a table lookup and never
+  arithmetic, so it can never be the subject of a clamp; the technological
+  index matrix takes it as an argument separate from its six
+  `Characteristic` columns.
+
+`Hex` and `Digit` are the deliberate boundary cases and they sit on the
+type side: `Hex` enforces the eight columns and ten rows of the p. 3 grid,
+`Digit` the p. 2 alphabet. Both are printed rules, but both are _identity_
+-- a hex outside 0101-0810 is not a hex, a character outside the alphabet
+is not a digit -- rather than a value range that a table also prints, which
+is the thing the first consequence refuses. If the grid or the notation
+ever becomes data, that is a different tool.
+
+## Two traps an agent will still hit
 
 - **The hex grid parity.** Getting the offset-to-cube conversion
   backwards leaves every distance internally consistent and wrong by one

@@ -47,8 +47,8 @@ with a test named in it.
 ## Technological levels (pp. 10-11)
 
 These two pages carry no rule and so get no R-number, but they are inside
-pp. 1-12 and so get a row. They were declared out of scope by the retired
-PRD; issue 1 #4 reopened them, and they are built.
+pp. 1-12 and so get a row. The original contract declared them out of
+scope; issue 1 #4 reopened them, and they are built.
 
 | Pages                                       | Page  | Implementation                                                    | Test                                                                                                                   | Status |
 | ------------------------------------------- | ----- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------ |

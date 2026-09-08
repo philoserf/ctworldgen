@@ -21,12 +21,8 @@ record into the listing, opening with a text map of the p. 3 hex grid, or
 into the booklet. `sector` lays sixteen subsectors on one 32x40 grid and
 throws for the routes at their seams.
 
-Two things are not built, and both are open:
+Every page of pp. 1-12 is built. One enhancement beyond them is open:
 
-- **The technological levels tables of pp. 10-11.** Every world carries a
-  technological index and no gloss of it. The listing says why the line is
-  bare rather than leaving it silently so
-  ([#4](https://github.com/philoserf/ctworldgen/issues/4)).
 - **Per-area occurrence DMs** -- a rift in one corner, a cluster in the
   other ([#5](https://github.com/philoserf/ctworldgen/issues/5)).
 
@@ -38,11 +34,8 @@ What the tool should do comes from
 [issue 1](https://github.com/philoserf/ctworldgen/issues/1), the first
 alpha's report: it was played as a referee rather than as a developer, and
 what that found is the backlog. The second alpha shipped everything it
-asked for but the technological levels tables, and it wants reading the
-same way -- play it as a referee and file what the table finds.
-`docs/PRD.md` was the contract through
-`v1.0.0-alpha.1` and governs nothing now -- read it for why a thing is the
-way it is, never for whether a thing may be built.
+asked for, the technological levels tables included, and it wants reading
+the same way -- play it as a referee and file what the table finds.
 
 ## Use
 
@@ -199,7 +192,6 @@ Two habits follow, and they are the ones worth knowing from outside:
 complete example beside it. `CLAUDE.md` carries the authority model in
 full, and the traps -- the font, the hex grid parity, the dice-stream
 consumption order -- that a change to this code has to respect.
-`docs/PRD.md` is historical; see above.
 
 ## Development
 
