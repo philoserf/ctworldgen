@@ -95,6 +95,16 @@ func PageThreeGrid() Grid { return Grid{Columns: Columns, Rows: Rows} }
 // SectorGrid is sixteen of those.
 func SectorGrid() Grid { return Grid{Columns: SectorColumns, Rows: SectorRows} }
 
+// IsSector reports whether this is the sector grid of sixteen sub-sectors
+// (ERRATA E006) rather than the p. 3 sub-sector grid.
+//
+// There are exactly two grids -- record.schema.json enforces that as a
+// oneOf over two const pairs, and Decode enumerates them -- so asking
+// which one a record is on is a kind question with a yes and a no. It had
+// no owner: four sites in render compared the struct to SectorGrid(),
+// which reads as a dimension check and means this.
+func (g Grid) IsSector() bool { return g == SectorGrid() }
+
 // Contains reports whether a hex is on this grid.
 func (g Grid) Contains(h Hex) bool {
 	return h.Col >= 1 && h.Col <= g.Columns && h.Row >= 1 && h.Row <= g.Rows

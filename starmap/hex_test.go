@@ -69,6 +69,31 @@ func TestDistanceAgainstPrintedGrid(t *testing.T) {
 // grid there is: a hex is four digits whether it names a subsector or a
 // sector, and 0000 or 3341 is not one. Whether a hex is on a particular
 // record's grid is Grid.Contains, checked below.
+// TestOnlyTheSectorGridIsASector holds the predicate render asks instead
+// of comparing dimensions. It is worth a test rather than being obvious
+// because it is the Go side of a two-sided invariant: record.schema.json
+// enumerates exactly two grids as a oneOf over two const pairs, and
+// Decode enumerates the same two. If a third is ever added, this fails
+// and says which side moved first.
+func TestOnlyTheSectorGridIsASector(t *testing.T) {
+	t.Parallel()
+
+	if !starmap.SectorGrid().IsSector() {
+		t.Error("the sector grid does not report itself as one")
+	}
+
+	if starmap.PageThreeGrid().IsSector() {
+		t.Error("the p. 3 sub-sector grid reports itself as a sector")
+	}
+
+	// A grid Decode refuses is not a sector either. IsSector answers a
+	// kind question, and the answer for anything that is not the sector
+	// grid is no -- it is not a test of whether the record is valid.
+	if (starmap.Grid{Columns: starmap.SectorColumns, Rows: starmap.Rows}).IsSector() {
+		t.Error("a grid neither the schema nor Decode names reported itself as a sector")
+	}
+}
+
 func TestNewHexRejectsOffGrid(t *testing.T) {
 	t.Parallel()
 
