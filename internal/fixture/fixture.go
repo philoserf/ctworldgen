@@ -22,9 +22,9 @@ type Golden struct {
 	OccurrenceDM int
 }
 
-// Goldens is the roster: the three occurrence DMs the book offers, plus
-// the seed 0 case, which is an explicit and distinct choice rather than a
-// request for a random seed.
+// Goldens is the roster both golden trees are generated from. It is the
+// three occurrence DMs the book offers, plus the seed 0 case, which is an
+// explicit and distinct choice rather than a request for a random seed.
 //
 // There is deliberately no empty-subsector golden. An empty subsector is
 // a valid result, but eighty throws at the worst DM the book offers make
@@ -44,13 +44,13 @@ func Goldens() []Golden {
 // fixture together, and it would pin almost nothing new. A sector's
 // members are the subsectors `new --seed base+i` already writes, which a
 // test compares directly, so the only thing a sector adds is the route
-// pass at the seams -- and that is what SeamsPath pins.
+// pass at the seams -- and that is what [SeamsPath] pins.
 func SectorGolden() Golden {
 	return Golden{File: "sector-seams", Seed: 1, Name: aramis, OccurrenceDM: 0}
 }
 
 // SeamsPath is the golden of the routes that cross a member border,
-// relative to the repository root. The name comes from SectorGolden so
+// relative to the repository root. The name comes from [SectorGolden] so
 // that the writer and the test that reads it cannot come to name two
 // different files.
 func SeamsPath() string {
@@ -80,7 +80,7 @@ func SectorSlicePath() string {
 	return filepath.Join("render", "testdata", fmt.Sprintf("sector-member-%02d.md", SectorSliceMember))
 }
 
-// SectorSlice cuts the member section SectorSlicePath pins out of a whole
+// SectorSlice cuts the member section [SectorSlicePath] pins out of a whole
 // sector listing. The writer and the reader of that golden both call it,
 // so the two cannot come to cut different things.
 func SectorSlice(listing string) string {

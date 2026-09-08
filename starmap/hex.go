@@ -5,7 +5,7 @@
 // of sixteen sub-sectors ERRATA E006 assembles.
 //
 // The rule dividing the types from the data is that types carry identity,
-// never rule invariants. Hex enforces the eight columns and ten rows of
+// never rule invariants. [Hex] enforces the eight columns and ten rows of
 // the Book 3 p. 3 grid and Digit enforces the p. 2 alphabet, because an
 // identifier and a notation are identity. A characteristic's value range
 // is not: those stay int.
@@ -38,7 +38,7 @@ const (
 // (ERRATA E006).
 const Members = SectorAcross * SectorAcross
 
-// Place translates a member's local hex onto the sector grid: member
+// Place translates a member's local hex onto the sector grid. Member
 // index sits at column band index mod 4 and row band index div 4, and a
 // local hex moves by whole bands (ERRATA E006 parts 1 and 2).
 //
@@ -58,8 +58,8 @@ func Place(index int, hex Hex) Hex {
 	return Hex{Col: across*Columns + hex.Col, Row: down*Rows + hex.Row}
 }
 
-// MemberOf returns which of a sector's sixteen sub-sectors a hex fell in,
-// numbered left to right and then down (ERRATA E006 part 1).
+// MemberOf returns which of a sector's sixteen sub-sectors a hex fell in.
+// They are numbered left to right and then down (ERRATA E006 part 1).
 func MemberOf(hex Hex) int {
 	across := (hex.Col - 1) / Columns
 	down := (hex.Row - 1) / Rows
@@ -70,7 +70,7 @@ func MemberOf(hex Hex) int {
 // MemberBounds returns the corners of a member's band on the sector grid:
 // the hex at its top left and the hex at its bottom right.
 //
-// It is the inverse Place does not state. The documents need it to draw
+// It is the inverse [Place] does not state. The documents need it to draw
 // one member's eighty hexes and to name the range in a heading, and
 // deriving the corners at each call site would put the band arithmetic in
 // as many places as there are call sites.
@@ -99,9 +99,9 @@ func SectorGrid() Grid { return Grid{Columns: SectorColumns, Rows: SectorRows} }
 // (ERRATA E006) rather than the p. 3 sub-sector grid.
 //
 // There are exactly two grids -- record.schema.json enforces that as a
-// oneOf over two const pairs, and Decode enumerates them -- so asking
+// oneOf over two const pairs, and [Decode] enumerates them -- so asking
 // which one a record is on is a kind question with a yes and a no. It
-// needs an owner: without one, render compares the struct to SectorGrid()
+// needs an owner: without one, render compares the struct to [SectorGrid]
 // at four sites, which reads as a dimension check and means this.
 func (g Grid) IsSector() bool { return g == SectorGrid() }
 
@@ -110,13 +110,13 @@ func (g Grid) Contains(h Hex) bool {
 	return h.Col >= 1 && h.Col <= g.Columns && h.Row >= 1 && h.Row <= g.Rows
 }
 
-// Zero reports a grid no one set, which Decode reads as the p. 3 grid so
+// Zero reports a grid no one set, which [Decode] reads as the p. 3 grid so
 // that a record written before grids were recorded still reads.
 func (g Grid) Zero() bool { return g.Columns == 0 && g.Rows == 0 }
 
 // hold returns the off-grid error for a hex this grid does not contain,
 // and nil for one it does. Every hex a record carries is checked through
-// here, because Hex bounds itself by the largest grid there is: 0910
+// here, because [Hex] bounds itself by the largest grid there is: 0910
 // parses, and only the record's own grid refuses it.
 func (g Grid) hold(h Hex) error {
 	if g.Contains(h) {
@@ -261,7 +261,7 @@ func (h Hex) cube() (int, int, int) {
 
 // valid bounds a hex by the largest grid there is, because a hex is an
 // identifier and the identifier is four digits either way. Whether a hex
-// is on *this* record's grid is Grid.Contains, and the record checks it.
+// is on *this* record's grid is [Grid.Contains], and the record checks it.
 func (h Hex) valid() bool {
 	return h.Col >= 1 && h.Col <= SectorColumns && h.Row >= 1 && h.Row <= SectorRows
 }
@@ -274,6 +274,6 @@ type Parsecs int
 //
 // It lives here rather than in tables, beside the type and the field it
 // bounds, because tables imports starmap: with it there, the package
-// owning Route.Distance could not enforce its own range and Decode let a
+// owning Route.Distance could not enforce its own range and [Decode] let a
 // five-parsec route through the schema's maximum.
 const MaxJump Parsecs = 4

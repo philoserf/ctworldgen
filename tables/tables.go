@@ -69,7 +69,7 @@ type Tables struct {
 }
 
 // Load reads and validates every embedded table. It is the only way to
-// get a Tables: a chart that does not describe its whole printed range,
+// get a [Tables]: a chart that does not describe its whole printed range,
 // or that is missing a row, fails here rather than at the throw that
 // needed it.
 func Load() (*Tables, error) {
