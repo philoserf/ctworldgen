@@ -195,14 +195,113 @@ func TestExistingFilesAreNeverOverwrittenWithoutForce(t *testing.T) {
 	}
 }
 
+// TestForceReplacesTheRecordRatherThanTruncatingIt: --force used to open
+// the referee's record O_TRUNC and only then write into it, so a write
+// that failed partway left him with a truncated file where his record had
+// been. The command reported the error and the old content was already
+// gone (issue #19).
+//
+// The fix is to write the new record beside the old one and rename it
+// over, and that is what is asserted here, because the failure itself
+// cannot be induced without a seam for three call sites to carry. A
+// truncating open writes into the file that is already there; a rename
+// puts a different file at the name. So the record after --force must not
+// be the same file as the record before it -- which is the whole of the
+// property, and which the old implementation fails.
+func TestForceReplacesTheRecordRatherThanTruncatingIt(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "subsector.json")
+
+	_, _, err := exec(t, "new", "--seed", "1", "-o", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	before, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, err = exec(t, "new", "--seed", "2", "-o", path, "--force")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	after, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if os.SameFile(before, after) {
+		t.Error("--force wrote into the record that was already there; a write that failed partway would have truncated it")
+	}
+
+	// The permission of a record is the referee's own notebook page, and
+	// the file it is renamed from has to be created at that permission
+	// rather than at the temporary file's default.
+	if after.Mode().Perm() != recordMode {
+		t.Errorf("the replaced record is mode %o; want %o", after.Mode().Perm(), recordMode)
+	}
+
+	// Nothing left beside it. The temporary file is removed on every path
+	// out, and a successful rename has already carried it off its name.
+	left, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, entry := range left {
+		if entry.Name() != "subsector.json" {
+			t.Errorf("--force left %s beside the record", entry.Name())
+		}
+	}
+}
+
 func TestWriteReportsAnUnusablePath(t *testing.T) {
 	t.Parallel()
 
-	path := filepath.Join(t.TempDir(), "no-such-directory", "subsector.json")
+	dir := t.TempDir()
+	path := filepath.Join(dir, "no-such-directory", "subsector.json")
 
 	_, _, err := exec(t, "new", "--seed", "1", "-o", path)
 	if err == nil {
 		t.Error("writing into a directory that does not exist succeeded")
+	}
+
+	// --force takes the other route out of writeFile, and it has its own
+	// two ways to fail: the temporary file beside the target cannot be
+	// made, and it cannot be put in the target's place.
+	_, _, err = exec(t, "new", "--seed", "1", "-o", path, "--force")
+	if err == nil {
+		t.Error("--force into a directory that does not exist succeeded")
+	}
+
+	// A directory inside dir rather than dir itself, so that the temporary
+	// file --force makes beside its target lands in dir, where the sweep
+	// below can see whether it was cleaned up.
+	occupied := filepath.Join(dir, "a-directory")
+
+	err = os.Mkdir(occupied, 0o700)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, err = exec(t, "new", "--seed", "1", "-o", occupied, "--force")
+	if err == nil {
+		t.Error("--force over a directory succeeded")
+	}
+
+	left, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, entry := range left {
+		if entry.Name() != "a-directory" {
+			t.Errorf("a --force that could not finish left %s behind", entry.Name())
+		}
 	}
 }
 
