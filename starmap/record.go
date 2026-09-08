@@ -406,9 +406,19 @@ func (s *Record) carriesTheFieldsTheSchemaRequires() error {
 	// every grid. The schema gives distance a minimum of 1 because one hex
 	// is one parsec (p. 1) and a route joins two worlds, so a distance of 0
 	// would be a world joined to itself.
+	//
+	// The schema gives it a maximum of 4 as well, and that half had one
+	// obligation instead of two: the schema stated it and nothing checked
+	// it at read time. The two are different failures and carry different
+	// errors -- absent, and out of range.
 	for _, route := range s.Routes {
 		if route.Distance < 1 {
 			return fmt.Errorf("%w: distance, for the route %s to %s", ErrFieldMissing, route.From, route.To)
+		}
+
+		if route.Distance > MaxJump {
+			return fmt.Errorf("%w: %d parsecs, for the route %s to %s",
+				ErrRouteTooFar, route.Distance, route.From, route.To)
 		}
 	}
 

@@ -316,6 +316,54 @@ func TestDecodeRejectsARouteWithNoDistance(t *testing.T) {
 	}
 }
 
+// TestDecodeRejectsARouteBeyondTheJumpRoutesTable is the maximum twin of
+// the test above, and the half that had one obligation instead of two:
+// record.schema.json gives distance a minimum of 1 and a maximum of 4,
+// and Decode checked only the minimum.
+//
+// It is not merely tidy. legible walks distance 1 to MaxJump, so a route
+// recorded at five parsecs never reached the drawn set, and the route
+// table then printed lanesNote -- telling the referee the lane "joins two
+// worlds already joined by shorter lanes, which p. 2 says may be ignored
+// in the drawing". That is false of a route no rule could have drawn, and
+// the document said it about a record it had accepted.
+//
+// The error is its own, not ErrFieldMissing: five parsecs is present and
+// out of range, not absent.
+func TestDecodeRejectsARouteBeyondTheJumpRoutesTable(t *testing.T) {
+	t.Parallel()
+
+	record := `{"schema_version":1,"ruleset":"ct-1977-book3-pp1-12","engine_version":"1",` +
+		`"rng_algorithm":"go-math-rand-v2-pcg","seed":1,"errata":[],"name":"Aramis","occurrence_dm":0,` +
+		`"worlds":[],"routes":[{"from":"0105","to":"0605","distance":5}]}`
+
+	_, err := starmap.Decode(strings.NewReader(record))
+	if !errors.Is(err, starmap.ErrRouteTooFar) {
+		t.Fatalf("Decode(a route of five parsecs) = %v, want %v", err, starmap.ErrRouteTooFar)
+	}
+
+	if errors.Is(err, starmap.ErrFieldMissing) {
+		t.Errorf("a distance that is present and out of range was reported as a missing field: %v", err)
+	}
+
+	// The referee has to find the route in his own file, so the message
+	// names the distance and the ends rather than only the rule.
+	for _, want := range []string{"5", "0105", "0605"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("the error does not name %q: %v", want, err)
+		}
+	}
+
+	// The last distance the table does state is accepted, so the check
+	// bounds rather than forbids.
+	atTheLimit := strings.Replace(record, `"distance":5`, `"distance":4`, 1)
+
+	_, err = starmap.Decode(strings.NewReader(atTheLimit))
+	if err != nil {
+		t.Errorf("a route at the table's own maximum was refused: %v", err)
+	}
+}
+
 // TestDecodeRejectsAWorldWithNoStarport: the map marks a world's hex with
 // the letter of its starport (p. 1). A world with no starport key decoded
 // to Starport(0) and the map drew it as the eleven characters

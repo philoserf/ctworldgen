@@ -268,3 +268,12 @@ func (h Hex) valid() bool {
 
 // Parsecs is a jump distance. One hex is one parsec (p. 1).
 type Parsecs int
+
+// MaxJump is the greatest distance the jump routes table states a target
+// for (p. 2), and so the greatest distance at which a route is possible.
+//
+// It lives here rather than in tables, beside the type and the field it
+// bounds, because tables imports starmap: with it there, the package
+// owning Route.Distance could not enforce its own range and Decode let a
+// five-parsec route through the schema's maximum.
+const MaxJump Parsecs = 4

@@ -2,7 +2,6 @@ package render
 
 import (
 	"github.com/philoserf/ctworldgen/starmap"
-	"github.com/philoserf/ctworldgen/tables"
 )
 
 // Lanes says which of a record's commercial routes the documents draw.
@@ -42,7 +41,7 @@ func legible(routes []starmap.Route) []starmap.Route {
 	joined := newGroups()
 	keep := make(map[starmap.Route]bool, len(routes))
 
-	for distance := starmap.Parsecs(1); distance <= tables.MaxJump; distance++ {
+	for distance := starmap.Parsecs(1); distance <= starmap.MaxJump; distance++ {
 		layer := make([]starmap.Route, 0, len(routes))
 
 		for _, route := range routes {

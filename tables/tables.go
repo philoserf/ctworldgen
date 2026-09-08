@@ -168,10 +168,6 @@ func (s *Starports) load(data []byte) error {
 	return nil
 }
 
-// MaxJump is the greatest distance the jump routes table states a target
-// for, and so the greatest distance at which a route is possible.
-const MaxJump starmap.Parsecs = 4
-
 // JumpRoutes is the jump routes table of p. 2. Its rows run A-A through
 // E-E and there is none for X; twenty-nine of its sixty cells print an
 // em-dash. Neither an absent row nor a dash cell states a number, so
@@ -191,7 +187,7 @@ func pairKey(a, b starmap.Starport) string {
 // pair involving X, which has no row, and none at a dash cell; in both
 // cases no die is thrown.
 func (j *JumpRoutes) Target(a, b starmap.Starport, distance starmap.Parsecs) (dice.Target, bool) {
-	if distance < 1 || distance > MaxJump {
+	if distance < 1 || distance > starmap.MaxJump {
 		return 0, false
 	}
 

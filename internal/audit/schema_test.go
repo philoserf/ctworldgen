@@ -11,7 +11,6 @@ import (
 	"github.com/philoserf/ctworldgen/gen"
 	"github.com/philoserf/ctworldgen/internal/fixture"
 	"github.com/philoserf/ctworldgen/starmap"
-	"github.com/philoserf/ctworldgen/tables"
 )
 
 func schema(t *testing.T, root string) *jsonschema.Schema {
@@ -229,7 +228,7 @@ func badRecords() []badRecord {
 		// the schema allows, and this case would pass without the maximum
 		// it means to test.
 		{"a route longer than the jump routes table states", func(_, _, route map[string]any) {
-			route["distance"] = int(tables.MaxJump) + 1
+			route["distance"] = int(starmap.MaxJump) + 1
 		}},
 	}
 }

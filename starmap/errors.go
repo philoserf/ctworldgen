@@ -49,6 +49,16 @@ var (
 	ErrNotThisRuleset = errors.New("not a record of the ruleset this tool implements")
 	ErrNotThisRNG     = errors.New("not a record of the generator this tool draws from")
 
+	// ErrRouteTooFar is the jump routes table of Book 3 p. 2, which states
+	// a target at one through four parsecs and none beyond. It is distinct
+	// from ErrFieldMissing because a distance of 5 is present and out of
+	// range, not absent, and because the document that accepted one told
+	// the referee something false about it: legible walks 1 to MaxJump, so
+	// the lane was never drawn, and the route table then said it had been
+	// suppressed for joining two worlds already joined by shorter ones.
+	ErrRouteTooFar = errors.New(
+		"a route is longer than the jump routes table states a target for (Book 3 p. 2)")
+
 	// ErrFieldMissing is the ten fields record.schema.json requires. The
 	// schema alone rejects nothing at read time, so the two obligations are
 	// the schema and this.
