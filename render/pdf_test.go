@@ -679,7 +679,9 @@ func sectorRecord(t *testing.T) *starmap.Record {
 		t.Fatalf("building the engine: %v", err)
 	}
 
-	record, err := engine.Sector(gen.Inputs{Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM})
+	record, err := engine.Sector(gen.Inputs{
+		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM, OccurrenceAreas: nil,
+	})
 	if err != nil {
 		t.Fatalf("generating the sector: %v", err)
 	}
@@ -932,7 +934,7 @@ func TestAFullSubsectorPaginates(t *testing.T) {
 func everyHexAWorld(t *testing.T) *starmap.Record {
 	t.Helper()
 
-	record := starmap.New(1, aramis, 0)
+	record := starmap.New(1, aramis, 0, nil)
 
 	for col := 1; col <= starmap.Columns; col++ {
 		for row := 1; row <= starmap.Rows; row++ {
@@ -1014,7 +1016,7 @@ func TestABookletHoldsARefereesOwnName(t *testing.T) {
 	// wide, so the trim can only land inside one.
 	accentedAndOverlong := strings.Repeat("é", 60)
 
-	record := starmap.New(1, aramis, 0)
+	record := starmap.New(1, aramis, 0, nil)
 
 	for index, name := range []string{accented, unwriteable, overlong, piped, accentedAndOverlong} {
 		record.Worlds = append(record.Worlds, world(t, hexOf(t, 1, index+1), name))
@@ -1136,7 +1138,7 @@ func TestABookletDrawsTheCharactersAppleKeyboardsType(t *testing.T) {
 	// A generated record rather than a hand-built one: a booklet with no
 	// worlds in it draws no bullet, so the world's note could not be
 	// expressed at all.
-	record := generated(t, fixture.Golden{File: "dm-zero", Seed: 1, Name: aramis, OccurrenceDM: 0})
+	record := generated(t, fixture.Golden{File: "dm-zero", Seed: 1, Name: aramis, OccurrenceDM: 0, OccurrenceAreas: nil})
 
 	if len(record.Worlds) == 0 {
 		t.Fatal("the fixture has no worlds, so a world's note cannot reach the page")
@@ -1169,7 +1171,9 @@ func TestABookletDrawsTheCharactersAppleKeyboardsType(t *testing.T) {
 func TestTheRouteTableIsLabelledOnEveryPageItReaches(t *testing.T) {
 	t.Parallel()
 
-	record := generated(t, fixture.Golden{File: "dm-plus-one", Seed: 1, Name: aramis, OccurrenceDM: 1})
+	record := generated(t, fixture.Golden{
+		File: "dm-plus-one", Seed: 1, Name: aramis, OccurrenceDM: 1, OccurrenceAreas: nil,
+	})
 
 	sheets := pages(t, drawn(t, record))
 	labelled := 0
@@ -1216,7 +1220,7 @@ func carriesARouteRow(written []stamp) bool {
 func TestAnEmptyBookletSaysSo(t *testing.T) {
 	t.Parallel()
 
-	record := starmap.New(1, aramis, 0)
+	record := starmap.New(1, aramis, 0, nil)
 
 	written := everyStamp(t, drawn(t, record))
 

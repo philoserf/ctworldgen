@@ -155,12 +155,36 @@ func (l *listing) heading() {
 // showed less than it had would be worse than an unreadable one.
 func summary(record *starmap.Record, drawn []starmap.Route) string {
 	if len(drawn) == len(record.Routes) {
-		return fmt.Sprintf("%d worlds, %d routes. Generated from seed %d at occurrence DM %s.",
-			len(record.Worlds), len(record.Routes), record.Seed, occurrenceDM(record.OccurrenceDM))
+		return fmt.Sprintf("%d worlds, %d routes. Generated from seed %d at occurrence DM %s.%s",
+			len(record.Worlds), len(record.Routes), record.Seed,
+			occurrenceDM(record.OccurrenceDM), broadAreas(record))
 	}
 
-	return fmt.Sprintf("%d worlds, %d routes, %d drawn. Generated from seed %d at occurrence DM %s.",
-		len(record.Worlds), len(record.Routes), len(drawn), record.Seed, occurrenceDM(record.OccurrenceDM))
+	return fmt.Sprintf("%d worlds, %d routes, %d drawn. Generated from seed %d at occurrence DM %s.%s",
+		len(record.Worlds), len(record.Routes), len(drawn), record.Seed,
+		occurrenceDM(record.OccurrenceDM), broadAreas(record))
+}
+
+// broadAreas names the areas of p. 1 the record was generated under, and
+// returns nothing at all where there were none (ERRATA E012).
+//
+// Nothing at all rather than "no broad areas": a record without them is
+// the whole-subsector form the tool has always written, and the sentence
+// above it is the sentence it has always printed. The DM of each is
+// written through occurrenceDM, so an area's DM and the record's are
+// written the same way.
+func broadAreas(record *starmap.Record) string {
+	if len(record.OccurrenceAreas) == 0 {
+		return ""
+	}
+
+	named := make([]string, 0, len(record.OccurrenceAreas))
+	for _, area := range record.OccurrenceAreas {
+		named = append(named, fmt.Sprintf("%s at %s", area, occurrenceDM(area.DM)))
+	}
+
+	return fmt.Sprintf(" Broad areas: %s, each overriding that DM where it lies (ERRATA E012).",
+		strings.Join(named, ", "))
 }
 
 // untitled is the heading a record the referee has not named gets. It is

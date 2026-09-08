@@ -37,9 +37,12 @@ const (
 	dryAtmosphereDM     = 4
 )
 
-// ErrOccurrenceDM is the referee's world occurrence DM, which p. 1 offers
-// as +1, 0 or -1 and nothing else.
-var ErrOccurrenceDM = errors.New("occurrence DM is not one of -1, 0 or +1 (Book 3 p. 1)")
+// ErrSectorTakesNoAreas is the scope of the broad areas of p. 1: a
+// rectangle of hexes is read against one grid, and a sector's members are
+// each generated on their own p. 3 grid (ERRATA E006 part 1). Refusing is
+// what keeps a record from claiming areas that governed no throw.
+var ErrSectorTakesNoAreas = errors.New(
+	"broad areas are read against the p. 3 sub-sector grid, and a sector is not on one (ERRATA E006)")
 
 // Inputs are the referee's choices, made before the run rather than
 // during it. They are recorded, and with the seed they reproduce the
@@ -48,12 +51,27 @@ type Inputs struct {
 	Seed         uint64
 	Name         string
 	OccurrenceDM int
+
+	// OccurrenceAreas are the broad areas of p. 1, each with its own DM
+	// (ERRATA E012). A hex in none of them takes OccurrenceDM.
+	OccurrenceAreas []starmap.Area
 }
 
 // Validate reports whether the inputs are ones the book offers.
+//
+// The areas are held against the p. 3 grid rather than against whatever
+// grid the run will produce, because a hex is four digits whether it names
+// a sub-sector or a sector: 0910 parses, and only a grid refuses it. This
+// is [Generate]'s grid, and [Sector] refuses areas outright.
 func (in Inputs) Validate() error {
-	if in.OccurrenceDM < -1 || in.OccurrenceDM > 1 {
-		return fmt.Errorf("%w: %+d", ErrOccurrenceDM, in.OccurrenceDM)
+	err := starmap.HoldOccurrenceDM(in.OccurrenceDM)
+	if err != nil {
+		return fmt.Errorf("the world occurrence DM: %w", err)
+	}
+
+	err = starmap.PageThreeGrid().HoldAreas(in.OccurrenceAreas)
+	if err != nil {
+		return fmt.Errorf("the broad areas: %w", err)
 	}
 
 	return nil
@@ -85,17 +103,24 @@ func (e *Engine) Generate(inputs Inputs) (*starmap.Record, error) {
 		return nil, err
 	}
 
-	record := starmap.New(inputs.Seed, inputs.Name, inputs.OccurrenceDM)
+	record := starmap.New(inputs.Seed, inputs.Name, inputs.OccurrenceDM, inputs.OccurrenceAreas)
 	stream := dice.NewStream(inputs.Seed)
 
 	// The order of the passes, and of the hexes within them, is a reading.
 	record.Stamp("E002")
 
 	// 1.A. Throw for each hex; 4, 5, or 6 indicates a world is present.
-	// The referee's DM applies to the whole subsector (p. 1).
-	hexes, err := scan(stream, inputs.OccurrenceDM)
+	// The referee's DM applies to the whole subsector, or to broad areas
+	// within one (p. 1, ERRATA E012).
+	hexes, err := scan(stream, inputs.OccurrenceDM, inputs.OccurrenceAreas)
 	if err != nil {
 		return nil, err
+	}
+
+	// A broad area is a reading of a silence, and there was one to read
+	// only where the referee drew an area.
+	if len(inputs.OccurrenceAreas) > 0 {
+		record.Stamp("E012")
 	}
 
 	// 1.B. Determine starport type; two dice throw and consult the
@@ -314,7 +339,14 @@ func (e *Engine) routes(stream *dice.Stream, worlds []starmap.World) []starmap.R
 // scan is pass 1.A: every hex of the grid in ascending grid number, one
 // die each. A hex that fails the throw is left blank and consumes its die
 // like any other.
-func scan(stream *dice.Stream, occurrenceDM int) ([]starmap.Hex, error) {
+//
+// The broad areas of p. 1 vary the DM and not the throw (ERRATA E012 part
+// 5): the loop, its order and the die it draws for each hex are what they
+// were before areas existed, and only the number the throw is read against
+// changes. That is what keeps a run with no areas byte-identical, and
+// scanning the areas in turn instead would visit the hexes out of E002's
+// order and move every seed's meaning.
+func scan(stream *dice.Stream, occurrenceDM int, areas []starmap.Area) ([]starmap.Hex, error) {
 	var found []starmap.Hex
 
 	for col := 1; col <= starmap.Columns; col++ {
@@ -324,11 +356,29 @@ func scan(stream *dice.Stream, occurrenceDM int) ([]starmap.Hex, error) {
 				return nil, fmt.Errorf("hex %d,%d: %w", col, row, err)
 			}
 
-			if occurrenceTarget.Met(stream.Die() + occurrenceDM) {
+			if occurrenceTarget.Met(stream.Die() + dmAt(occurrenceDM, areas, hex)) {
 				found = append(found, hex)
 			}
 		}
 	}
 
 	return found, nil
+}
+
+// dmAt is the DM one hex's occurrence throw is read against: the DM of the
+// broad area the hex lies in, or the record's own where it lies in none
+// (ERRATA E012 parts 2 and 3).
+//
+// At most one area can answer, because [starmap.Grid.HoldAreas] refused a
+// set that overlapped before any die was thrown. With no areas this walks
+// an empty list and returns the DM it was given, which is what the tool
+// did before areas existed.
+func dmAt(occurrenceDM int, areas []starmap.Area, hex starmap.Hex) int {
+	for _, area := range areas {
+		if area.Contains(hex) {
+			return area.DM
+		}
+	}
+
+	return occurrenceDM
 }

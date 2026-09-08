@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
@@ -118,7 +119,10 @@ func TestTheCompleteExampleIsAGeneratedRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	in := gen.Inputs{Seed: example.Seed, Name: example.Name, OccurrenceDM: example.OccurrenceDM}
+	in := gen.Inputs{
+		Seed: example.Seed, Name: example.Name, OccurrenceDM: example.OccurrenceDM,
+		OccurrenceAreas: example.OccurrenceAreas,
+	}
 
 	generated, err := engine.Generate(in)
 	if err != nil {
@@ -147,7 +151,7 @@ func TestSchemaRejectsUnknownFields(t *testing.T) {
 	repoRoot := root(t)
 	compiled := schema(t, repoRoot)
 
-	for _, bad := range badRecords() {
+	for _, bad := range slices.Concat(badRecords(), badAreaRecords()) {
 		t.Run(bad.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -172,6 +176,10 @@ type badRecord struct {
 
 // badRecords is the table. It sits outside the test so that the list can
 // grow without the test itself growing with it.
+// offTheNumbering is a four-digit identifier the grid never prints: no
+// hex is in row 00.
+const offTheNumbering = "0900"
+
 func badRecords() []badRecord {
 	return []badRecord{
 		{"an unknown field at the top level", func(record, _, _ map[string]any) {
@@ -186,7 +194,7 @@ func badRecords() []badRecord {
 		// record. What the pattern still refuses is a number the grid
 		// never prints at all.
 		{"a hex the grid numbering does not print", func(_, world, _ map[string]any) {
-			world["hex"] = "0900"
+			world["hex"] = offTheNumbering
 		}},
 		{"a hex that is not four digits", func(_, world, _ map[string]any) {
 			world["hex"] = "1-5"
@@ -197,6 +205,11 @@ func badRecords() []badRecord {
 		{"an occurrence DM the book does not offer", func(record, _, _ map[string]any) {
 			record["occurrence_dm"] = 2
 		}},
+		// The complete example carries no broad areas, so these add the
+		// field rather than mutating one. What the schema can state about
+		// an area is its shape, its two corners and its DM; the corners
+		// being low and high, and two areas not overlapping, are ERRATA
+		// E012's and starmap.Decode's.
 		{"a ruleset that is not the held pages", func(record, _, _ map[string]any) {
 			record["ruleset"] = "mongoose-2022"
 		}},
@@ -210,7 +223,7 @@ func badRecords() []badRecord {
 			route["surprise"] = 1
 		}},
 		{"a route reaching a hex the grid numbering does not print", func(_, _, route map[string]any) {
-			route["from"] = "0900"
+			route["from"] = offTheNumbering
 		}},
 		// The two dimensions are enumerated separately, so without the
 		// oneOf beside them the schema accepts a pair nothing prints --
@@ -229,6 +242,53 @@ func badRecords() []badRecord {
 		// it means to test.
 		{"a route longer than the jump routes table states", func(_, _, route map[string]any) {
 			route["distance"] = int(starmap.MaxJump) + 1
+		}},
+	}
+}
+
+// badAreaRecords is the same table for the broad areas of p. 1 (ERRATA
+// E012). They sit apart because the complete example carries no areas, so
+// every one of them adds the field rather than mutating one.
+//
+// What this schema can state about an area is its shape, its two corners
+// and its DM. The corners being the low and the high hex, and no two areas
+// overlapping, are things JSON Schema cannot say at all; those are held by
+// starmap.Decode, which is the other half of the two obligations.
+func badAreaRecords() []badRecord {
+	const (
+		lowCorner  = "from"
+		highCorner = "to"
+		modifier   = "dm"
+	)
+
+	area := func(fields map[string]any) func(record, _, _ map[string]any) {
+		return func(record, _, _ map[string]any) {
+			record["occurrence_areas"] = []any{fields}
+		}
+	}
+
+	return []badRecord{
+		{
+			"a broad area with a DM the book does not offer",
+			area(map[string]any{lowCorner: "0101", highCorner: "0410", modifier: 2}),
+		},
+		{
+			"a broad area reaching a hex the grid numbering does not print",
+			area(map[string]any{lowCorner: offTheNumbering, highCorner: "0410", modifier: -1}),
+		},
+		{
+			"a broad area with an unknown field",
+			area(map[string]any{lowCorner: "0101", highCorner: "0410", modifier: -1, "surprise": 1}),
+		},
+		{
+			"a broad area missing its DM",
+			area(map[string]any{lowCorner: "0101", highCorner: "0410"}),
+		},
+		// Absent is how a record with no areas is written, and an empty
+		// list would be a second way to say it -- which would let a record
+		// write the key where every golden does not.
+		{"an empty list of broad areas", func(record, _, _ map[string]any) {
+			record["occurrence_areas"] = []any{}
 		}},
 	}
 }
@@ -311,7 +371,7 @@ func TestASectorRecordValidates(t *testing.T) {
 	golden := fixture.SectorGolden()
 
 	record, err := engine.Sector(gen.Inputs{
-		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM, OccurrenceAreas: nil,
 	})
 	if err != nil {
 		t.Fatal(err)

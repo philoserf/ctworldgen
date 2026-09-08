@@ -27,7 +27,16 @@ func (e *Engine) Sector(inputs Inputs) (*starmap.Record, error) {
 		return nil, err
 	}
 
-	record := starmap.New(inputs.Seed, inputs.Name, inputs.OccurrenceDM)
+	// A broad area is a rectangle of one grid's numbering, and the sixteen
+	// members are each generated on their own p. 3 grid: a sector-grid
+	// rectangle would have to be clipped into sixteen local ones, which is
+	// not built. Refused rather than dropped -- a sector that quietly
+	// ignored them would carry a DM that governed nothing.
+	if len(inputs.OccurrenceAreas) > 0 {
+		return nil, ErrSectorTakesNoAreas
+	}
+
+	record := starmap.New(inputs.Seed, inputs.Name, inputs.OccurrenceDM, nil)
 
 	record.Grid = starmap.SectorGrid()
 
@@ -59,7 +68,9 @@ func (e *Engine) Sector(inputs Inputs) (*starmap.Record, error) {
 
 // member generates one subsector whole and lays it on the sector grid.
 func (e *Engine) member(record *starmap.Record, inputs Inputs, index int, seed uint64) error {
-	part, err := e.Generate(Inputs{Seed: seed, Name: inputs.Name, OccurrenceDM: inputs.OccurrenceDM})
+	part, err := e.Generate(Inputs{
+		Seed: seed, Name: inputs.Name, OccurrenceDM: inputs.OccurrenceDM, OccurrenceAreas: nil,
+	})
 	if err != nil {
 		return fmt.Errorf("member %d of the sector: %w", index, err)
 	}

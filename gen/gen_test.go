@@ -15,6 +15,10 @@ import (
 	"github.com/philoserf/ctworldgen/tables"
 )
 
+// aramis is the subsector name the gen tests use, as internal/fixture
+// uses it for the roster.
+const aramis = "Aramis"
+
 // newEngine builds the engine once per test. The charts are the same for
 // every seed, so loading them per subsector would re-parse and re-validate
 // ten embedded documents several hundred times across this suite.
@@ -72,7 +76,10 @@ func TestGoldens(t *testing.T) {
 				t.Fatalf("%v (run `task regenerate` to create it)", err)
 			}
 
-			in := gen.Inputs{Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM}
+			in := gen.Inputs{
+				Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+				OccurrenceAreas: golden.OccurrenceAreas,
+			}
 
 			got := marshal(t, generate(t, engine, in))
 			if string(got) != string(want) {
@@ -105,10 +112,15 @@ func TestRegenerationRoundTrip(t *testing.T) {
 				t.Fatalf("decoding %s: %v", golden.File, err)
 			}
 
+			// Read back off the record and not off the roster: what this
+			// holds is that a record carries every input a run is
+			// reproducible from, which a test reading the inputs it
+			// already had could not fail.
 			again := generate(t, engine, gen.Inputs{
-				Seed:         recorded.Seed,
-				Name:         recorded.Name,
-				OccurrenceDM: recorded.OccurrenceDM,
+				Seed:            recorded.Seed,
+				Name:            recorded.Name,
+				OccurrenceDM:    recorded.OccurrenceDM,
+				OccurrenceAreas: recorded.OccurrenceAreas,
 			})
 			if string(marshal(t, again)) != string(encoded) {
 				t.Errorf("%s did not reproduce from its own recorded seed and inputs", golden.File)
@@ -123,7 +135,7 @@ func TestSameSeedSameSubsector(t *testing.T) {
 
 	engine := newEngine(t)
 
-	in := gen.Inputs{Seed: 12345, Name: "Aramis", OccurrenceDM: 0}
+	in := gen.Inputs{Seed: 12345, Name: aramis, OccurrenceDM: 0, OccurrenceAreas: nil}
 	first := marshal(t, generate(t, engine, in))
 
 	second := marshal(t, generate(t, engine, in))
@@ -143,7 +155,7 @@ func TestOccurrenceDMChangesTheStream(t *testing.T) {
 
 	counts := map[int]int{}
 	for _, dm := range []int{-1, 0, 1} {
-		counts[dm] = len(generate(t, engine, gen.Inputs{Seed: 7, Name: "", OccurrenceDM: dm}).Worlds)
+		counts[dm] = len(generate(t, engine, gen.Inputs{Seed: 7, Name: "", OccurrenceDM: dm, OccurrenceAreas: nil}).Worlds)
 	}
 
 	if counts[-1] >= counts[0] || counts[0] >= counts[1] {
@@ -156,7 +168,7 @@ func TestRejectsDMsTheBookDoesNotOffer(t *testing.T) {
 	t.Parallel()
 
 	for _, dm := range []int{-2, 2, 7, -100} {
-		_, err := newEngine(t).Generate(gen.Inputs{Seed: 0, Name: "", OccurrenceDM: dm})
+		_, err := newEngine(t).Generate(gen.Inputs{Seed: 0, Name: "", OccurrenceDM: dm, OccurrenceAreas: nil})
 		if err == nil {
 			t.Errorf("an occurrence DM of %d was accepted; p. 1 offers -1, 0 and +1", dm)
 		}
@@ -181,7 +193,7 @@ func TestInvariantsOverManySeeds(t *testing.T) {
 	for i := range 200 {
 		seed := uint64(i)
 		for _, dm := range []int{-1, 0, 1} {
-			record := generate(t, engine, gen.Inputs{Seed: seed, Name: "", OccurrenceDM: dm})
+			record := generate(t, engine, gen.Inputs{Seed: seed, Name: "", OccurrenceDM: dm, OccurrenceAreas: nil})
 
 			assertValidatesAgainstTheSchema(t, record, seed)
 			assertWorldsWellFormed(t, record, seed)
@@ -353,7 +365,9 @@ func TestStarportDistributionFollowsThePage(t *testing.T) {
 
 	for i := range 300 {
 		seed := uint64(i)
-		for _, w := range generate(t, engine, gen.Inputs{Seed: seed, Name: "", OccurrenceDM: 1}).Worlds {
+		record := generate(t, engine, gen.Inputs{Seed: seed, Name: "", OccurrenceDM: 1, OccurrenceAreas: nil})
+
+		for _, w := range record.Worlds {
 			counts[w.Starport]++
 		}
 	}
@@ -546,7 +560,8 @@ func TestBaseThrowsFollowTheChart(t *testing.T) {
 	scout := map[starmap.Starport]int{}
 
 	for i := range baseSweepSubsectors {
-		for _, world := range generate(t, engine, gen.Inputs{Seed: uint64(i), Name: "", OccurrenceDM: 1}).Worlds {
+		record := generate(t, engine, gen.Inputs{Seed: uint64(i), Name: "", OccurrenceDM: 1, OccurrenceAreas: nil})
+		for _, world := range record.Worlds {
 			worlds[world.Starport]++
 
 			if world.NavalBase {
@@ -785,7 +800,7 @@ func TestTheClampsThatBindAreTheOnesR14Names(t *testing.T) {
 	highest := 0
 
 	for index := range 3000 {
-		record := generate(t, engine, gen.Inputs{Seed: uint64(index), Name: "", OccurrenceDM: 1})
+		record := generate(t, engine, gen.Inputs{Seed: uint64(index), Name: "", OccurrenceDM: 1, OccurrenceAreas: nil})
 		for _, world := range record.Worlds {
 			highest = max(highest, world.TechIndex)
 

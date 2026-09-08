@@ -5,7 +5,7 @@ github.com/philoserf/ctworldgen/cmd/ctworldgen 36
 github.com/philoserf/ctworldgen/dice 0
 github.com/philoserf/ctworldgen/gen 11
 github.com/philoserf/ctworldgen/internal/cmd/regenerate 127
-github.com/philoserf/ctworldgen/internal/fixture 17
+github.com/philoserf/ctworldgen/internal/fixture 26
 github.com/philoserf/ctworldgen/render 4
 github.com/philoserf/ctworldgen/starmap 19
 github.com/philoserf/ctworldgen/tables 27

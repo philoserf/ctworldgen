@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	aramis     = "Aramis"
-	renderVerb = "render"
+	aramis       = "Aramis"
+	renderVerb   = "render"
+	areaFlagName = "--occurrence-area"
 )
 
 func exec(t *testing.T, args ...string) (string, string, error) {
@@ -124,6 +125,143 @@ func TestADrawnSeedSurvivesADoubleParser(t *testing.T) {
 		if float64(seed) != float64(seed)+0 || uint64(float64(seed)) != seed {
 			t.Fatalf("drawn seed %d does not survive a round trip through a float64", seed)
 		}
+	}
+}
+
+// TestBroadAreasReachTheRecord: --occurrence-area is repeatable, because
+// p. 1 offers a DM "on broad areas within a subsector", plural.
+//
+// The leading dash is the thing worth asserting. A negative DM opens the
+// value with the character flag parsing uses to introduce a flag, and Go's
+// flag package takes the next argument for a non-boolean flag whatever it
+// begins with -- which is behaviour this command depends on and does not
+// control.
+func TestBroadAreasReachTheRecord(t *testing.T) {
+	t.Parallel()
+
+	out, _, err := exec(t, "new", "--seed", "1", "--name", aramis,
+		areaFlagName, "-1@0101-0805", areaFlagName, "+1@0106-0810")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	record := decode(t, out)
+	if len(record.OccurrenceAreas) != 2 {
+		t.Fatalf("the record carries %d broad areas; want 2", len(record.OccurrenceAreas))
+	}
+
+	// In the order they were given: nothing sorts them.
+	for index, want := range []starmap.Area{
+		{From: starmap.Hex{Col: 1, Row: 1}, To: starmap.Hex{Col: 8, Row: 5}, DM: -1},
+		{From: starmap.Hex{Col: 1, Row: 6}, To: starmap.Hex{Col: 8, Row: 10}, DM: 1},
+	} {
+		if record.OccurrenceAreas[index] != want {
+			t.Errorf("area %d is %+v; want %+v", index, record.OccurrenceAreas[index], want)
+		}
+	}
+
+	if !slices.Contains(record.Errata, "E012") {
+		t.Errorf("a record generated under broad areas did not stamp E012: %v", record.Errata)
+	}
+}
+
+// TestARecordWithNoBroadAreasStampsNothingNew is the other half, and the
+// one that keeps every golden still: a run without the flag reads no
+// silence, so it stamps nothing and writes no field.
+func TestARecordWithNoBroadAreasStampsNothingNew(t *testing.T) {
+	t.Parallel()
+
+	out, _, err := exec(t, "new", "--seed", "1", "--name", aramis)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if strings.Contains(out, "occurrence_areas") {
+		t.Error("a run with no --occurrence-area wrote the field anyway")
+	}
+
+	if slices.Contains(decode(t, out).Errata, "E012") {
+		t.Error("a run with no --occurrence-area stamped E012")
+	}
+}
+
+// TestRejectsBroadAreasTheReadingRefuses: the syntax is refused by
+// starmap.ParseArea as the flag is read, and the set as a whole by
+// gen.Inputs.Validate before any die is thrown (ERRATA E012).
+func TestRejectsBroadAreasTheReadingRefuses(t *testing.T) {
+	t.Parallel()
+
+	for name, args := range map[string][]string{
+		"no DM":                        {areaFlagName, "0101-0410"},
+		"one corner":                   {areaFlagName, "-1@0101"},
+		"not a hex":                    {areaFlagName, "-1@0000-0410"},
+		"a DM the page does not offer": {areaFlagName, "2@0101-0410"},
+		"a corner off the p. 3 grid":   {areaFlagName, "-1@0101-0910"},
+		"two areas sharing a hex": {
+			areaFlagName, "-1@0101-0410", areaFlagName, "+1@0401-0810",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			_, _, err := exec(t, append([]string{"new", "--seed", "1"}, args...)...)
+			if err == nil {
+				t.Errorf("%s was accepted", name)
+			}
+		})
+	}
+}
+
+// TestTheAreaFlagPrintsWhatItHolds. flag calls String on a fresh zero
+// value to decide whether a default is worth printing, so `-h` reaches the
+// empty case and nothing reaches the other one: a flag whose value cannot
+// be printed is a flag that reports the wrong thing in a usage message,
+// and the compiler cannot say so.
+func TestTheAreaFlagPrintsWhatItHolds(t *testing.T) {
+	t.Parallel()
+
+	var flagValue areaFlag
+
+	if flagValue.String() != "" {
+		t.Errorf("a flag holding no areas prints %q; want nothing", flagValue.String())
+	}
+
+	for _, text := range []string{"-1@0101-0805", "+1@0106-0810"} {
+		err := flagValue.Set(text)
+		if err != nil {
+			t.Fatalf("%s: %v", text, err)
+		}
+	}
+
+	// The rectangles, in the order they were given. The DM is not in it:
+	// both documents write a DM through one formatter, and a flag with its
+	// own would be a second place for "+1" to be written differently.
+	if flagValue.String() != "0101-0805,0106-0810" {
+		t.Errorf("the flag prints %q; want %q", flagValue.String(), "0101-0805,0106-0810")
+	}
+}
+
+// TestSectorTakesNoBroadArea: an area is a rectangle of one grid's
+// numbering, and a sector's sixteen members are each generated on their
+// own p. 3 grid (ERRATA E006 part 1). The flag is not defined there, so
+// asking for one fails by name rather than being ignored.
+func TestSectorTakesNoBroadArea(t *testing.T) {
+	t.Parallel()
+
+	_, errs, err := exec(t, "sector", "--seed", "1", areaFlagName, "-1@0101-0805")
+	if err == nil {
+		t.Fatal("sector accepted --occurrence-area")
+	}
+
+	if !strings.Contains(errs, "occurrence-area") {
+		t.Errorf("the error does not name the flag that was refused:\n%s", errs)
+	}
+
+	// And the flag `new` does take is still there, so this is the one
+	// difference between the two rather than a broken flag set.
+	_, _, sectorErr := exec(t, "sector", "--seed", "1", "--occurrence-dm", "-1")
+	if sectorErr != nil {
+		t.Errorf("sector refused --occurrence-dm as well: %v", sectorErr)
 	}
 }
 

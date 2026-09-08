@@ -28,6 +28,23 @@ var (
 	ErrOffGrid = errors.New("outside the grid the record is drawn on")
 	ErrNotAHex = errors.New("a hex is four digits")
 
+	// ErrOccurrenceDM is the world occurrence DM of Book 3 p. 1, which the
+	// page offers as "+1 or -1 on the whole subsector, or on broad areas
+	// within a subsector" -- 0 being the absence of one -- and nothing
+	// else. One sentinel because the page states one rule: it bounds the
+	// record's own DM and every broad area's alike (ERRATA E012).
+	ErrOccurrenceDM = errors.New("occurrence DM is not one of -1, 0 or +1 (Book 3 p. 1)")
+
+	// ErrNotAnArea, ErrAreaCorners and ErrAreasOverlap are the broad areas
+	// of Book 3 p. 1, read as ERRATA E012 reads them. The page offers the
+	// areas and says nothing about their shape, their corners or what a hex
+	// in two of them would get; the reading supplies all three, so these
+	// cite the entry as well as the page.
+	ErrNotAnArea    = errors.New("a broad area is written DM@FROM-TO, as -1@0101-0410 (Book 3 p. 1, ERRATA E012)")
+	ErrAreaCorners  = errors.New("a broad area's corners are not its low hex and its high hex (ERRATA E012)")
+	ErrAreasOverlap = errors.New(
+		"two broad areas share a hex, and Book 3 p. 1 gives no basis for combining two DMs (ERRATA E012)")
+
 	// ErrNotAGrid is the two grids there are: the p. 3 sub-sector grid,
 	// and the sector of sixteen of them (ERRATA E006). The schema states
 	// the same pair, and the two must agree -- a schema alone rejects

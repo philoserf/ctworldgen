@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+
+	"github.com/philoserf/ctworldgen/starmap"
 )
 
 // aramis is the subsector name the roster uses throughout.
@@ -20,11 +22,55 @@ type Golden struct {
 	Seed         uint64
 	Name         string
 	OccurrenceDM int
+
+	// OccurrenceAreas are the broad areas of p. 1 (ERRATA E012). Nil on
+	// every fixture but one, which is what keeps the rest byte-identical
+	// to what the tool wrote before areas existed.
+	OccurrenceAreas []starmap.Area
 }
 
+// bandedAreas splits the p. 3 grid into a top half at -1 and a bottom half
+// at +1: 0101-0805 and 0106-0810.
+//
+// The split is by row on purpose. The mutant this fixture exists to kill
+// is scanning the areas in turn rather than the hexes, and a whole-grid
+// area cannot kill it, nor can a split by column -- columns 1 to 4 and
+// then 5 to 8 is already the ascending grid number of ERRATA E002, so
+// visiting one area and then the other visits the hexes in exactly the
+// order the engine already does and moves no die. A pair of row bands is
+// the smallest shape that does not.
+func bandedAreas() []starmap.Area {
+	// The p. 3 grid cut across the middle: rows 1 through 5, then 6
+	// through 10, each the full eight columns wide.
+	const (
+		lastRowOfTheTop     = starmap.Rows / 2
+		firstRowOfTheBottom = lastRowOfTheTop + 1
+	)
+
+	return []starmap.Area{
+		starmap.NewArea(
+			starmap.Hex{Col: 1, Row: 1},
+			starmap.Hex{Col: starmap.Columns, Row: lastRowOfTheTop}, -1),
+		starmap.NewArea(
+			starmap.Hex{Col: 1, Row: firstRowOfTheBottom},
+			starmap.Hex{Col: starmap.Columns, Row: starmap.Rows}, 1),
+	}
+}
+
+// BandedAreas is that pair, for the tests that reconstruct the occurrence
+// scan against it. They and the golden read the one definition, so a test
+// cannot come to check a different geography from the one on disk.
+func BandedAreas() []starmap.Area { return bandedAreas() }
+
 // Goldens is the roster both golden trees are generated from. It is the
-// three occurrence DMs the book offers, plus the seed 0 case, which is an
-// explicit and distinct choice rather than a request for a random seed.
+// three occurrence DMs the book offers, the seed 0 case -- an explicit and
+// distinct choice rather than a request for a random seed -- and the broad
+// areas of p. 1 (ERRATA E012), which are the one shape the other four
+// cannot express.
+//
+// The first four carry no areas, which is deliberate and load-bearing:
+// they are what the tool wrote before areas existed, and regenerating them
+// unchanged is the proof that the dice stream did not move.
 //
 // There is deliberately no empty-subsector golden. An empty subsector is
 // a valid result, but eighty throws at the worst DM the book offers make
@@ -32,11 +78,29 @@ type Golden struct {
 // minimal example record, which schema validation checks.
 func Goldens() []Golden {
 	return []Golden{
-		{File: "dm-minus-one", Seed: 1, Name: aramis, OccurrenceDM: -1},
-		{File: "dm-zero", Seed: 1, Name: aramis, OccurrenceDM: 0},
-		{File: "dm-plus-one", Seed: 1, Name: aramis, OccurrenceDM: 1},
-		{File: "seed-zero", Seed: 0, Name: "", OccurrenceDM: 0},
+		{File: "dm-minus-one", Seed: 1, Name: aramis, OccurrenceDM: -1, OccurrenceAreas: nil},
+		{File: "dm-zero", Seed: 1, Name: aramis, OccurrenceDM: 0, OccurrenceAreas: nil},
+		{File: "dm-plus-one", Seed: 1, Name: aramis, OccurrenceDM: 1, OccurrenceAreas: nil},
+		{File: "seed-zero", Seed: 0, Name: "", OccurrenceDM: 0, OccurrenceAreas: nil},
+		{File: broadAreas, Seed: 1, Name: aramis, OccurrenceDM: 0, OccurrenceAreas: bandedAreas()},
 	}
+}
+
+// broadAreas is the roster entry the area tests read.
+const broadAreas = "broad-areas"
+
+// BroadAreasGolden returns that entry out of the roster rather than
+// restating it, so that a test and the file it checks cannot come to
+// describe two different subsectors under one name -- which is the whole
+// reason this package exists.
+func BroadAreasGolden() Golden {
+	for _, golden := range Goldens() {
+		if golden.File == broadAreas {
+			return golden
+		}
+	}
+
+	return Golden{File: "", Seed: 0, Name: "", OccurrenceDM: 0, OccurrenceAreas: nil}
 }
 
 // SectorGolden is the sector fixture. There is deliberately no golden of
@@ -46,7 +110,7 @@ func Goldens() []Golden {
 // test compares directly, so the only thing a sector adds is the route
 // pass at the seams -- and that is what [SeamsPath] pins.
 func SectorGolden() Golden {
-	return Golden{File: "sector-seams", Seed: 1, Name: aramis, OccurrenceDM: 0}
+	return Golden{File: "sector-seams", Seed: 1, Name: aramis, OccurrenceDM: 0, OccurrenceAreas: nil}
 }
 
 // SeamsPath is the golden of the routes that cross a member border,
@@ -112,5 +176,5 @@ const exampleSeed = 1977
 // exactly like a golden: an example that drifted from what `ctworldgen
 // new` writes would document a record shape the tool does not produce.
 func CompleteExample() Golden {
-	return Golden{File: "complete", Seed: exampleSeed, Name: aramis, OccurrenceDM: -1}
+	return Golden{File: "complete", Seed: exampleSeed, Name: aramis, OccurrenceDM: -1, OccurrenceAreas: nil}
 }

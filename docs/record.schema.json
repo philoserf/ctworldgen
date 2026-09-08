@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/philoserf/ctworldgen/docs/record.schema.json",
   "title": "Classic Traveller star map record",
-  "description": "A star map generated from Book 3 Worlds and Adventures pp. 1-12: either the p. 3 sub-sector grid, or the sector of sixteen of them (ERRATA E006). This schema describes the record the engine writes at milestone 3: the world occurrence scan, starport types, naval and scout bases, routes, and the eight characteristics of every world. It grows with each milestone that adds fields, all of it at schema_version 1, because pre-release growth invalidates no released record.",
+  "description": "A star map generated from Book 3 Worlds and Adventures pp. 1-12: either the p. 3 sub-sector grid, or the sector of sixteen of them (ERRATA E006). This schema describes the record the engine writes at milestone 5: the world occurrence scan and the broad areas of p. 1 it was made under, starport types, naval and scout bases, routes, and the eight characteristics of every world. It grows with each milestone that adds fields, all of it at schema_version 1, because pre-release growth invalidates no released record.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -56,10 +56,16 @@
       "type": "string"
     },
     "occurrence_dm": {
-      "description": "The referee's world occurrence DM, applied to the whole subsector (p. 1).",
+      "description": "The referee's world occurrence DM (p. 1), applied to every hex no broad area covers. With no broad areas that is the whole subsector, which is the only form the tool wrote before ERRATA E012.",
       "type": "integer",
       "minimum": -1,
       "maximum": 1
+    },
+    "occurrence_areas": {
+      "description": "The broad areas of p. 1: rectangles of the grid's own numbering, each with its own occurrence DM overriding occurrence_dm where it lies (ERRATA E012). Absent from a record with none, which is what keeps such a record identical to what the tool wrote before this field existed. Two things this schema cannot state and starmap.Decode enforces instead: the corners are the low and the high hex, and no two areas may overlap -- p. 1 gives no basis for combining two DMs.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/area" }
     },
     "grid": {
       "description": "The hex grid the hexes below are numbered on: 8x10 for the p. 3 sub-sector grid, 32x40 for a sector of sixteen of them (ERRATA E006). A record written before grids were recorded has none, and is a sub-sector. The pair is what is named, not the two dimensions separately -- 8x40 and 32x10 are grids nothing prints and starmap.Decode refuses, so the oneOf below is what keeps the schema from accepting a record the reader rejects.",
@@ -175,6 +181,29 @@
         }
       }
     },
+    "area": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "dm"],
+      "properties": {
+        "from": {
+          "description": "The low corner of the rectangle: its least column and its least row.",
+          "type": "string",
+          "pattern": "^(0[1-9]|[12][0-9]|3[0-2])(0[1-9]|[1-3][0-9]|40)$"
+        },
+        "to": {
+          "description": "The high corner. A rectangle of the grid's numbering rather than a geometric one: p. 3 sets the even-numbered columns half a hex low, so the drawn shape has a ragged edge.",
+          "type": "string",
+          "pattern": "^(0[1-9]|[12][0-9]|3[0-2])(0[1-9]|[1-3][0-9]|40)$"
+        },
+        "dm": {
+          "description": "The occurrence DM inside this area. The same three values p. 1 offers for the whole subsector, because the page states one rule for both.",
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 1
+        }
+      }
+    },
     "clamp": {
       "type": "object",
       "additionalProperties": false,
@@ -183,7 +212,15 @@
         "characteristic": {
           "description": "Starport is not among them: it is a table lookup and never arithmetic, so it can never be clamped.",
           "type": "string",
-          "enum": ["size", "atmosphere", "hydrographics", "population", "government", "law_level", "tech_index"]
+          "enum": [
+            "size",
+            "atmosphere",
+            "hydrographics",
+            "population",
+            "government",
+            "law_level",
+            "tech_index"
+          ]
         },
         "raw": { "type": "integer" },
         "value": { "type": "integer", "minimum": 0 }

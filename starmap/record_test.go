@@ -15,7 +15,7 @@ import (
 func TestNewRecordCarriesItsProvenance(t *testing.T) {
 	t.Parallel()
 
-	record := starmap.New(42, "Aramis", -1)
+	record := starmap.New(42, "Aramis", -1, nil)
 	if record.SchemaVersion != starmap.SchemaVersion ||
 		record.Ruleset != starmap.Ruleset ||
 		record.EngineVersion != starmap.EngineVersion {
@@ -43,7 +43,7 @@ func TestStampKeepsDocumentOrderAndDoesNotRepeat(t *testing.T) {
 
 	const governsEveryRecord = "E002"
 
-	record := starmap.New(0, "", 0)
+	record := starmap.New(0, "", 0, nil)
 	for _, id := range []string{"E003", governsEveryRecord, "E005", governsEveryRecord, "E001"} {
 		record.Stamp(id)
 	}
@@ -483,7 +483,7 @@ func TestNotesRoundTripAndDoNotLoosenTheRecord(t *testing.T) {
 func TestARecordWithNoNotesIsUnchanged(t *testing.T) {
 	t.Parallel()
 
-	record := starmap.New(1977, "Aramis", -1)
+	record := starmap.New(1977, "Aramis", -1, nil)
 
 	encoded, err := starmap.Marshal(record)
 	if err != nil {

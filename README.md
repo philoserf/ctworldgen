@@ -21,10 +21,11 @@ record into the listing, opening with a text map of the p. 3 hex grid, or
 into the booklet. `sector` lays sixteen subsectors on one 32x40 grid and
 throws for the routes at their seams.
 
-Every page of pp. 1-12 is built. One enhancement beyond them is open:
-
-- **Per-area occurrence DMs** -- a rift in one corner, a cluster in the
-  other ([#5](https://github.com/philoserf/ctworldgen/issues/5)).
+Every page of pp. 1-12 is built, including p. 1's offer of an occurrence
+DM "on broad areas within a subsector": `--occurrence-area` puts a rift in
+one corner and a cluster in the other. It is `new`'s alone -- an area is a
+rectangle of one grid's numbering, and a sector's sixteen members are each
+generated on their own p. 3 grid.
 
 `docs/COVERAGE.md` is the live map of rule to code to test, and it carries a
 row for what is not built as well as for what is. Ask it whether a rule is
@@ -40,7 +41,7 @@ the same way -- play it as a referee and file what the table finds.
 ## Use
 
 ```sh
-ctworldgen new    [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
+ctworldgen new    [--seed N] [--name X] [--occurrence-dm N] [--occurrence-area DM@FROM-TO]... [-o file] [--force]
 ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
 ctworldgen render [--format markdown|pdf] [--lanes legible|all] [-o file] [--force] record.json
 ctworldgen version
@@ -71,7 +72,22 @@ the two worlds on the map", which a monospace grid has nowhere to put. A
 booklet is a binary, so `--format pdf` needs `-o`, and it reproduces byte
 for byte from the same record.
 
-`--occurrence-dm` takes -1, 0 or +1 and nothing else, and defaults to 0.
+`--occurrence-dm` takes -1, 0 or +1 and nothing else, and defaults to 0. It
+applies to every hex no broad area covers.
+
+`--occurrence-area` is p. 1's other half -- a DM "on broad areas within a
+subsector" -- and takes a DM, an `@`, and the two opposite corners of a
+rectangle of hexes: `--occurrence-area -1@0101-0805`. It may be given more
+than once, areas may not overlap, and the record carries every one of them
+so a run still reproduces from what it holds. The reading is ERRATA E012.
+A sector takes none: an area is a rectangle of one grid's numbering, and a
+sector's sixteen members are each generated on their own p. 3 grid.
+
+```sh
+$ ctworldgen new --seed 1977 --name Aramis \
+    --occurrence-area -1@0101-0805 --occurrence-area +1@0106-0810
+```
+
 Without `--seed`, a seed is drawn from OS entropy and written into the
 record, so a run is reproducible after the fact; `--seed 0` is therefore an
 explicit and distinct choice rather than a request for a random one.
@@ -89,8 +105,8 @@ A seed and the inputs reproduce a subsector exactly, and only exactly. All
 the dice come from one stream in procedure order, so anything that changes
 how many throws are made before a given world changes that world.
 
-**Changing `--occurrence-dm` regenerates the subsector; it does not thin
-the one you have.** The occurrence scan throws one die per hex over all
+**Changing either occurrence flag regenerates the subsector; it does not
+thin the one you have.** The occurrence scan throws one die per hex over all
 eighty before anything else, so the same seed gives the same eighty faces
 and the star fields nest: every hex placed at -1 is placed at 0, and every
 hex placed at 0 is placed at +1. The map looks like a dial. But each extra
@@ -98,7 +114,9 @@ world consumes dice for its starport, its bases and its characteristics,
 so the hexes two runs share keep almost nothing else — different starports,
 different populations, a different string of digits. "The same subsector, a
 touch sparser" is not available: change the seed for another subsector, and
-hold the DM to keep this one.
+hold the DM to keep this one. A broad area is the same story told over
+fewer hexes -- it changes which faces succeed inside its rectangle, and
+every world after the first difference is a different world.
 
 **Separate subsector files are a loop over `new`.** `sector` is the answer
 when the sixteen belong on one grid, because it throws for the routes at

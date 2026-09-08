@@ -38,6 +38,17 @@ rather than the generation, so like E007 it is never stamped.
 joined by shorter routes is not drawn (E007) -- and `--lanes all` draws
 every one. The record carries them all either way.
 
+P. 1 offers the occurrence DM "on the whole subsector, or on broad areas
+within a subsector", and both halves are built. `new --occurrence-area
+-1@0101-0805` is a rectangle of the grid's numbering with its own DM,
+repeatable, overlaps refused (E012). It varies the number each throw is
+read against and never the throw, its order or its eighty dice, which is
+what keeps a record with no areas byte-for-byte what the tool wrote
+before the field existed -- `occurrence_areas` is `omitempty`,
+`schema_version` did not move, and neither did `EngineVersion`. `sector`
+takes none: an area is read against one grid, and its sixteen members are
+each generated on their own p. 3 grid.
+
 `docs/COVERAGE.md` is the live map of rule to code to test. Every page of
 pp. 1-12 is now built: pp. 10-11 gloss each world's technological index,
 read downward (E009) with their holes left as holes (E010), and with the

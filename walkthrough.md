@@ -32,7 +32,7 @@ go run ./cmd/ctworldgen 2>&1 | head -8
 ctworldgen generates Classic Traveller subsectors from Book 3 pp. 1-12.
 
 usage:
-  ctworldgen new    [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
+  ctworldgen new    [--seed N] [--name X] [--occurrence-dm N] [--occurrence-area DM@FROM-TO]... [-o file] [--force]
   ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
   ctworldgen render [--format markdown|pdf] [--lanes legible|all] [-o file] [--force] record.json
   ctworldgen version
@@ -311,15 +311,22 @@ grid before pass 2 details any world, because that is the order the book
 gives and the order the seed's meaning depends on.
 
 ```bash
-sed -n '94,120p' gen/gen.go
+sed -n '112,145p' gen/gen.go
 ```
 
 ```output
 	// 1.A. Throw for each hex; 4, 5, or 6 indicates a world is present.
-	// The referee's DM applies to the whole subsector (p. 1).
-	hexes, err := scan(stream, inputs.OccurrenceDM)
+	// The referee's DM applies to the whole subsector, or to broad areas
+	// within one (p. 1, ERRATA E012).
+	hexes, err := scan(stream, inputs.OccurrenceDM, inputs.OccurrenceAreas)
 	if err != nil {
 		return nil, err
+	}
+
+	// A broad area is a reading of a silence, and there was one to read
+	// only where the referee drew an area.
+	if len(inputs.OccurrenceAreas) > 0 {
+		record.Stamp("E012")
 	}
 
 	// 1.B. Determine starport type; two dice throw and consult the
@@ -354,7 +361,7 @@ not throw at all. Rolling a die there would shift every subsequent world in
 the stream, and every record anyone holds would stop reproducing.
 
 ```bash
-sed -n '169,199p' gen/gen.go
+sed -n '194,224p' gen/gen.go
 ```
 
 ```output
@@ -403,7 +410,7 @@ What a member cannot do is throw for a route to a world in another member,
 because it never saw one. So there is a seam pass, with a stream of its own.
 
 ```bash
-sed -n '91,112p' gen/sector.go
+sed -n '102,123p' gen/sector.go
 ```
 
 ```output
@@ -438,7 +445,7 @@ and the one file the tool asks a referee to keep. It is a subsector — or a
 sector — and a world is a row inside it.
 
 ```bash
-sed -n '41,60p' starmap/record.go
+sed -n '41,85p' starmap/record.go
 ```
 
 ```output
@@ -462,6 +469,31 @@ type Record struct {
 	// wrote before this field existed.
 	Notes string `json:"notes,omitempty"`
 
+	OccurrenceDM int `json:"occurrence_dm"`
+
+	// OccurrenceAreas are the broad areas of p. 1 (ERRATA E012): each a
+	// rectangle of the grid's numbering with its own DM, overriding
+	// OccurrenceDM at every hex it covers. A hex in no area takes
+	// OccurrenceDM, which is the whole-subsector form of the same sentence.
+	//
+	// They are carried in the order the referee gave them and nothing sorts
+	// them. Sorting would make the record a function of the geography
+	// rather than of the typing, which is the nicer property and one no
+	// test could fail; the property that matters is bought by refusing
+	// overlaps, because the order of a set of areas that cannot overlap
+	// changes no die.
+	//
+	// omitempty keeps a record without one byte-identical to what the tool
+	// wrote before this field existed, as Notes does.
+	OccurrenceAreas []Area `json:"occurrence_areas,omitempty"`
+
+	// Grid is what the hexes below are numbered on: the p. 3 sub-sector
+	// grid, or the sector grid of sixteen of them (ERRATA E006).
+	Grid Grid `json:"grid"`
+
+	Worlds []World `json:"worlds"`
+	Routes []Route `json:"routes"`
+}
 ```
 
 `docs/record.schema.json` states the shape, and `Validate` holds a record to
@@ -470,7 +502,7 @@ calls it; `Marshal` deliberately does not, because the file is the referee's
 notebook page and he is allowed to hand-edit it.
 
 ```bash
-sed -n '317,336p' starmap/record.go
+sed -n '339,362p' starmap/record.go
 ```
 
 ```output
@@ -481,7 +513,12 @@ func (s *Record) Validate() error {
 		return fmt.Errorf("%w: %dx%d", ErrNotAGrid, s.Grid.Columns, s.Grid.Rows)
 	}
 
-	err := s.carriesThisToolsProvenance()
+	err := s.Grid.HoldAreas(s.OccurrenceAreas)
+	if err != nil {
+		return err
+	}
+
+	err = s.carriesThisToolsProvenance()
 	if err != nil {
 		return err
 	}
@@ -493,7 +530,6 @@ func (s *Record) Validate() error {
 
 	return s.onItsOwnGrid()
 }
-
 ```
 
 ## 7. Rendering: two documents, one middle
@@ -504,7 +540,7 @@ per-world bullet list was once written out twice, agreed by convention, and
 a change to one was a change the other's tests could not see.
 
 ```bash
-sed -n '620,640p' render/render.go
+sed -n '644,664p' render/render.go
 ```
 
 ```output
@@ -679,7 +715,7 @@ github.com/philoserf/ctworldgen/cmd/ctworldgen 36
 github.com/philoserf/ctworldgen/dice 0
 github.com/philoserf/ctworldgen/gen 11
 github.com/philoserf/ctworldgen/internal/cmd/regenerate 127
-github.com/philoserf/ctworldgen/internal/fixture 17
+github.com/philoserf/ctworldgen/internal/fixture 26
 github.com/philoserf/ctworldgen/render 4
 github.com/philoserf/ctworldgen/starmap 19
 github.com/philoserf/ctworldgen/tables 27
@@ -699,7 +735,7 @@ grep -o '^## E0[0-9]*' docs/ERRATA.md | sed 's/## //' | paste -sd' ' -
 ```
 
 ```output
-E001 E002 E003 E004 E005 E006 E007 E008 E009 E010 E011
+E001 E002 E003 E004 E005 E006 E007 E008 E009 E010 E011 E012
 ```
 
 ## Where to look first
@@ -717,4 +753,3 @@ E001 E002 E003 E004 E005 E006 E007 E008 E009 E010 E011
   wrong reason.
 - **Why a thing is shaped as it is** — `THEORY.md` for the design, `CLAUDE.md`
   for the traps, `docs/ERRATA.md` for every reading of a silent page.
-
