@@ -57,7 +57,7 @@ func (r *Renderer) Listing(out io.Writer, record *starmap.Record) error {
 
 	r.heading(&built, record, drawn)
 
-	if record.Grid == starmap.SectorGrid() {
+	if record.Grid.IsSector() {
 		r.sectorSections(&built, names, record, drawn)
 	} else {
 		r.grid(&built, record, wholeGrid(record.Grid), everywhere, "## The map", mapNote(record))
@@ -149,7 +149,7 @@ func summary(record *starmap.Record, drawn []starmap.Route) string {
 // are the only shapes a record takes (ERRATA E006), and heading a 32x40
 // one "Subsector" is the listing misreporting its own subject.
 func untitled(record *starmap.Record) string {
-	if record.Grid == starmap.SectorGrid() {
+	if record.Grid.IsSector() {
 		return "Sector"
 	}
 
@@ -180,7 +180,7 @@ const noWorlds = "No world was placed. An empty subsector is a result."
 // cases -- which is exactly what makes the sector translation safe
 // (ERRATA E006 part 2).
 func mapNote(record *starmap.Record) string {
-	if record.Grid == starmap.SectorGrid() {
+	if record.Grid.IsSector() {
 		return sectorIndexNote
 	}
 

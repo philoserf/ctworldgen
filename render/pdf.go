@@ -143,7 +143,7 @@ func (r *Renderer) Booklet(out io.Writer, record *starmap.Record) error {
 		y:        pageMargin,
 	}
 
-	if record.Grid == starmap.SectorGrid() {
+	if record.Grid.IsSector() {
 		book.sectorPages()
 	} else {
 		book.firstPage()
