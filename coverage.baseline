@@ -5,7 +5,6 @@ github.com/philoserf/ctworldgen/cmd/ctworldgen 28
 github.com/philoserf/ctworldgen/dice 0
 github.com/philoserf/ctworldgen/gen 11
 github.com/philoserf/ctworldgen/internal/audit 7
-github.com/philoserf/ctworldgen/internal/cmd/ratchet 31
 github.com/philoserf/ctworldgen/internal/cmd/regenerate 136
 github.com/philoserf/ctworldgen/internal/fixture 17
 github.com/philoserf/ctworldgen/render 4
