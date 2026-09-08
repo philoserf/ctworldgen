@@ -22,11 +22,10 @@ const seamSeedOffset = starmap.Members
 // subsector `new --seed base+i` writes -- and the only throws made here
 // are for pairs that straddle two members.
 func (e *Engine) Sector(inputs Inputs) (*starmap.Record, error) {
-	err := inputs.Validate()
-	if err != nil {
-		return nil, err
-	}
-
+	// Before Validate, which holds an area against the p. 3 grid: a
+	// sector-grid rectangle refused there would be reported as off an 8x10
+	// grid, which is a true sentence about the wrong thing.
+	//
 	// A broad area is a rectangle of one grid's numbering, and the sixteen
 	// members are each generated on their own p. 3 grid: a sector-grid
 	// rectangle would have to be clipped into sixteen local ones, which is
@@ -34,6 +33,11 @@ func (e *Engine) Sector(inputs Inputs) (*starmap.Record, error) {
 	// ignored them would carry a DM that governed nothing.
 	if len(inputs.OccurrenceAreas) > 0 {
 		return nil, ErrSectorTakesNoAreas
+	}
+
+	err := inputs.Validate()
+	if err != nil {
+		return nil, err
 	}
 
 	record := starmap.New(inputs.Seed, inputs.Name, inputs.OccurrenceDM, nil)

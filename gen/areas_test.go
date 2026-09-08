@@ -1,6 +1,7 @@
 package gen_test
 
 import (
+	"errors"
 	"slices"
 	"testing"
 
@@ -146,30 +147,66 @@ func was(placed bool) string {
 // banded areas make the top half of the grid poorer than the bottom, which
 // is what "a rift in one corner and a cluster in the other" means.
 //
-// Without it the two tests above could both pass on a fixture whose areas
-// happened to change nothing at all.
+// It is stated as strict nesting rather than as a count, and the
+// difference matters. The occurrence scan draws the same eighty dice
+// whatever the DM (ERRATA E012 part 5), so a hex is placed at -1 only if
+// it is placed at 0, and at 0 only if it is placed at +1 -- the star
+// fields nest. A count comparison would say "fewer worlds up here than
+// down there", which for any one seed is very nearly a coin toss and
+// passes just as happily when the areas are ignored altogether.
+//
+// Strictly nested is the property the areas actually have, and it is
+// exactly equality when they are ignored.
 func TestBroadAreasChangeWhereTheWorldsAre(t *testing.T) {
 	t.Parallel()
 
+	engine := newEngine(t)
 	golden := fixture.BroadAreasGolden()
 
-	record := generate(t, newEngine(t), gen.Inputs{
+	plain := generate(t, engine, gen.Inputs{
+		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM, OccurrenceAreas: nil,
+	})
+	banded := generate(t, engine, gen.Inputs{
 		Seed: golden.Seed, Name: golden.Name,
 		OccurrenceDM: golden.OccurrenceDM, OccurrenceAreas: golden.OccurrenceAreas,
 	})
 
-	top, bottom := 0, 0
+	// The rift band is at -1, so its worlds are strictly fewer; the cluster
+	// band is at +1, so strictly more. Which band a hex is in is read off
+	// the fixture's own areas rather than off a row number written here.
+	rift, cluster := golden.OccurrenceAreas[0], golden.OccurrenceAreas[1]
+
+	assertStrictlyInside(t, "the rift band at -1", in(banded, rift), in(plain, rift))
+	assertStrictlyInside(t, "the cluster band at +1", in(plain, cluster), in(banded, cluster))
+}
+
+// in is the set of hexes a record placed a world on inside one area.
+func in(record *starmap.Record, area starmap.Area) map[starmap.Hex]bool {
+	found := map[starmap.Hex]bool{}
 
 	for _, world := range record.Worlds {
-		if world.Hex.Row <= starmap.Rows/2 {
-			top++
-		} else {
-			bottom++
+		if area.Contains(world.Hex) {
+			found[world.Hex] = true
 		}
 	}
 
-	if top >= bottom {
-		t.Errorf("the -1 band holds %d worlds and the +1 band %d; a broad area's DM should tell", top, bottom)
+	return found
+}
+
+// assertStrictlyInside holds one set inside another and refuses equality,
+// which is what a DM that governed nothing would produce.
+func assertStrictlyInside(t *testing.T, what string, fewer, more map[starmap.Hex]bool) {
+	t.Helper()
+
+	for hex := range fewer {
+		if !more[hex] {
+			t.Errorf("%s: %s carries a world the run at the higher DM does not; the star fields do not nest", what, hex)
+		}
+	}
+
+	if len(fewer) >= len(more) {
+		t.Errorf("%s holds %d worlds against %d at the DM one step higher; a broad area's DM told nothing",
+			what, len(fewer), len(more))
 	}
 }
 
@@ -242,10 +279,27 @@ func TestAdjacentAreasDoNotOverlap(t *testing.T) {
 func TestASectorTakesNoBroadAreas(t *testing.T) {
 	t.Parallel()
 
-	_, err := newEngine(t).Sector(gen.Inputs{
+	engine := newEngine(t)
+
+	// A p. 3 rectangle, which Validate would accept.
+	_, err := engine.Sector(gen.Inputs{
 		Seed: 1, Name: aramis, OccurrenceDM: 0, OccurrenceAreas: wholeGrid(-1),
 	})
-	if err == nil {
-		t.Error("a sector accepted broad areas, which are read against the p. 3 grid it is not on")
+	if !errors.Is(err, gen.ErrSectorTakesNoAreas) {
+		t.Errorf("a p. 3 area on a sector gave %v; want ErrSectorTakesNoAreas", err)
+	}
+
+	// And a sector-grid rectangle, which it would not. The refusal has to
+	// come first, or a referee asking for something the tool does not build
+	// is told his area is off an 8x10 grid -- a true sentence about the
+	// wrong thing, on a record that is 32x40.
+	_, err = engine.Sector(gen.Inputs{
+		Seed: 1, Name: aramis, OccurrenceDM: 0,
+		OccurrenceAreas: []starmap.Area{starmap.NewArea(
+			starmap.Hex{Col: 1, Row: 1},
+			starmap.Hex{Col: starmap.SectorColumns, Row: starmap.SectorRows}, -1)},
+	})
+	if !errors.Is(err, gen.ErrSectorTakesNoAreas) {
+		t.Errorf("a sector-grid area on a sector gave %v; want ErrSectorTakesNoAreas", err)
 	}
 }
