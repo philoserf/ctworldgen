@@ -59,6 +59,7 @@ func generated(t *testing.T, golden fixture.Golden) *starmap.Record {
 
 	record, err := engine.Generate(gen.Inputs{
 		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+		OccurrenceAreas: golden.OccurrenceAreas,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -301,7 +302,7 @@ func TestTheRefereesNotesReachBothDocuments(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record := starmap.New(1, aramis, 0)
+	record := starmap.New(1, aramis, 0, nil)
 
 	record.Notes = onTheMap
 	record.Worlds = append(record.Worlds, starmap.World{
@@ -354,7 +355,7 @@ func TestARefereesOwnNameStaysInOneCell(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	record := starmap.New(1, aramis, 0)
+	record := starmap.New(1, aramis, 0, nil)
 
 	record.Worlds = append(record.Worlds, starmap.World{
 		Hex: hex, Name: "Regina | the\nold capital", Notes: "", Starport: starmap.StarportA,
@@ -431,7 +432,7 @@ func assertTheRouteTableStaysInThreeCells(t *testing.T, record *starmap.Record, 
 func TestAnEmptySubsectorRenders(t *testing.T) {
 	t.Parallel()
 
-	written := listing(t, starmap.New(7, "", 0))
+	written := listing(t, starmap.New(7, "", 0, nil))
 
 	for _, want := range []string{"# Subsector", "No world was placed", "No route was drawn"} {
 		if !strings.Contains(written, want) {
@@ -450,7 +451,7 @@ func TestAnEmptySubsectorRenders(t *testing.T) {
 func annotated(t *testing.T) *starmap.Record {
 	t.Helper()
 
-	record := starmap.New(1, aramis, 0)
+	record := starmap.New(1, aramis, 0, nil)
 
 	for _, world := range []struct {
 		col, row int
@@ -661,7 +662,7 @@ func TestTheGlossReadsBothTablesDownward(t *testing.T) {
 
 	const matterTransport = "matter transport"
 
-	record := starmap.New(1, aramis, 0)
+	record := starmap.New(1, aramis, 0, nil)
 
 	for index, level := range []int{0, 1, 12, 16, 18} {
 		world := world(t, hexOf(t, 1, index+1), "")
@@ -893,7 +894,7 @@ func TestTheMapIsTheGridPrintedOnPageThree(t *testing.T) {
 	// on the map at all; the goldens carry the starport letters.
 	t.Run("empty", func(t *testing.T) {
 		t.Parallel()
-		assertTheMapIsThePrintedGrid(t, section(t, listing(t, starmap.New(1, aramis, 0)), "The map"),
+		assertTheMapIsThePrintedGrid(t, section(t, listing(t, starmap.New(1, aramis, 0, nil)), "The map"),
 			everyHexOf(starmap.PageThreeGrid()))
 	})
 
@@ -1067,7 +1068,7 @@ func sectorListingRecord(t *testing.T) *starmap.Record {
 		t.Fatal(err)
 	}
 
-	record, err := engine.Sector(gen.Inputs{Seed: 1, Name: aramis, OccurrenceDM: 0})
+	record, err := engine.Sector(gen.Inputs{Seed: 1, Name: aramis, OccurrenceDM: 0, OccurrenceAreas: nil})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1132,7 +1133,7 @@ func TestTheSectorSliceGolden(t *testing.T) {
 	}
 
 	record, err := engine.Sector(gen.Inputs{
-		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM, OccurrenceAreas: nil,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1320,7 +1321,7 @@ func TestTheListingSaysWhichGridItDrew(t *testing.T) {
 
 	// Unnamed, because the heading under test is the one a record with no
 	// referee's name of its own falls back to.
-	asSector, err := engine.Sector(gen.Inputs{Seed: 1, Name: "", OccurrenceDM: 0})
+	asSector, err := engine.Sector(gen.Inputs{Seed: 1, Name: "", OccurrenceDM: 0, OccurrenceAreas: nil})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1335,7 +1336,7 @@ func TestTheListingSaysWhichGridItDrew(t *testing.T) {
 		t.Errorf("the map note of a sector does not say which grid was drawn: %q", note)
 	}
 
-	subsectorListing := listing(t, starmap.New(1, "", 0))
+	subsectorListing := listing(t, starmap.New(1, "", 0, nil))
 
 	if !strings.HasPrefix(subsectorListing, "# Subsector\n") {
 		t.Errorf("an unnamed subsector is headed %q", line(subsectorListing))

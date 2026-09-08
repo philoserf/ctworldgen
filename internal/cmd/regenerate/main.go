@@ -72,6 +72,7 @@ func run() error {
 
 	sectorRecord, err := engine.Sector(gen.Inputs{
 		Seed: sector.Seed, Name: sector.Name, OccurrenceDM: sector.OccurrenceDM,
+		OccurrenceAreas: sector.OccurrenceAreas,
 	})
 	if err != nil {
 		return fmt.Errorf("%s: %w", sector.File, err)
@@ -143,6 +144,7 @@ func writeGolden(
 ) error {
 	record, err := engine.Generate(gen.Inputs{
 		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+		OccurrenceAreas: golden.OccurrenceAreas,
 	})
 	if err != nil {
 		return fmt.Errorf("%s: %w", golden.File, err)
@@ -186,7 +188,10 @@ func writeGolden(
 func writeExample(engine *gen.Engine) error {
 	example := fixture.CompleteExample()
 
-	record, err := engine.Generate(gen.Inputs{Seed: example.Seed, Name: example.Name, OccurrenceDM: example.OccurrenceDM})
+	record, err := engine.Generate(gen.Inputs{
+		Seed: example.Seed, Name: example.Name, OccurrenceDM: example.OccurrenceDM,
+		OccurrenceAreas: example.OccurrenceAreas,
+	})
 	if err != nil {
 		return fmt.Errorf("%s: %w", fixture.CompleteExamplePath(), err)
 	}

@@ -649,6 +649,93 @@ gets a clause he can ignore, which is what the citation makes legible.
 _Never stamped, for E009's reasons. The record carries no gloss, and two
 referees rendering the same record read the same page._
 
+## E012 — What a broad area is, and how one is read against the occurrence throw (p. 1)
+
+P. 1 offers the referee a world occurrence DM, and offers it twice over:
+
+> The referee may elect to alter the normal chances of worlds, making them
+> more frequent or less frequent to correspond to specific regions of the
+> galaxy. This is easily accomplished by imposing a DM of +1 or −1 on the
+> whole subsector, **or on broad areas within a subsector.**
+
+The whole-subsector form needs no reading. The second form is four
+silences: the page says nothing about an area's shape, nothing about its
+size, nothing about how many there may be, and nothing about a hex that
+falls in two of them. Nor does it say what a hex in no area gets, which
+only looks obvious.
+
+**The reading, in five parts.**
+
+### 1. A broad area is a rectangle of the grid's own numbering
+
+Two opposite corners, written low and high — `0101-0410` is columns 1
+through 4 and rows 1 through 10.
+
+It is a rectangle of the _numbering_ and not a geometric one. P. 3 sets the
+even-numbered columns half a hex low, so the shape those corners describe
+has a ragged edge on the page and is not the block a ruler would draw. That
+is the right answer rather than a concession: what the referee is looking
+at when he decides where the rift goes is a sheet of four-digit numbers,
+and the numbering is what he can point at.
+
+Two alternatives were considered and are recorded so they are not
+reconsidered. An explicit list of hexes is more expressive — it can hold a
+diagonal rift — at the cost of a much longer record and a much worse thing
+to type. Whole column or row bands are simpler and cannot put a cluster in
+a corner, which is the page's own example of what the DM is for.
+
+### 2. Each area carries its own DM
+
+One of the values p. 1 offers, which is the same sentence's `+1` or `−1`,
+with 0 the absence of a DM rather than a third value. The page states one
+rule for the whole subsector and for a broad area alike, so this tool holds
+both to it in one place.
+
+### 3. A hex in no area takes the record's own DM
+
+P. 1 offers the whole-subsector form and the broad-area form in one breath,
+joined by "or". So the two are not alternatives to choose between: the
+whole-subsector DM is what the subsector has, and an area overrides it
+where it lies. A referee who wants a rift in one corner and nothing
+elsewhere writes one area and leaves the record's DM at 0, which is what
+the page's own example asks for.
+
+### 4. Areas may not overlap, and an overlapping set is refused
+
+Refused before any die is thrown, so every hex has exactly one DM and the
+record is unambiguous by construction.
+
+P. 1 offers +1 and −1 and gives no basis whatever for combining two of
+them. The two ways a tool could combine them are both inventions. Taking
+the first area listed makes the record's meaning depend on the order the
+referee typed his areas in — a record that says the same thing twice and
+generates two different subsectors. Summing gives a hex in two −1 areas a
+DM of −2, which is not a DM the book names anywhere.
+
+Refusing means the tool never has to choose. A referee who wants a smaller
+area carved out of a larger one writes the four rectangles that surround
+it, which the notation already allows.
+
+### 5. The throw is unchanged; only the number it is read against varies
+
+One die per hex, over all eighty hexes, in the ascending grid number of
+E002. That is not a convenience: the order fixes what every seed means, and
+scanning the areas in turn — the obvious implementation — would visit the
+hexes in some other order and silently change every seed's subsector.
+
+So a broad area varies the _target_ and not the throw. Two consequences,
+and the second is why this entry could be written at all:
+
+- Any set of areas covering the whole grid at one DM produces exactly what
+  that DM produces on the whole subsector.
+- A record with no areas is byte-for-byte what this tool wrote before areas
+  existed. `EngineVersion` does not move, because no throw, no order and no
+  construction changed.
+
+_Stamped on records carrying at least one broad area. A record with none
+read no silence and stamps nothing, which is the second consequence above
+stated as a rule._
+
 ## Noted discrepancies (not stamped)
 
 These need no reading. They are recorded because each one looks, on the

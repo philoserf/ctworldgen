@@ -35,9 +35,9 @@ const (
 // sixteen of them (ERRATA E006). Its Grid says which. The JSON record is
 // the source of truth; the Markdown listing is a render of it.
 //
-// Name, OccurrenceDM and Seed are the inputs a run is reproducible from,
-// and the regeneration test in gen reads them back to reproduce each
-// golden.
+// Name, OccurrenceDM, OccurrenceAreas and Seed are the inputs a run is
+// reproducible from, and the regeneration test in gen reads them back to
+// reproduce each golden.
 type Record struct {
 	SchemaVersion int      `json:"schema_version"`
 	Ruleset       string   `json:"ruleset"`
@@ -59,6 +59,22 @@ type Record struct {
 	Notes string `json:"notes,omitempty"`
 
 	OccurrenceDM int `json:"occurrence_dm"`
+
+	// OccurrenceAreas are the broad areas of p. 1 (ERRATA E012): each a
+	// rectangle of the grid's numbering with its own DM, overriding
+	// OccurrenceDM at every hex it covers. A hex in no area takes
+	// OccurrenceDM, which is the whole-subsector form of the same sentence.
+	//
+	// They are carried in the order the referee gave them and nothing sorts
+	// them. Sorting would make the record a function of the geography
+	// rather than of the typing, which is the nicer property and one no
+	// test could fail; the property that matters is bought by refusing
+	// overlaps, because the order of a set of areas that cannot overlap
+	// changes no die.
+	//
+	// omitempty keeps a record without one byte-identical to what the tool
+	// wrote before this field existed, as Notes does.
+	OccurrenceAreas []Area `json:"occurrence_areas,omitempty"`
 
 	// Grid is what the hexes below are numbered on: the p. 3 sub-sector
 	// grid, or the sector grid of sixteen of them (ERRATA E006).
@@ -146,7 +162,7 @@ type Route struct {
 
 // New returns a record stamped with the provenance of the run that is
 // about to fill it.
-func New(seed uint64, name string, occurrenceDM int) *Record {
+func New(seed uint64, name string, occurrenceDM int, areas []Area) *Record {
 	return &Record{
 		SchemaVersion: SchemaVersion,
 		Ruleset:       Ruleset,
@@ -157,9 +173,14 @@ func New(seed uint64, name string, occurrenceDM int) *Record {
 		Name:          name,
 		Notes:         "",
 		OccurrenceDM:  occurrenceDM,
-		Grid:          PageThreeGrid(),
-		Worlds:        []World{},
-		Routes:        []Route{},
+
+		// Held rather than copied: an area is a value, the slice is the
+		// referee's own, and nothing here or later mutates it.
+		OccurrenceAreas: areas,
+
+		Grid:   PageThreeGrid(),
+		Worlds: []World{},
+		Routes: []Route{},
 	}
 }
 
@@ -297,8 +318,9 @@ func (w World) DigitString() (string, error) {
 }
 
 // Validate holds a record to what record.schema.json states. That is the
-// two grids it names, the three provenance constants, the fields it marks
-// required, and every hex on the record's own grid.
+// two grids it names, the broad areas of p. 1 it carries, the three
+// provenance constants, the fields it marks required, and every hex on the
+// record's own grid.
 //
 // It is exported so that both callers can reach it: [Decode] on the read
 // path, and gen's six-hundred-seed sweep, which holds the engine's own
@@ -321,7 +343,12 @@ func (s *Record) Validate() error {
 		return fmt.Errorf("%w: %dx%d", ErrNotAGrid, s.Grid.Columns, s.Grid.Rows)
 	}
 
-	err := s.carriesThisToolsProvenance()
+	err := s.Grid.HoldAreas(s.OccurrenceAreas)
+	if err != nil {
+		return err
+	}
+
+	err = s.carriesThisToolsProvenance()
 	if err != nil {
 		return err
 	}

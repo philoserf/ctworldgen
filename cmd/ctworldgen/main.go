@@ -64,7 +64,7 @@ const (
 const usage = `ctworldgen generates Classic Traveller subsectors from Book 3 pp. 1-12.
 
 usage:
-  ctworldgen new    [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
+  ctworldgen new    [--seed N] [--name X] [--occurrence-dm N] [--occurrence-area DM@FROM-TO]... [-o file] [--force]
   ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
   ctworldgen render [--format markdown|pdf] [--lanes legible|all] [-o file] [--force] record.json
   ctworldgen version
@@ -101,11 +101,54 @@ func run(args []string, stdout, stderr io.Writer) error {
 	}
 }
 
-// singleRecordCmd is `new` and `sector`. They take the same flags, draw a
-// seed the same way, and write one record; the only difference is which
-// pass of the engine fills it, so that is the only thing passed in.
+// areaFlag collects --occurrence-area, which the referee may give more
+// than once: p. 1 offers a DM "on broad areas within a subsector", plural,
+// and a flag is repeatable only by implementing [flag.Value].
+//
+// The parse itself is starmap's, beside ParseHex. This is the program's
+// edge and nothing more.
+type areaFlag struct{ areas []starmap.Area }
+
+// String is what flag prints as the default. The zero value has no areas,
+// which is the whole-subsector form and prints as nothing.
+func (a *areaFlag) String() string {
+	if a == nil || len(a.areas) == 0 {
+		return ""
+	}
+
+	written := make([]string, 0, len(a.areas))
+	for _, area := range a.areas {
+		written = append(written, area.String())
+	}
+
+	return strings.Join(written, ",")
+}
+
+// Set reads one area and appends it. The set as a whole -- its DMs, its
+// corners and whether any two of them overlap -- is held by
+// gen.Inputs.Validate, which is the one place that rule lives.
+func (a *areaFlag) Set(text string) error {
+	area, err := starmap.ParseArea(text)
+	if err != nil {
+		return fmt.Errorf("reading --occurrence-area: %w", err)
+	}
+
+	a.areas = append(a.areas, area)
+
+	return nil
+}
+
+// singleRecordCmd is `new` and `sector`. They draw a seed the same way and
+// write one record; what differs is which pass of the engine fills it, and
+// whether broad areas may be given at all.
+//
+// Only `new` takes them. A broad area is a rectangle of one grid's
+// numbering, and a sector's sixteen members are each generated on their
+// own p. 3 grid (ERRATA E006 part 1), so a sector-grid rectangle would
+// have to be clipped into sixteen local ones. Leaving the flag undefined
+// on `sector` means asking for one fails by name rather than silently.
 func singleRecordCmd(
-	subcommand, noun string, args []string, stdout, stderr io.Writer,
+	subcommand, noun string, args []string, takesAreas bool, stdout, stderr io.Writer,
 	fill func(*gen.Engine, gen.Inputs) (*starmap.Record, error),
 ) error {
 	flags := flag.NewFlagSet(subcommand, flag.ContinueOnError)
@@ -118,6 +161,14 @@ func singleRecordCmd(
 		out          = flags.String("o", "", "write to this file instead of stdout")
 		force        = flags.Bool("force", false, "overwrite an existing output file")
 	)
+
+	var areas areaFlag
+
+	if takesAreas {
+		flags.Var(&areas, "occurrence-area",
+			"a broad area with its own occurrence DM, as -1@0101-0410; repeatable, and areas may not overlap "+
+				"(Book 3 p. 1, ERRATA E012)")
+	}
 
 	err := flags.Parse(args)
 	if err != nil {
@@ -152,7 +203,9 @@ func singleRecordCmd(
 		return fmt.Errorf("building the engine: %w", err)
 	}
 
-	record, err := fill(engine, gen.Inputs{Seed: *seed, Name: *name, OccurrenceDM: *occurrenceDM})
+	record, err := fill(engine, gen.Inputs{
+		Seed: *seed, Name: *name, OccurrenceDM: *occurrenceDM, OccurrenceAreas: areas.areas,
+	})
 	if err != nil {
 		return fmt.Errorf("generating the %s: %w", noun, err)
 	}
@@ -163,7 +216,7 @@ func singleRecordCmd(
 // newCmd writes one subsector: the whole of Book 3 pp. 1-12 on the p. 3
 // grid.
 func newCmd(args []string, stdout, stderr io.Writer) error {
-	return singleRecordCmd("new", "subsector", args, stdout, stderr,
+	return singleRecordCmd("new", "subsector", args, true, stdout, stderr,
 		func(e *gen.Engine, in gen.Inputs) (*starmap.Record, error) { return e.Generate(in) })
 }
 
@@ -173,7 +226,7 @@ func newCmd(args []string, stdout, stderr io.Writer) error {
 // subsectors a referee could have generated one at a time, plus the routes
 // that generating them one at a time could not find.
 func sectorCmd(args []string, stdout, stderr io.Writer) error {
-	return singleRecordCmd("sector", "sector", args, stdout, stderr,
+	return singleRecordCmd("sector", "sector", args, false, stdout, stderr,
 		func(e *gen.Engine, in gen.Inputs) (*starmap.Record, error) { return e.Sector(in) })
 }
 

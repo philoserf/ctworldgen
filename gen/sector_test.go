@@ -21,7 +21,7 @@ func sector(t *testing.T, golden fixture.Golden) *starmap.Record {
 	}
 
 	record, err := engine.Sector(gen.Inputs{
-		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+		Seed: golden.Seed, Name: golden.Name, OccurrenceDM: golden.OccurrenceDM, OccurrenceAreas: nil,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -74,6 +74,7 @@ func TestASectorsMembersAreTheSubsectorsNewWrites(t *testing.T) {
 	for index := range starmap.Members {
 		alone, genErr := engine.Generate(gen.Inputs{
 			Seed: golden.Seed + uint64(index), Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+			OccurrenceAreas: nil,
 		})
 		if genErr != nil {
 			t.Fatal(genErr)
@@ -266,7 +267,7 @@ func TestSectorRejectsADMTheBookDoesNotOffer(t *testing.T) {
 	}
 
 	for _, dm := range []int{-2, 2} {
-		_, err := engine.Sector(gen.Inputs{Seed: 1, Name: "Aramis", OccurrenceDM: dm})
+		_, err := engine.Sector(gen.Inputs{Seed: 1, Name: aramis, OccurrenceDM: dm, OccurrenceAreas: nil})
 		if err == nil {
 			t.Errorf("Sector accepted an occurrence DM of %+d, and p. 1 offers -1, 0 and +1", dm)
 		}
@@ -314,6 +315,7 @@ func TestASectorsMembersKeepTheirOwnRoutes(t *testing.T) {
 	for index := range starmap.Members {
 		alone, genErr := engine.Generate(gen.Inputs{
 			Seed: golden.Seed + uint64(index), Name: golden.Name, OccurrenceDM: golden.OccurrenceDM,
+			OccurrenceAreas: nil,
 		})
 		if genErr != nil {
 			t.Fatal(genErr)
