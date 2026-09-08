@@ -192,13 +192,12 @@ func newPDF() *fpdf.Fpdf {
 //
 // One function, because there are two ways into fpdf and they must agree.
 // Drawing hands it bytes. Measuring hands SplitText runes, which it
-// indexes into the same 256-entry table. They did not agree once: the
-// guard measuring used asked whether Windows-1252 could carry a rune
-// rather than whether the rune was below 256, so the whole 0x80-0x9F
-// block -- curly quotes, the em-dash, the ellipsis -- passed through
-// untouched and fpdf indexed cw[8217] into a slice of 256. macOS types
-// U+2019 for every apostrophe, so a referee's note crashed the render
-// (issue #17).
+// indexes into the same 256-entry table. A guard that asks whether
+// Windows-1252 can carry a rune, rather than whether the rune is below
+// 256, lets the whole 0x80-0x9F block through untouched -- curly quotes,
+// the em-dash, the ellipsis -- and fpdf then indexes cw[8217] into a
+// slice of 256. macOS types U+2019 for every apostrophe, so that is a
+// referee's note crashing the render (issue #17).
 //
 // A character the encoding cannot carry is written as a question mark
 // rather than dropped, so a line keeps the length and shape he gave it.
@@ -381,10 +380,10 @@ func (b *booklet) drawMap(within box, draw window, shows func(starmap.Hex) bool)
 // between the sixteen members drawn heavy, and each member's number in its
 // band (ERRATA E008 part 4).
 //
-// Thirty-two columns fitted to a page give a hex seventeen points across.
-// A four-digit number drawn in one runs out into the hex beside it, which
-// is what a sector booklet used to do, and the numbers are on the member
-// maps overleaf where there is room for them.
+// Thirty-two columns fitted to a page give a hex seventeen points across,
+// and a four-digit number drawn in one runs out into the hex beside it.
+// So the numbers are on the member maps overleaf, where there is room for
+// them.
 func (b *booklet) drawIndex(within box) {
 	draw := wholeGrid(b.record.Grid)
 	fit := fitMap(draw, within)

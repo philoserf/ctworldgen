@@ -100,9 +100,9 @@ func SectorGrid() Grid { return Grid{Columns: SectorColumns, Rows: SectorRows} }
 //
 // There are exactly two grids -- record.schema.json enforces that as a
 // oneOf over two const pairs, and Decode enumerates them -- so asking
-// which one a record is on is a kind question with a yes and a no. It had
-// no owner: four sites in render compared the struct to SectorGrid(),
-// which reads as a dimension check and means this.
+// which one a record is on is a kind question with a yes and a no. It
+// needs an owner: without one, render compares the struct to SectorGrid()
+// at four sites, which reads as a dimension check and means this.
 func (g Grid) IsSector() bool { return g == SectorGrid() }
 
 // Contains reports whether a hex is on this grid.

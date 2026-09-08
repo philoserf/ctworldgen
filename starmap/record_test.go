@@ -139,12 +139,13 @@ func TestDecodeRejectsMoreThanOneDocument(t *testing.T) {
 }
 
 // TestDecodeDoesNotCallAMalformedTailASecondDocument: reading past the
-// record has three outcomes and used to have one. Anything that was not
-// io.EOF became ErrTrailingContent, so `{...}]` -- a stray bracket, a
-// hand-edit gone wrong -- was reported as "more than one document in the
-// record read; a record is one JSON document", which is a specific and
-// confident claim about a file holding no second document at all. The
-// decoder's own error, and the byte offset in it, were dropped.
+// record has three outcomes, and collapsing them into one is the failure
+// this holds against. Treating anything that is not io.EOF as
+// ErrTrailingContent reports `{...}]` -- a stray bracket, a hand-edit
+// gone wrong -- as "more than one document in the record read; a record
+// is one JSON document", a specific and confident claim about a file
+// holding no second document at all, and it drops the decoder's own error
+// and the byte offset in it.
 //
 // So the two that are not a second document are asserted here, and each
 // by what it actually is: the syntax error the decoder raised, and the
@@ -210,9 +211,10 @@ func TestDecodeRejectsAHexOffTheRecordsGrid(t *testing.T) {
 
 // TestDecodeRejectsAnotherToolsProvenance: the three constants
 // record.schema.json states are what a referee trusts without checking --
-// which pages govern, and which generator drew the dice. Each was once
-// accepted at any value, because every other field still parsed and the
-// listing still rendered.
+// which pages govern, and which generator drew the dice. Nothing else
+// catches a wrong one: every other field still parses and the listing
+// still renders, so a record stamped by another tool reads as this
+// tool's.
 func TestDecodeRejectsAnotherToolsProvenance(t *testing.T) {
 	t.Parallel()
 
@@ -317,9 +319,9 @@ func TestDecodeRejectsARouteWithNoDistance(t *testing.T) {
 }
 
 // TestDecodeRejectsARouteBeyondTheJumpRoutesTable is the maximum twin of
-// the test above, and the half that had one obligation instead of two:
-// record.schema.json gives distance a minimum of 1 and a maximum of 4,
-// and Decode checked only the minimum.
+// the test above. record.schema.json gives distance a minimum of 1 and a
+// maximum of 4, and both halves have to be checked at read time: a bound
+// the schema states binds only the records something validates.
 //
 // It is not merely tidy. legible walks distance 1 to MaxJump, so a route
 // recorded at five parsecs never reached the drawn set, and the route
@@ -365,12 +367,12 @@ func TestDecodeRejectsARouteBeyondTheJumpRoutesTable(t *testing.T) {
 }
 
 // TestDecodeRejectsAWorldWithNoStarport: the map marks a world's hex with
-// the letter of its starport (p. 1). A world with no starport key decoded
-// to Starport(0) and the map drew it as the eleven characters
-// "Starport(0)", which is wider than a hex's slot -- so every hex to the
-// right of it on that line shifted, and the drawn grid stopped being the
-// p. 3 grid. gridLine's own comment reasoned about "a Starport the schema
-// would have rejected"; nothing rejected it until here.
+// the letter of its starport (p. 1). A world with no starport key decodes
+// to Starport(0), which the map draws as the eleven characters
+// "Starport(0)" -- wider than a hex's slot, so every hex to the right of
+// it on that line shifts and the drawn grid is no longer the p. 3 grid.
+// gridLine's own comment reasons about "a Starport the schema would have
+// rejected", and this is what does the rejecting.
 func TestDecodeRejectsAWorldWithNoStarport(t *testing.T) {
 	t.Parallel()
 

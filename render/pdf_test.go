@@ -625,12 +625,11 @@ func assertRouteTableIsWhole(t *testing.T, want int, written []stamp) {
 // modification date, and time.Now in either would mean a referee could
 // not check that the file on his disk is the file this record produces.
 //
-// Comparing two renders is not enough on its own, and this is the check
-// that was dead when it was written: both renders finish inside the same
-// second, and fpdf writes its dates to the second, so an unpinned
-// time.Now passed. The dates are therefore read back and held against the
-// clock -- a date the clock could not have produced is the only proof
-// that no clock was read.
+// Comparing two renders is not enough on its own: both finish inside the
+// same second, and fpdf writes its dates to the second, so an unpinned
+// time.Now passes such a comparison. The dates are therefore read back
+// and held against the clock -- a date the clock could not have produced
+// is the only proof that no clock was read.
 func TestTheBookletIsDeterministic(t *testing.T) {
 	t.Parallel()
 
@@ -808,10 +807,9 @@ func TestTheBookletsMemberMapsAreTheGridPrintedOnPageThree(t *testing.T) {
 
 // TestTheSectorIndexCarriesNoHexNumbers: thirty-two columns fitted to a
 // sheet give a hex seventeen points across, and a four-digit number drawn
-// in one runs out into the hex beside it -- which is what a sector booklet
-// used to do. The index carries the starport letters and the seams and no
-// hex numbers, and the member maps overleaf carry the numbers (ERRATA
-// E008 part 4).
+// in one runs out into the hex beside it. So the index carries the
+// starport letters and the seams and no hex numbers, and the member maps
+// overleaf carry the numbers (ERRATA E008 part 4).
 func TestTheSectorIndexCarriesNoHexNumbers(t *testing.T) {
 	t.Parallel()
 
@@ -1239,11 +1237,10 @@ func TestAnEmptyBookletSaysSo(t *testing.T) {
 }
 
 // TestTheBookletsBulletsCarryTheirLabelsAndTables is the booklet's half of
-// R16, and it was missing: the Markdown listing's labels were held by
-// TestLabelsComeFromTheTables and the golden listings, and the booklet's
-// were held by nothing at all. Renaming "Law level" in pdf.go alone left
-// the whole suite green -- a sixth instance of the pattern CLAUDE.md
-// records, and the reason the two documents could have drifted unnoticed.
+// R16, and nothing else holds it. TestLabelsComeFromTheTables and the
+// golden listings hold the Markdown listing's labels; without this,
+// renaming "Law level" in pdf.go alone leaves the whole suite green,
+// which is how the two documents drift unnoticed.
 //
 // Each world's block is read on its own, between its own heading and the
 // next, because another world carrying the same value would otherwise

@@ -214,13 +214,13 @@ func TestInvariantsOverManySeeds(t *testing.T) {
 // assertValidatesAgainstTheSchema holds what the engine wrote to the
 // contract the reader enforces (issue #24).
 //
-// The two were never joined. Decode held a record to record.schema.json
-// and the engine's own output was held to nothing, which was safe because
-// scan bounds every hex and the jump routes table caps distance -- true,
-// and empirical. What covered it was TestGoldensValidate running four
-// fixtures through the published schema, so a gen change that produced a
-// record Decode would refuse was caught by four records. It is caught by
-// six hundred now.
+// Decode holds a record to record.schema.json. Without this, the engine's
+// own output is held to nothing, and that is safe only empirically: scan
+// bounds every hex and the jump routes table caps distance, both true and
+// neither enforced on the write side. The cover would be
+// TestGoldensValidate running four fixtures through the published schema,
+// so a gen change producing a record Decode would refuse would be caught
+// by four records. Here it is caught by six hundred.
 func assertValidatesAgainstTheSchema(t *testing.T, record *starmap.Record, seed uint64) {
 	t.Helper()
 

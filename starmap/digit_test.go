@@ -61,11 +61,11 @@ func TestDigitReaches20(t *testing.T) {
 }
 
 // TestParseDigitReadsOneCharacterOfTheAlphabet covers the parse that
-// production actually calls -- tables.go reads every descriptive table's
-// value through it -- and it exists because deleting Digit's unused JSON
-// methods took the only starmap test that reached ParseDigit with it. The
-// round trip through json.Unmarshal was testing the parser sideways; this
-// tests it directly, which is what the tables package depends on.
+// production calls: tables.go reads every descriptive table's value
+// through ParseDigit, so its success path and both of its refusals are
+// load-bearing. It calls the parser directly rather than through a round
+// trip, because a round trip proves only that two functions agree with
+// each other.
 func TestParseDigitReadsOneCharacterOfTheAlphabet(t *testing.T) {
 	t.Parallel()
 

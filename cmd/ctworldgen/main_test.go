@@ -195,19 +195,18 @@ func TestExistingFilesAreNeverOverwrittenWithoutForce(t *testing.T) {
 	}
 }
 
-// TestForceReplacesTheRecordRatherThanTruncatingIt: --force used to open
-// the referee's record O_TRUNC and only then write into it, so a write
-// that failed partway left him with a truncated file where his record had
-// been. The command reported the error and the old content was already
-// gone (issue #19).
+// TestForceReplacesTheRecordRatherThanTruncatingIt holds --force to the
+// property that protects the referee's record. Opening it O_TRUNC and
+// only then writing means a write that fails partway leaves a truncated
+// file where the record was, the command reporting an error over content
+// that is already gone (issue #19).
 //
-// The fix is to write the new record beside the old one and rename it
-// over, and that is what is asserted here, because the failure itself
-// cannot be induced without a seam for three call sites to carry. A
-// truncating open writes into the file that is already there; a rename
+// What is asserted is the rename rather than the failure, because the
+// failure cannot be induced without a seam for three call sites to carry.
+// A truncating open writes into the file that is already there; a rename
 // puts a different file at the name. So the record after --force must not
-// be the same file as the record before it -- which is the whole of the
-// property, and which the old implementation fails.
+// be the same file as the record before it, which is the whole of the
+// property and which no truncating implementation can satisfy.
 func TestForceReplacesTheRecordRatherThanTruncatingIt(t *testing.T) {
 	t.Parallel()
 
@@ -328,9 +327,9 @@ func TestVersionReportsTheBuildAndTheStamps(t *testing.T) {
 func TestUsage(t *testing.T) {
 	t.Parallel()
 
-	// `batch` is among them: it was retired once `sector` covered what it
-	// was for, and a retired subcommand that still ran would be worse than
-	// one that never existed.
+	// `batch` is among them: it is a retired name, covered by `sector`,
+	// and a retired subcommand that still ran would be worse than one that
+	// never existed.
 	for _, args := range [][]string{{}, {"nonesuch"}, {"generate"}, {"batch"}} {
 		_, stderr, err := exec(t, args...)
 		if err == nil {

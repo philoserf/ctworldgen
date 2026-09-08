@@ -26,11 +26,8 @@ const (
 	// deliberately not the build's own version -- a tag cut for a
 	// documentation fix must not move it.
 	//
-	// It was "0" while the engine was being built, because during the
-	// milestones every increment would have been a rule change and the
-	// number would have been noise. It became "1" at the milestone that
-	// finished the walk of pp. 1-12, and the three conditions above are
-	// the whole rule from here.
+	// The three conditions above are the whole rule: nothing else moves
+	// this number, and a release that changes no throw leaves it alone.
 	EngineVersion = "1"
 )
 
@@ -189,12 +186,13 @@ func (s *Record) Stamp(id string) {
 // "additionalProperties": false in the schema; the rest are the checks
 // beneath this function.
 //
-// Unknown-field rejection was once the whole of it, on the reasoning that
-// a record from a newer schema would fail loudly. That holds only when the
-// newer schema *added* a field. A record claiming a different schema
-// version, a different ruleset, or a different generator parsed cleanly
-// and rendered, which is the one thing this record cannot afford: it would
-// report a subsector under provenance stamps that are not true of it.
+// Unknown-field rejection looks like the whole of it and is not. The
+// reasoning that a record from a newer schema fails loudly holds only
+// where the newer schema *added* a field. A record claiming a different
+// schema version, a different ruleset, or a different generator parses
+// cleanly and renders without these checks, which is the one thing this
+// record cannot afford: it would report a subsector under provenance
+// stamps that are not true of it.
 //
 // A record is one document, and content after it is refused for the same
 // reason: a file holding two records -- concatenated by hand, or written
@@ -234,13 +232,13 @@ func Decode(r io.Reader) (*Record, error) {
 // pastTheRecord reads what follows the document Decode took, and says
 // which of the three things it was.
 //
-// It was one thing. Anything that was not io.EOF became
-// ErrTrailingContent, so a decoder syntax error or a reader failure was
-// reported as "more than one document in the record read" -- a specific
-// and confident claim about a file that may hold no second document at
-// all -- and the original error was dropped along with the byte offset
-// the decoder knew. The rest of this package names what was wrong and
-// wraps what it wrapped.
+// Three rather than one, because collapsing them loses the diagnosis.
+// Treating anything that is not io.EOF as ErrTrailingContent reports a
+// decoder syntax error or a reader failure as "more than one document in
+// the record read" -- a specific and confident claim about a file that
+// may hold no second document at all -- and drops the original error
+// along with the byte offset the decoder knew. The rest of this package
+// names what is wrong and wraps what it wraps.
 func pastTheRecord(dec *json.Decoder) error {
 	tok, err := dec.Token()
 
@@ -302,13 +300,11 @@ func (w World) DigitString() (string, error) {
 // grids it names, the three provenance constants, the fields it marks
 // required, and every hex on the record's own grid.
 //
-// Decode calls it, and it is exported because for a long time Decode was
-// the only caller there could be -- the checks were private methods and
-// the engine's own output was never held to the contract the reader
-// enforces. That was safe empirically rather than structurally: the
-// goldens are four records, while the sweep in gen runs six hundred and
-// held them to the rules and never to the schema. It now runs them
-// through here.
+// It is exported so that both callers can reach it: Decode on the read
+// path, and gen's six-hundred-seed sweep, which holds the engine's own
+// output to the contract the reader enforces. Checks private to this
+// package would leave that sweep testing the rules and never the schema,
+// covered instead by whatever the four goldens happen to exercise.
 //
 // Marshal does not call it, deliberately. Writing is the referee's
 // notebook page and he is allowed to hand-edit it; the assertion belongs
@@ -431,10 +427,10 @@ func (s *Record) carriesTheFieldsTheSchemaRequires() error {
 	// is one parsec (p. 1) and a route joins two worlds, so a distance of 0
 	// would be a world joined to itself.
 	//
-	// The schema gives it a maximum of 4 as well, and that half had one
-	// obligation instead of two: the schema stated it and nothing checked
-	// it at read time. The two are different failures and carry different
-	// errors -- absent, and out of range.
+	// The schema gives it a maximum of 4 as well, and both halves are
+	// checked here: a bound the schema states but the read path does not
+	// enforce binds nothing. The two are different failures and carry
+	// different errors -- absent, and out of range.
 	for _, route := range s.Routes {
 		if route.Distance < 1 {
 			return fmt.Errorf("%w: distance, for the route %s to %s", ErrFieldMissing, route.From, route.To)

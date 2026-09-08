@@ -60,9 +60,11 @@ func TestClipCutsWholeCharacters(t *testing.T) {
 // TestMemberSeedFallsBackToTheBaseSeed holds the bound the conversion in
 // memberSeed relies on. A sector has sixteen members and nothing asks for
 // a seventeenth, but the guard is what makes converting the index to the
-// seed's width safe rather than merely true today. The old name said the
-// function refuses such an index; it does not refuse, it falls back, and
-// the test asserted the fallback all along.
+// seed's width safe rather than merely true today.
+//
+// The name says fall back rather than refuse because that is what happens:
+// an index outside the sixteen returns the sector's base seed. A renderer
+// has no error path out, which is why it cannot do anything better.
 func TestMemberSeedFallsBackToTheBaseSeed(t *testing.T) {
 	t.Parallel()
 
@@ -143,11 +145,11 @@ func TestSplitMeasuresTheCharacterItWillDraw(t *testing.T) {
 // columns is (1.5C + 0.5) sides across, and one of R rows is root3*(R +
 // 0.5) sides down.
 //
-// The height-bound case is not decoration. The width term binds for almost
-// every map this tool draws, so a box where height binds is the only way
-// the row half-step gets measured at all, and without one this test cannot
-// see the term it is about. That is why the case asserts which term bound
-// it: the day it stops being height-bound it must say so, not pass.
+// The width term binds for almost every map this tool draws, so a box
+// where height binds is the only way the row half-step gets measured at
+// all: without one this test cannot see the term it is about. The case
+// asserts which term bound it, so that the day it stops being
+// height-bound it says so rather than passing.
 func TestFitMapIsTheLargestDrawingThatFitsItsBox(t *testing.T) {
 	t.Parallel()
 
