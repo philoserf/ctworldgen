@@ -1,10 +1,13 @@
 package starmap_test
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"testing"
+	"testing/iotest"
 
 	"github.com/philoserf/ctworldgen/starmap"
 )
@@ -110,6 +113,10 @@ func TestDecodeRejectsUnknownFields(t *testing.T) {
 // TestDecodeRejectsMoreThanOneDocument: a record is one JSON document, so
 // a file holding two of them fails loudly rather than decoding the first
 // and discarding the rest.
+//
+// The second document is named in the message. What follows the record is
+// the referee's own file, hand-edited or concatenated, and the offending
+// token is the thing he has to go and find.
 func TestDecodeRejectsMoreThanOneDocument(t *testing.T) {
 	t.Parallel()
 
@@ -120,15 +127,61 @@ func TestDecodeRejectsMoreThanOneDocument(t *testing.T) {
 		t.Errorf("two records in one read gave %v; the second was dropped in silence", err)
 	}
 
-	_, err = starmap.Decode(strings.NewReader(one + "\nsurprise"))
-	if !errors.Is(err, starmap.ErrTrailingContent) {
-		t.Errorf("content after the record gave %v", err)
+	if !strings.Contains(fmt.Sprint(err), "{") {
+		t.Errorf("the message does not say what was found after the record: %v", err)
 	}
 
 	// Trailing whitespace is not content: Marshal writes a newline.
 	_, err = starmap.Decode(strings.NewReader(one + "\n"))
 	if err != nil {
 		t.Errorf("a record with the newline Marshal writes did not decode: %v", err)
+	}
+}
+
+// TestDecodeDoesNotCallAMalformedTailASecondDocument: reading past the
+// record has three outcomes and used to have one. Anything that was not
+// io.EOF became ErrTrailingContent, so `{...}]` -- a stray bracket, a
+// hand-edit gone wrong -- was reported as "more than one document in the
+// record read; a record is one JSON document", which is a specific and
+// confident claim about a file holding no second document at all. The
+// decoder's own error, and the byte offset in it, were dropped.
+//
+// So the two that are not a second document are asserted here, and each
+// by what it actually is: the syntax error the decoder raised, and the
+// reader's own failure, both reachable through errors.As and errors.Is
+// rather than flattened into a sentinel that means something else.
+func TestDecodeDoesNotCallAMalformedTailASecondDocument(t *testing.T) {
+	t.Parallel()
+
+	one := fmt.Sprintf(completeRecord, "")
+
+	_, err := starmap.Decode(strings.NewReader(one + "]"))
+
+	syntax, isSyntax := errors.AsType[*json.SyntaxError](err)
+	if !isSyntax {
+		t.Fatalf("a malformed tail gave %v; want the decoder's own syntax error", err)
+	}
+
+	// The offset is the thing the decoder knows and the sentinel could
+	// not carry: where in his file the referee should look.
+	if syntax.Offset <= 0 {
+		t.Errorf("the syntax error carries no byte offset: %v", syntax)
+	}
+
+	if errors.Is(err, starmap.ErrTrailingContent) {
+		t.Errorf("a malformed tail was reported as a second document: %v", err)
+	}
+
+	// A reader that fails after the record is neither a second document
+	// nor malformed JSON, and the caller cannot tell which it was unless
+	// the error it raised is the one that comes back.
+	_, err = starmap.Decode(io.MultiReader(strings.NewReader(one), iotest.ErrReader(io.ErrUnexpectedEOF)))
+	if !errors.Is(err, io.ErrUnexpectedEOF) {
+		t.Errorf("a reader that failed past the record gave %v; want the reader's own error", err)
+	}
+
+	if errors.Is(err, starmap.ErrTrailingContent) {
+		t.Errorf("a reader failure was reported as a second document: %v", err)
 	}
 }
 

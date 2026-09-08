@@ -239,12 +239,35 @@ func Decode(r io.Reader) (*Record, error) {
 		return nil, err
 	}
 
-	_, err = dec.Token()
-	if !errors.Is(err, io.EOF) {
-		return nil, ErrTrailingContent
+	err = pastTheRecord(dec)
+	if err != nil {
+		return nil, err
 	}
 
 	return &record, nil
+}
+
+// pastTheRecord reads what follows the document Decode took, and says
+// which of the three things it was.
+//
+// It was one thing. Anything that was not io.EOF became
+// ErrTrailingContent, so a decoder syntax error or a reader failure was
+// reported as "more than one document in the record read" -- a specific
+// and confident claim about a file that may hold no second document at
+// all -- and the original error was dropped along with the byte offset
+// the decoder knew. The rest of this package names what was wrong and
+// wraps what it wrapped.
+func pastTheRecord(dec *json.Decoder) error {
+	tok, err := dec.Token()
+
+	switch {
+	case errors.Is(err, io.EOF):
+		return nil
+	case err != nil:
+		return fmt.Errorf("reading past the record: %w", err)
+	default:
+		return fmt.Errorf("%w: %v", ErrTrailingContent, tok)
+	}
 }
 
 // Marshal renders a record as the JSON a golden holds: indented, with a
