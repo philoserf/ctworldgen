@@ -14,8 +14,8 @@ what held up is what must not break, what it did not want is not to be
 built, and what it lacked is the backlog. `docs/ERRATA.md` holds the
 recorded readings; `docs/COVERAGE.md` maps rules to implementation and
 tests. Both are live. `THEORY.md` states the design and its uncertainties;
-`walkthrough.md` is the executable tour, verified with `uvx showboat
-verify walkthrough.md` and never formatted by prettier.
+`WALKTHROUGH.md` is the executable tour, verified with `uvx showboat
+verify WALKTHROUGH.md` and never formatted by prettier.
 
 [issue 1]: https://github.com/philoserf/ctworldgen/issues/1
 
