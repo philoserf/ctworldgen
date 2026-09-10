@@ -14,8 +14,8 @@ what held up is what must not break, what it did not want is not to be
 built, and what it lacked is the backlog. `docs/ERRATA.md` holds the
 recorded readings; `docs/COVERAGE.md` maps rules to implementation and
 tests. Both are live. `THEORY.md` states the design and its uncertainties;
-`walkthrough.md` is the executable tour, verified with `uvx showboat
-verify walkthrough.md` and never formatted by prettier.
+`WALKTHROUGH.md` is the executable tour, verified with `uvx showboat
+verify WALKTHROUGH.md` and never formatted by prettier.
 
 [issue 1]: https://github.com/philoserf/ctworldgen/issues/1
 
@@ -408,6 +408,44 @@ down.
   "no seed". If the call sites ever stop being exhaustive, the answer is
   an error, not a better constant.
 
+## Layout
+
+Six packages: a line as far as `tables`, then a fork -- `gen` and
+`render` both stand on `tables` and `starmap` and neither stands on the
+other -- rejoining at the command.
+
+- **`dice`** — B1 pp. 2-3, one seeded `Stream`. Imports nothing of ours.
+- **`starmap`** — the record, the identity types (`Hex`, `Starport`,
+  `Digit`, `Characteristic`, `Parsecs`, `Area`), `Encode`/`Decode`, and
+  the provenance constants. Reaches `dice` for the stamp alone.
+- **`tables`** — the charts of pp. 1-12 as embedded JSON under
+  `tables/data/`, validated at load and read through typed lookups.
+- **`gen`** — walks the p. 12 checklist and fills a record. `gen.go` is
+  the subsector; `sector.go` is the sixteen and the seams between them.
+- **`render`** — a record to the Markdown listing or to the PDF booklet,
+  one package on purpose (see above). `lanes.go` is the lane rule both
+  documents share; `pdf.go` and `layout.go` are the booklet's alone.
+- **`cmd/ctworldgen`** — flags, file I/O, and nothing else.
+
+**`render` does not import `gen`, and that is the architecture.** The JSON
+record is the entire interface between generating and drawing: everything
+that throws a die is upstream of it, everything that reads a descriptive
+table is downstream, and a record written before a feature existed still
+renders. Every edge above is one the compiler already refuses to reverse,
+which is why `.golangci.yml` writes depguard rules for none of them —
+only for the two fences that would otherwise compile.
+
+`internal/fixture` is the one roster both golden trees are generated from.
+`internal/audit` holds no non-test file on purpose: its checks read the
+repository rather than a package's behaviour — that every record the
+engine writes matches the published schema, and that the readings cited
+in the code and the documents are exactly the ones the errata records —
+and a directory with no non-test files cannot be imported at all, which
+is a firmer fence than a lint rule. Note that this puts every `.md` here,
+this file included, under the citation check: an E-number written in prose
+must name a reading that exists. `internal/cmd/regenerate` is what `task
+regenerate` runs.
+
 ## Commands
 
 `task` is the whole gate — tidy, vet, golangci-lint, NilAway, `go test
@@ -419,3 +457,35 @@ the gate without also installing it there.
 and the shipped example, then you read the diff. `task ratchet:update`
 records a new uncovered-statement baseline, which is for deliberately
 unreachable code and test-support packages, not for skipping a test.
+
+`task --list` is the rest. The two you will reach for are `task fix`,
+which applies every autofix the enabled linters offer and is deliberately
+outside the gate, and `task build`. The gate wants `task`,
+`golangci-lint` and `nilaway` on `PATH`; `.github/workflows/ci.yml`
+names the supported way to install each and says why `go install` is not
+that way for golangci-lint.
+
+One test, or one package:
+
+```sh
+go test ./gen -run TestBroadAreasChangeWhereTheWorldsAre
+go test ./internal/audit/   # schema conformance and the errata citations
+```
+
+A behavioural change fails `TestGoldens` before it fails anything you
+meant to test; "Regenerate the goldens under the mutation", above, is the
+habit that follows.
+
+The CLI surface, which the sections above argue about flag by flag
+without ever showing whole:
+
+```sh
+ctworldgen new    [--seed N] [--name X] [--occurrence-dm N] [--occurrence-area DM@FROM-TO]... [-o file] [--force]
+ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
+ctworldgen render [--format markdown|pdf] [--lanes legible|all] [-o file] [--force] record.json
+ctworldgen version
+```
+
+Without `--seed` one is drawn from OS entropy and written into the
+record, so `--seed 0` is an explicit choice and not a request for a
+random one. `--format pdf` is binary and therefore requires `-o`.

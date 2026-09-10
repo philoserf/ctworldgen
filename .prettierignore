@@ -18,4 +18,4 @@ tables/data/
 # Showboat manages this file's formatting, and every fenced block in it is
 # verified output. Prettier would reflow the blocks and break `showboat
 # verify`, which is the only thing that says the document still runs.
-walkthrough.md
+WALKTHROUGH.md
