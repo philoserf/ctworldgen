@@ -99,7 +99,21 @@
     "world": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["hex", "name", "starport", "naval_base", "scout_base", "size", "atmosphere", "hydrographics", "population", "government", "law_level", "tech_index", "digits"],
+      "required": [
+        "hex",
+        "name",
+        "starport",
+        "naval_base",
+        "scout_base",
+        "size",
+        "atmosphere",
+        "hydrographics",
+        "population",
+        "government",
+        "law_level",
+        "tech_index",
+        "digits"
+      ],
       "properties": {
         "hex": {
           "description": "The four-digit column-and-row number the p. 3 grid prints. 0101 through 0810 on a sub-sector grid; up to 3240 on a sector grid (ERRATA E006). The record's grid says which.",

@@ -95,6 +95,10 @@ formatters:
   enable:
     - gofumpt
     - goimports
+  settings:
+    gofumpt:
+      extra:
+        group-params: true
 
 issues:
   max-issues-per-linter: 0

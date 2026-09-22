@@ -449,7 +449,7 @@ regenerate` runs.
 ## Commands
 
 `task` is the whole gate — tidy, vet, golangci-lint, NilAway, `go test
--race`, and the coverage ratchet — and CI runs exactly `task`. Never add
+-race`, the coverage ratchet, and prettier over the non-Go files — and CI runs exactly `task`. Never add
 a check to CI that the local gate does not run, and never add a tool to
 the gate without also installing it there.
 

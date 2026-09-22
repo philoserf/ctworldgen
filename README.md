@@ -221,7 +221,7 @@ output, so the document cannot quietly stop being true.
 ## Development
 
 ```sh
-task              # the whole gate: tidy, vet, lint (formatting included), nilaway, test -race, coverage ratchet
+task              # the whole gate: tidy, vet, lint (formatting included), nilaway, test -race, coverage ratchet, prettier
 task regenerate   # rewrite the golden fixtures and the complete example, then read the diff
 ```
 
