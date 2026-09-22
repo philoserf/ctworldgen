@@ -10,6 +10,7 @@ render/testdata/
 # Written by `ctworldgen new`, and compared against the schema in the same
 # shape the engine emits.
 docs/examples/complete.json
+docs/examples/minimal.json
 
 # Transcribed from the page and read by the loader; leave the shape alone
 # so a diff here is a transcription change and nothing else.

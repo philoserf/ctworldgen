@@ -1,6 +1,6 @@
 module github.com/philoserf/ctworldgen
 
-go 1.27.0
+go 1.27
 
 require (
 	github.com/go-pdf/fpdf v0.9.0

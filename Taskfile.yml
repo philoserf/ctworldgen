@@ -9,8 +9,8 @@
 version: "3"
 
 vars:
-  COVERAGE: coverage.out
-  BASELINE: coverage.baseline
+  PROFILE: coverage.out
+  RATCHET: coverage.ratchet
   COUNTS: coverage.counts.out
   # Uncovered statements per package, from the raw coverage profile. A
   # profile line is "import/path/file.go:span statements executions".
@@ -37,7 +37,7 @@ vars:
     for (i=2; i<n; i++) d = d "/" p[i];
     pkg[$1]=d; stmts[$1]=$2; runs[$1]+=$3; seen[d]=1 }
     END { for (b in runs) if (runs[b]==0) u[pkg[b]] += stmts[b];
-    for (d in seen) print d, u[d]+0 }' {{.COVERAGE}} | LC_ALL=C sort
+    for (d in seen) print d, u[d]+0 }' {{.PROFILE}} | LC_ALL=C sort
 
 tasks:
   default:
@@ -49,6 +49,7 @@ tasks:
       - task: nilaway
       - task: test
       - task: ratchet
+      - task: docs
 
   tidy:
     desc: go.mod and go.sum are current
@@ -94,7 +95,7 @@ tasks:
     # every gate and every CI run, for one profile that does not change.
     run: once
     cmds:
-      - go test -race -covermode=atomic -coverprofile={{.COVERAGE}} ./...
+      - go test -race -covermode=atomic -coverprofile={{.PROFILE}} ./...
 
   ratchet:
     desc: Uncovered statements per package have not moved
@@ -109,7 +110,7 @@ tasks:
     cmds:
       - |
         {{.UNCOVERED}} > {{.COUNTS}}
-        grep -v '^#' {{.BASELINE}} | diff - {{.COUNTS}} || {
+        grep -v '^#' {{.RATCHET}} | diff - {{.COUNTS}} || {
           echo "" >&2
           echo "coverage moved. If that was deliberate: task ratchet:update" >&2
           exit 1
@@ -117,7 +118,7 @@ tasks:
         echo "ratchet holds: $(wc -l < {{.COUNTS}} | tr -d ' ') packages"
 
   ratchet:update:
-    desc: Record the current uncovered-statement counts as the baseline
+    desc: Record the current uncovered-statement counts
     deps: [test]
     cmds:
       - |
@@ -126,13 +127,25 @@ tasks:
           echo "# The gate fails in both directions: gaining uncovered statements is"
           echo "# lost coverage, and losing them is coverage the baseline should record."
           {{.UNCOVERED}}
-        } > {{.BASELINE}}
-        echo "wrote {{.BASELINE}}"
+        } > {{.RATCHET}}
+        echo "wrote {{.RATCHET}}"
 
   regenerate:
     desc: Rewrite the golden fixtures and the complete example, then read the diff
     cmds:
       - go run ./internal/cmd/regenerate
+
+  docs:
+    desc: Markdown, JSON and YAML are formatted
+    # prettier is to every non-Go file what gofumpt is to the Go files. It
+    # runs in --check here because the gate reports rather than repairs;
+    # `task docs:fix` is the writer. .prettierignore keeps it off the goldens.
+    cmds:
+      - prettier --check .
+
+  docs:fix:
+    cmds:
+      - prettier --write .
 
   build:
     cmds:
@@ -140,4 +153,4 @@ tasks:
 
   clean:
     cmds:
-      - rm -f {{.COVERAGE}} {{.COUNTS}}
+      - rm -f {{.PROFILE}} {{.COUNTS}}
