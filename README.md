@@ -1,5 +1,7 @@
 # ctworldgen
 
+![Status: Beta](https://img.shields.io/badge/Status-Beta-yellow.svg)
+
 A Go CLI that generates rules-accurate Classic Traveller subsectors and
 sectors from Book 3 _Worlds and Adventures_, the Worlds chapter (pp. 1-12,
 © 1977 text). It writes a JSON record from a recorded seed and renders it
