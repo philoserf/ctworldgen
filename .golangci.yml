@@ -49,6 +49,7 @@ linters:
             - "**/starmap/*.go"
             - "**/tables/*.go"
             - "**/gen/*.go"
+            - "**/render/*.go"
             - "**/cmd/ctworldgen/*.go"
             - "!$test"
           deny:

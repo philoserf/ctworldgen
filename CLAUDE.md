@@ -30,13 +30,13 @@ within a subsector", and both halves are built. `new --occurrence-area
 -1@0101-0805` is a rectangle of the grid's numbering with its own DM,
 repeatable, overlaps refused (E012). It varies the number each throw is
 read against and never the throw, its order or its eighty dice, which is
-what keeps a record with no areas byte-for-byte what the tool wrote
-before the field existed -- `occurrence_areas` is `omitempty`,
-`schema_version` did not move, and neither did `EngineVersion`. `sector`
+what keeps a record with no areas byte-for-byte a record without the
+field -- `occurrence_areas` is `omitempty`, and areas share the one
+`schema_version` and `EngineVersion` everything else is stamped with. `sector`
 takes none: an area is read against one grid, and its sixteen members are
 each generated on their own p. 3 grid.
 
-There are two golden trees now -- the JSON records in `gen/testdata` and
+There are two golden trees -- the JSON records in `gen/testdata` and
 the Markdown listings in `render/testdata` -- and both are driven from the
 one roster in `internal/fixture`, so they cannot come to describe
 different subsectors under the same name. `task regenerate` rewrites
@@ -222,7 +222,7 @@ ever becomes data, that is a different tool.
   test that catches it measures against the printed p. 3 grid. Never
   change the conversion without re-measuring there.
 
-  The parity now lives in **three** places, and they must agree:
+  The parity lives in **three** places, and they must agree:
   `starmap.Hex.cube`, the text map's `render.gridLine`, and the drawn
   map's `render.mapFit.hexCenter`. Each has its own measurement against
   the page, because each can be flipped without the other two noticing.
@@ -310,9 +310,8 @@ down.
   `mapPlaces`/`hexStampsOn`, `mapGeometry`/`stepsOf`,
   `closerPlace`/`closerStep` -- duplicates a great deal on purpose. A
   merged harness compares the three against each other, and passes when
-  all three are flipped together. (`everyHexOf` was not this, which is why
-  it and its character-identical twin `everyHexOfGrid` were merged into
-  one: it enumerates a grid and measures nothing.)
+  all three are flipped together. (`everyHexOf` is shared and is not
+  this: it enumerates a grid and measures nothing.)
 
 - **`Digit`, `Starport` and `Characteristic` do not become one generic
   type.** They share a Go shape and nothing else: `Digit` is B1 p. 8's
@@ -373,8 +372,7 @@ down.
 
 - **`render.memberSeed`'s bounds guard stays, unreachable.** Every call
   site is an exhaustive loop over the sixteen members, so the branch
-  cannot fire, and issue 25 proposed deleting it on exactly that ground.
-  Deleting it turns the gate red: the `index < 0` test is the bounds proof
+  cannot fire. Deleting it on that ground turns the gate red: the `index < 0` test is the bounds proof
   gosec's G115 accepts for the int-to-uint64 conversion, and the only way
   to keep the deletion is a lint disable, which the section above
   forbids. `panic` is out -- library code here does not panic -- and
