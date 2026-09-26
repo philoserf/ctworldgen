@@ -18,24 +18,12 @@ tests. Both are live. `THEORY.md` states the design and its uncertainties;
 
 [issue 1]: https://github.com/philoserf/ctworldgen/issues/1
 
-**Status.** The engine walks the whole of pp. 1-12; `render` writes the
-listing, which opens with a text map of the p. 3 grid, or a printable PDF
-booklet (`--format pdf`) with the grid drawn and p. 2's route lines joined;
-and `sector` lays sixteen subsectors on one 32x40 grid and throws for the
-routes at their seams (E006). A sector's members are unchanged -- member
-_i_ of `sector --seed N` is the subsector `new --seed N+i` writes -- which
-is the property that keeps a sector trustworthy and is tested directly.
-
 A sector's **documents** are an index of the whole grid and then the
 sixteen sub-sector listings its members would have had, each on its own
 p. 3 grid, ringed by one hex of its neighbours, headed with the seed that
 writes it standalone (E008). The sector map is an index and carries no hex
 numbers; the member maps carry them. That reading governs the documents
 rather than the generation, so like E007 it is never stamped.
-
-`render` draws legible lanes by default -- a route whose worlds are already
-joined by shorter routes is not drawn (E007) -- and `--lanes all` draws
-every one. The record carries them all either way.
 
 P. 1 offers the occurrence DM "on the whole subsector, or on broad areas
 within a subsector", and both halves are built. `new --occurrence-area
@@ -47,11 +35,6 @@ before the field existed -- `occurrence_areas` is `omitempty`,
 `schema_version` did not move, and neither did `EngineVersion`. `sector`
 takes none: an area is read against one grid, and its sixteen members are
 each generated on their own p. 3 grid.
-
-`docs/COVERAGE.md` is the live map of rule to code to test. Every page of
-pp. 1-12 is now built: pp. 10-11 gloss each world's technological index,
-read downward (E009) with their holes left as holes (E010), and with the
-band and era T5 supplies for description alone (E011).
 
 There are two golden trees now -- the JSON records in `gen/testdata` and
 the Markdown listings in `render/testdata` -- and both are driven from the
@@ -66,13 +49,11 @@ Rules come only from the held PDFs in `~/Documents/Traveller/Classic/`.
 Traveller is mostly the 1981 revision and later editions, and the held
 © 1977 page governs even where it differs.
 
-This outlived the contract that first stated it, because it is not a
-contract term. It is what the alpha report singles out as the reason the
+This is what the alpha report singles out as the reason the
 output could be trusted at all: "The numbers are the page's numbers",
 "Error messages cite the page — this bought trust in the rest of the
 output before I had checked any of it", and "The errata loop works …
-this is the best thing in the alpha." Page accuracy is a user need. What
-retired with the original contract was its scope fence, not this.
+this is the best thing in the alpha." Page accuracy is a user need.
 
 **What is in authority for generation**, and nothing else is:
 
@@ -176,10 +157,8 @@ it.
 
 ## The decisions the design turns on
 
-Four decisions shaped this code, and until now they were written down in
-one place only: the contract that governed through `v1.0.0-alpha.1`, which
-is deleted. They are kept here because each is still load-bearing and none
-of them can be read back off the source -- code shows what was decided,
+Four decisions shaped this code. Each is still load-bearing and none of
+them can be read back off the source -- code shows what was decided,
 never what was rejected.
 
 **The subsector is the record. Not the world.** Star mapping is
@@ -310,13 +289,13 @@ disguised a dead check:
 
 Each of these has a visible cost -- lines, duplication, latency -- and an
 invisible benefit: a bug that did not happen, a check that can still fail,
-a seed that still reproduces. Optimise on what is measurable and all ten
-come out, and the suite stays green, because most of them guard against
+a seed that still reproduces. Optimise on what is measurable and every one
+of them comes out, and the suite stays green, because most of them guard against
 failures the suite is structurally unable to express. So they are written
 down.
 
 - **`render` is one package and stays one.** Two typesetters, a
-  decomposition, a lane rule and a page geometry, in 2,283 lines. The
+  decomposition, a lane rule and a page geometry. The
   middle they share -- `bullets`, `member`/`members`, `legible`,
   `summary`, `named`, `bases` -- is what stops the two documents
   diverging. They did diverge once: the bullet list was written out twice,
@@ -398,8 +377,8 @@ down.
   Deleting it turns the gate red: the `index < 0` test is the bounds proof
   gosec's G115 accepts for the int-to-uint64 conversion, and the only way
   to keep the deletion is a lint disable, which the section above
-  forbids. `panic` is out under this repo's Go rules -- library code does
-  not panic -- and narrowing the parameter to `uint64` is clean in
+  forbids. `panic` is out -- library code here does not panic -- and
+  narrowing the parameter to `uint64` is clean in
   isolation but only moves the conversion out to the call sites, because
   `member.Index` is an `int` fed by `starmap.MemberOf`. The guard's
   fallback does return a wrong seed, which is a real complaint and not a
@@ -447,8 +426,7 @@ regenerate` runs.
 
 ## Commands
 
-`task` is the whole gate — tidy, vet, golangci-lint, NilAway, `go test
--race`, the coverage ratchet, and prettier over the non-Go files — and CI runs exactly `task`. Never add
+`task` is the whole gate, and CI runs exactly `task`. Never add
 a check to CI that the local gate does not run, and never add a tool to
 the gate without also installing it there.
 
@@ -460,7 +438,7 @@ unreachable code and test-support packages, not for skipping a test.
 `task --list` is the rest. The two you will reach for are `task fix`,
 which applies every autofix the enabled linters offer and is deliberately
 outside the gate, and `task build`. The gate wants `task`,
-`golangci-lint` and `nilaway` on `PATH`; `.github/workflows/ci.yml`
+`golangci-lint`, `nilaway` and `prettier` on `PATH`; `.github/workflows/ci.yml`
 names the supported way to install each and says why `go install` is not
 that way for golangci-lint.
 
@@ -474,16 +452,6 @@ go test ./internal/audit/   # schema conformance and the errata citations
 A behavioural change fails `TestGoldens` before it fails anything you
 meant to test; "Regenerate the goldens under the mutation", above, is the
 habit that follows.
-
-The CLI surface, which the sections above argue about flag by flag
-without ever showing whole:
-
-```sh
-ctworldgen new    [--seed N] [--name X] [--occurrence-dm N] [--occurrence-area DM@FROM-TO]... [-o file] [--force]
-ctworldgen sector [--seed N] [--name X] [--occurrence-dm N] [-o file] [--force]
-ctworldgen render [--format markdown|pdf] [--lanes legible|all] [-o file] [--force] record.json
-ctworldgen version
-```
 
 Without `--seed` one is drawn from OS entropy and written into the
 record, so `--seed 0` is an explicit choice and not a request for a
