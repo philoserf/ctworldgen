@@ -50,10 +50,12 @@ func bandedAreas() []starmap.Area {
 	return []starmap.Area{
 		starmap.NewArea(
 			starmap.Hex{Col: 1, Row: 1},
-			starmap.Hex{Col: starmap.Columns, Row: lastRowOfTheTop}, -1),
+			starmap.Hex{Col: starmap.Columns, Row: lastRowOfTheTop}, -1,
+		),
 		starmap.NewArea(
 			starmap.Hex{Col: 1, Row: firstRowOfTheBottom},
-			starmap.Hex{Col: starmap.Columns, Row: starmap.Rows}, 1),
+			starmap.Hex{Col: starmap.Columns, Row: starmap.Rows}, 1,
+		),
 	}
 }
 

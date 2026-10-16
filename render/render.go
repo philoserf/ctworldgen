@@ -374,7 +374,8 @@ func lanesNote(all, suppressed int) string {
 		"%d of these %d lanes are not listed: each joins two worlds already joined by shorter lanes, "+
 			"which p. 2 says may be ignored in the drawing (ERRATA E007). The record carries every one of "+
 			"them, and `render --lanes=all` lists them.",
-		suppressed, all)
+		suppressed, all,
+	)
 }
 
 // occurrenceDM writes the referee's DM the way p. 1 offers it: +1, 0 or
