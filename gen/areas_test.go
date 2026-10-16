@@ -297,7 +297,8 @@ func TestASectorTakesNoBroadAreas(t *testing.T) {
 		Seed: 1, Name: aramis, OccurrenceDM: 0,
 		OccurrenceAreas: []starmap.Area{starmap.NewArea(
 			starmap.Hex{Col: 1, Row: 1},
-			starmap.Hex{Col: starmap.SectorColumns, Row: starmap.SectorRows}, -1)},
+			starmap.Hex{Col: starmap.SectorColumns, Row: starmap.SectorRows}, -1,
+		)},
 	})
 	if !errors.Is(err, gen.ErrSectorTakesNoAreas) {
 		t.Errorf("a sector-grid area on a sector gave %v; want ErrSectorTakesNoAreas", err)

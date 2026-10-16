@@ -140,7 +140,8 @@ func (m *member) provenance(seed uint64) string {
 		"Member %d of this sector. `ctworldgen new --seed %d` writes this sub-sector on its own "+
 			"p. 3 grid, where its first hex is 0101; here it is laid on the sector's, and that hex "+
 			"is %s (ERRATA E006).",
-		m.Index, memberSeed(seed, m.Index), m.First)
+		m.Index, memberSeed(seed, m.Index), m.First,
+	)
 }
 
 // summary counts this member the way the document's own heading counts the

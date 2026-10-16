@@ -42,7 +42,8 @@ const (
 // each generated on their own p. 3 grid (ERRATA E006 part 1). Refusing is
 // what keeps a record from claiming areas that governed no throw.
 var ErrSectorTakesNoAreas = errors.New(
-	"broad areas are read against the p. 3 sub-sector grid, and a sector is not on one (ERRATA E006)")
+	"broad areas are read against the p. 3 sub-sector grid, and a sector is not on one (ERRATA E006)",
+)
 
 // Inputs are the referee's choices, made before the run rather than
 // during it. They are recorded, and with the seed they reproduce the

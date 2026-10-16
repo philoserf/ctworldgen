@@ -375,7 +375,8 @@ func checkChartRow(typ, description string, naval, scout *int) error {
 	for _, base := range bases {
 		if base.throw != nil && (*base.throw < minThrow || *base.throw > maxThrow) {
 			return fmt.Errorf(
-				"%w: starport %s, %s throw of %d", errNotATwoDiceTarget, typ, base.name, *base.throw)
+				"%w: starport %s, %s throw of %d", errNotATwoDiceTarget, typ, base.name, *base.throw,
+			)
 		}
 	}
 
