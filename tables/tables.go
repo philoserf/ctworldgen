@@ -45,13 +45,26 @@ var (
 //go:embed data/*.json
 var files embed.FS
 
-// Tables is every chart of pp. 1-12 that generation consults.
+// Tables is every chart of pp. 1-12 both halves of the tool read: the
+// charts generation throws against, and the charts the documents describe
+// a value with. The two are different obligations, and the fields below
+// are grouped by which.
 type Tables struct {
+	// Generation. gen throws against these, so a corrected cell in one of
+	// them -- or in starports.json, jump_routes.json,
+	// technological_index_matrix.json or starport_chart.json's base
+	// columns -- changes what every existing seed means and moves
+	// EngineVersion (see starmap/record.go). StarportChart is read from
+	// both sides: gen takes its base throws and render its descriptions,
+	// and only the throws are a rules input.
 	Starports       Starports
 	JumpRoutes      JumpRoutes
-	StarportChart   StarportChart
 	TechIndexMatrix TechIndexMatrix
+	StarportChart   StarportChart
 
+	// Description. Nothing below is thrown against, so a corrected cell
+	// changes the documents and no record's meaning.
+	//
 	// The descriptive tables of pp. 5-7. A generated value may exceed a
 	// table's printed range -- an atmosphere of 13, a government of 14 --
 	// and the book prints no label for one. That is a gap in the page, not
@@ -81,8 +94,8 @@ func Load() (*Tables, error) {
 	}{
 		{"starports.json", func(b []byte) error { return loaded.Starports.load(b) }},
 		{"jump_routes.json", func(b []byte) error { return loaded.JumpRoutes.load(b) }},
-		{"starport_chart.json", func(b []byte) error { return loaded.StarportChart.load(b) }},
 		{"technological_index_matrix.json", func(b []byte) error { return loaded.TechIndexMatrix.load(b) }},
+		{"starport_chart.json", func(b []byte) error { return loaded.StarportChart.load(b) }},
 		{"planetary_size.json", func(b []byte) error { return loaded.Size.load(b) }},
 		{"planetary_atmosphere.json", func(b []byte) error { return loaded.Atmosphere.load(b) }},
 		{"hydrographic_percentage.json", func(b []byte) error { return loaded.Hydrographics.load(b) }},

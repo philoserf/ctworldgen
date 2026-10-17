@@ -11,6 +11,14 @@ the reason and where it sits in the backlog. A page inside pp. 1-12 that
 this tool does not implement has a row saying so; the gap in the document
 is otherwise indistinguishable from an oversight.
 
+Two kinds of chart sit under `tables/data/`, and they carry different
+obligations. Four are thrown against -- `starports.json`,
+`jump_routes.json`, `technological_index_matrix.json`, and the base columns
+of `starport_chart.json` -- so a corrected cell there changes what every
+existing seed means and moves `EngineVersion`. The rest only describe a
+value, so a corrected cell there changes the documents and no record.
+`tables.Tables` groups its fields the same way.
+
 This document is living. A rule is not implemented until it has a row here
 with a test named in it.
 
@@ -27,7 +35,7 @@ with a test named in it.
 | R2a The occurrence DM on broad areas within a subsector               | 1    | `starmap.Area`, `starmap.Grid.HoldAreas`, `gen.dmAt`, `cmd/ctworldgen.areaFlag` | `TestAWholeGridAreaIsTheWholeGridDM`, `TestTheOccurrenceThrowIsOneDiePerHexInGridOrder`, `TestBroadAreasChangeWhereTheWorldsAre`, `TestParseArea`, `TestHoldAreasRefusesWhatErrataTwelveRefuses`, `TestBroadAreasReachBothDocuments` | done   |
 | R3 Starport type, two dice against the starports table                | 1    | `tables.Starports.Type`, `gen.Generate`                                         | `TestStarportsTable`, `TestStarportDistributionFollowsThePage`                                                                                                                                                                       | done   |
 | R4 Naval and scout base throws                                        | 5    | `tables.StarportChart.NavalBase`/`ScoutBase`, `gen.Engine.Generate`             | `TestStarportChartBaseThrows`, `TestBaseThrowsFollowTheChart`, `assertBasesFollowTheChart`                                                                                                                                           | done   |
-| R5 Routes, one die against the jump routes table                      | 2    | `tables.JumpRoutes.Target`, `tables.MaxJump`, `gen.Engine.routes`               | `TestJumpRoutesTable`, `TestJumpRoutesHasNoRowForX`, `assertRoutesFollowTheTable`, `assertRoutesTheTableMakesCertain`                                                                                                                | done   |
+| R5 Routes, one die against the jump routes table                      | 2    | `tables.JumpRoutes.Target`, `starmap.MaxJump`, `gen.Engine.routes`              | `TestJumpRoutesTable`, `TestJumpRoutesHasNoRowForX`, `assertRoutesFollowTheTable`, `assertRoutesTheTableMakesCertain`                                                                                                                | done   |
 
 ## World creation (pp. 4-9)
 
