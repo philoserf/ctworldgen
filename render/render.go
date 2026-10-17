@@ -766,3 +766,105 @@ func digit(value int) string {
 
 	return written.String()
 }
+
+// sectorIndex writes the map of the whole sector and the table of what is
+// in each of its sixteen (ERRATA E008 part 4).
+func (l *listing) sectorIndex(gathered []member) {
+	l.built.WriteString("## The sector\n\n")
+	l.built.WriteString(mapNote(l.record))
+
+	indexMap(&l.built, l.record)
+
+	l.built.WriteString(sectorContentsNote)
+	l.built.WriteString("| Subsector | Hexes | Worlds | Lanes within | Crossing | Seed |\n")
+	l.built.WriteString("| --- | --- | --- | --- | --- | --- |\n")
+
+	for _, part := range gathered {
+		fmt.Fprintf(&l.built, "| %d | %s to %s | %d | %d | %d | %d |\n",
+			part.Index, part.First, part.Last, len(part.Worlds),
+			len(part.Carried)-part.Crossing, part.Crossing, memberSeed(l.record.Seed, part.Index))
+	}
+
+	l.built.WriteString("\n")
+}
+
+const sectorContentsNote = "A lane that crosses a seam is listed under both the sub-sectors it " +
+	"joins, so the sixteen tables below carry more rows between them than the record has lanes " +
+	"(ERRATA E008 part 3).\n\n"
+
+// The index map's slot. Two characters: the starport letter p. 1 says to
+// mark a hex with, and the space that carries the half-slot offset of the
+// p. 3 parity. A four-digit number would make the sheet a hundred and
+// sixty columns wide, which is what this map exists not to be.
+const (
+	indexSlot     = 2
+	indexHalfSlot = indexSlot / 2
+	indexEmpty    = "."
+)
+
+// columnStride is how many columns apart two hexes on one drawn line are.
+// The p. 3 parity puts only every second column on a line, so it is 2.
+// That is indexSlot's number and not indexSlot's quantity -- one is a cell
+// width, this is a step across the grid -- and they are written separately
+// so that widening the cell cannot silently move a seam.
+const columnStride = 2
+
+// indexMap draws the whole sector as an index: starport letters, the seams
+// between the sixteen, and no hex numbers (ERRATA E008 part 4).
+func indexMap(built *strings.Builder, record *starmap.Record) {
+	built.WriteString("```text\n")
+
+	marked := marks(record)
+
+	for row := 1; row <= record.Grid.Rows; row++ {
+		built.WriteString(indexLine(marked, record.Grid, row, 1))
+		built.WriteString(indexLine(marked, record.Grid, row, 0))
+
+		// The seams that run across the sheet, between the bands of
+		// members. A blank line rather than a rule, because a rule would
+		// have to interleave with the half-row offset and a blank line
+		// reads at a glance.
+		if row%starmap.Rows == 0 && row < record.Grid.Rows {
+			built.WriteString("\n")
+		}
+	}
+
+	built.WriteString("```\n\n")
+}
+
+// indexLine draws the columns of one parity across a single row.
+func indexLine(marked map[starmap.Hex]starmap.Starport, grid starmap.Grid, row, parity int) string {
+	var line strings.Builder
+
+	// The index draws the whole grid, so its first column is 1.
+	if indented(parity, 1) {
+		line.WriteString(strings.Repeat(" ", indexHalfSlot))
+	}
+
+	for col := 1; col <= grid.Columns; col++ {
+		if col%2 != parity {
+			continue
+		}
+
+		hex := starmap.Hex{Col: col, Row: row}
+
+		cell := indexEmpty
+		if starport, ok := marked[hex]; ok {
+			cell = starport.String()
+		}
+
+		line.WriteString(cell)
+		line.WriteByte(' ')
+
+		// The seam goes where this line's next hex is in another member,
+		// which is after column 7 on the high line and after column 8 on
+		// the low one -- a line carries only every second column, so a bar
+		// placed by column number alone draws a staircase.
+		next := starmap.Hex{Col: col + columnStride, Row: row}
+		if grid.Contains(next) && starmap.MemberOf(hex) != starmap.MemberOf(next) {
+			line.WriteString("| ")
+		}
+	}
+
+	return strings.TrimRight(line.String(), " ") + "\n"
+}
