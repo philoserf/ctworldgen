@@ -521,14 +521,9 @@ const (
 // was for a route's distance. internal/audit holds the two together, so
 // neither can move without the other noticing.
 func (s *Record) withinWhatTheSchemaStates() error {
-	stamped := make(map[string]bool, len(s.Errata))
-
-	for _, id := range s.Errata {
-		if !isErratumID(id) || stamped[id] {
-			return fmt.Errorf("%w: %q", ErrNotAnErratum, id)
-		}
-
-		stamped[id] = true
+	err := s.errataWrittenOnce()
+	if err != nil {
+		return err
 	}
 
 	if s.OccurrenceAreas != nil && len(s.OccurrenceAreas) == 0 {
@@ -536,34 +531,59 @@ func (s *Record) withinWhatTheSchemaStates() error {
 	}
 
 	for _, world := range s.Worlds {
-		for _, field := range []struct {
-			which   Characteristic
-			value   int
-			highest int
-		}{
-			{Size, world.Size, highestSize},
-			{Atmosphere, world.Atmosphere, highestAtmosphere},
-			{Hydrographics, world.Hydrographics, highestHydrographics},
-			{Population, world.Population, highestPopulation},
-			{Government, world.Government, highestGovernment},
-			{LawLevel, world.LawLevel, highestLawLevel},
-			{TechIndex, world.TechIndex, MaxTechIndex},
-		} {
-			if field.value < 0 || field.value > field.highest {
-				return fmt.Errorf("%w: %s %d, for the world at %s; the schema allows 0 to %d",
-					ErrOutOfRange, field.which, field.value, world.Hex, field.highest)
-			}
+		err = world.withinItsRanges()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// errataWrittenOnce is the errata list's pattern and uniqueness.
+func (s *Record) errataWrittenOnce() error {
+	stamped := make(map[string]bool, len(s.Errata))
+
+	for _, reading := range s.Errata {
+		if !isErratumID(reading) || stamped[reading] {
+			return fmt.Errorf("%w: %q", ErrNotAnErratum, reading)
 		}
 
-		if world.Clamps != nil && len(world.Clamps) == 0 {
-			return fmt.Errorf("%w: clamps, for the world at %s", ErrEmptyList, world.Hex)
-		}
+		stamped[reading] = true
+	}
 
-		for _, clamped := range world.Clamps {
-			if clamped.Value < 0 {
-				return fmt.Errorf("%w: the %s clamp records %d, for the world at %s; every clamp floors at 0",
-					ErrOutOfRange, clamped.Characteristic, clamped.Value, world.Hex)
-			}
+	return nil
+}
+
+// withinItsRanges is one world's seven characteristics and its clamps.
+func (w World) withinItsRanges() error {
+	for _, field := range []struct {
+		which   Characteristic
+		value   int
+		highest int
+	}{
+		{Size, w.Size, highestSize},
+		{Atmosphere, w.Atmosphere, highestAtmosphere},
+		{Hydrographics, w.Hydrographics, highestHydrographics},
+		{Population, w.Population, highestPopulation},
+		{Government, w.Government, highestGovernment},
+		{LawLevel, w.LawLevel, highestLawLevel},
+		{TechIndex, w.TechIndex, MaxTechIndex},
+	} {
+		if field.value < 0 || field.value > field.highest {
+			return fmt.Errorf("%w: %s %d, for the world at %s; the schema allows 0 to %d",
+				ErrOutOfRange, field.which, field.value, w.Hex, field.highest)
+		}
+	}
+
+	if w.Clamps != nil && len(w.Clamps) == 0 {
+		return fmt.Errorf("%w: clamps, for the world at %s", ErrEmptyList, w.Hex)
+	}
+
+	for _, clamped := range w.Clamps {
+		if clamped.Value < 0 {
+			return fmt.Errorf("%w: the %s clamp records %d, for the world at %s; every clamp floors at 0",
+				ErrOutOfRange, clamped.Characteristic, clamped.Value, w.Hex)
 		}
 	}
 
@@ -571,14 +591,14 @@ func (s *Record) withinWhatTheSchemaStates() error {
 }
 
 // isErratumID is the schema's ^E[0-9]{3}$.
-func isErratumID(id string) bool {
+func isErratumID(reading string) bool {
 	const width = 4
 
-	if len(id) != width || id[0] != 'E' {
+	if len(reading) != width || reading[0] != 'E' {
 		return false
 	}
 
-	for _, digit := range id[1:] {
+	for _, digit := range reading[1:] {
 		if digit < '0' || digit > '9' {
 			return false
 		}
