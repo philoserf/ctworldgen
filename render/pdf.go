@@ -577,14 +577,12 @@ func (b *booklet) rosterSection(left, width, top float64, worlds []starmap.World
 	b.rosterHead(left, width)
 
 	for _, world := range worlds {
-		if b.y+rosterLead > contentBottom {
-			b.newPage()
-
+		b.ensure(rosterLead, func() {
 			// Past the map, the roster has the whole width to itself.
 			left, width = pageMargin, contentWidth
 
 			b.rosterHead(left, width)
-		}
+		})
 
 		b.rosterRow(left, width, world)
 	}
@@ -678,10 +676,7 @@ func (b *booklet) routesSection(
 		// does. A subsector at DM +1 carries a hundred and fifty routes and
 		// a sector carries hundreds, so a table without this prints pages
 		// of unlabelled columns.
-		if b.y+rosterLead > contentBottom {
-			b.newPage()
-			b.routeHead(into != nil)
-		}
+		b.ensure(rosterLead, func() { b.routeHead(into != nil) })
 
 		leaves := ""
 		if into != nil {
@@ -753,7 +748,7 @@ func (b *booklet) worldBlock(world starmap.World) {
 	// The heading and its first line stay together: a world whose name is
 	// the last thing on a page and whose starport is the first thing on
 	// the next is harder to read than one moved whole.
-	b.ensure(bodyLead*two + blockGap)
+	b.ensure(bodyLead*two+blockGap, nil)
 
 	b.pdf.SetFont("Helvetica", "B", bodySize)
 	b.pdf.SetTextColor(inkBlack, inkBlack, inkBlack)
@@ -792,7 +787,7 @@ func (b *booklet) bulletLine(line bullet) {
 	// leaving the page: ensure starts at most one page, so a referee's
 	// notes longer than a page need the per-line call below, and run on
 	// overleaf unlabelled, as a paragraph does.
-	b.ensure(bodyLead * float64(len(wrapped)))
+	b.ensure(bodyLead*float64(len(wrapped)), nil)
 
 	b.pdf.SetFont("Helvetica", "B", bodySize)
 	b.pdf.SetTextColor(inkBlack, inkBlack, inkBlack)
@@ -801,7 +796,7 @@ func (b *booklet) bulletLine(line bullet) {
 	b.pdf.SetFont("Helvetica", "", bodySize)
 
 	for _, text := range wrapped {
-		b.ensure(bodyLead)
+		b.ensure(bodyLead, nil)
 		b.text(textX, b.y+bodySize, text)
 
 		b.y += bodyLead
@@ -830,7 +825,7 @@ func (b *booklet) body(text string) {
 	b.pdf.SetTextColor(inkNote, inkNote, inkNote)
 
 	for _, line := range b.split(strings.TrimSpace(text), contentWidth) {
-		b.ensure(bodyLead)
+		b.ensure(bodyLead, nil)
 		b.text(pageMargin, b.y+bodySize, line)
 
 		b.y += bodyLead
@@ -847,10 +842,20 @@ func (b *booklet) rule(from, to float64) {
 }
 
 // ensure starts a new page when what is about to be drawn would not fit
-// on this one.
-func (b *booklet) ensure(height float64) {
+// on this one, and redraws whatever the reader needs at the top of it.
+// continued is nil where nothing has to be put back.
+//
+// Call it once per line from inside a loop that flows, and once before a
+// block to keep that block whole. Those are the two uses and they are not
+// interchangeable: ensure starts at most one page, so a single call sized
+// to a whole block reserves space it cannot then break inside.
+func (b *booklet) ensure(height float64, continued func()) {
 	if b.y+height > contentBottom {
 		b.newPage()
+
+		if continued != nil {
+			continued()
+		}
 	}
 }
 

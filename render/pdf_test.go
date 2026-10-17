@@ -1194,6 +1194,61 @@ func TestABookletDrawsTheCharactersAppleKeyboardsType(t *testing.T) {
 	}
 }
 
+// TestTheRosterContinuesLabelledAndFullWidth: eighty worlds do not fit in
+// the half column beside the map, so the roster runs on overleaf. Each
+// page it reaches repeats its head, and past the map's page it takes the
+// whole width -- which is what moves the digits column right of where the
+// first page sets it.
+func TestTheRosterContinuesLabelledAndFullWidth(t *testing.T) {
+	t.Parallel()
+
+	record := everyHexAWorld(t)
+	digits := record.Worlds[0].Digits
+
+	var (
+		first   float64
+		reached int
+	)
+
+	for number, page := range pages(t, drawn(t, record)) {
+		written := stamps(t, page)
+
+		if !anyStamp(written, digits) {
+			continue
+		}
+
+		head := -1.0
+
+		for _, found := range written {
+			if found.Text == "Digits" {
+				head = found.X
+			}
+		}
+
+		if head < 0 {
+			t.Errorf("page %d carries roster rows and no column heading", number+1)
+
+			continue
+		}
+
+		if reached == 0 {
+			first = head
+		} else if head <= first {
+			t.Errorf("page %d sets the digits column at x %.2f, no further right than the map's page at %.2f; "+
+				"the roster did not take the whole width", number+1, head, first)
+		}
+
+		reached++
+	}
+
+	// The roster has to have reached a second page, or this proves nothing.
+	const atLeast = 2
+
+	if reached < atLeast {
+		t.Fatalf("the roster reached %d pages; the check needs at least %d to mean anything", reached, atLeast)
+	}
+}
+
 // TestTheRouteTableIsLabelledOnEveryPageItReaches: a subsector at DM +1
 // carries a hundred and fifty routes and a sector carries hundreds, so the
 // table runs past one page. The roster beside it repeats its head; this
