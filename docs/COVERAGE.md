@@ -131,7 +131,7 @@ reading is stamped only once the engine implements the step it governs.
 | E005    | The string of digits: order, alphabet, no separator                 | `starmap/record.go`, `starmap/digit.go`                                       | records with at least one world, now         |
 | E006    | Sixteen subsectors on one grid, and the route pass at their seams   | `gen/sector.go`, `starmap/hex.go`, `starmap/record.go`                        | every sector record                          |
 | E007    | Which lanes the documents draw                                      | `render/lanes.go`, `render/render.go`, `cmd/ctworldgen/main.go`               | never -- it governs the documents            |
-| E008    | How a sector's documents present its sixteen sub-sectors            | `render/sector.go`, `render/layout.go`, `render/render.go`, `render/pdf.go`   | never -- it governs the documents            |
+| E008    | How a sector's documents present its sixteen sub-sectors            | `render/member.go`, `render/layout.go`, `render/render.go`, `render/pdf.go`   | never -- it governs the documents            |
 | E009    | Reading a technological levels table downward                       | `tables/tables.go`, `render/render.go`                                        | never -- it governs the documents            |
 | E010    | A hole in those tables is not an absence                            | `tables/tables.go`, `render/render.go`                                        | never -- it governs the documents            |
 | E011    | A later edition may be cited for description; T5 is the one that is | `tables/tables.go`, `tables/data/technological_eras.json`, `render/render.go` | never -- it governs the documents            |
