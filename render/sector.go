@@ -239,7 +239,8 @@ func indexMap(built *strings.Builder, record *starmap.Record) {
 func indexLine(marked map[starmap.Hex]starmap.Starport, grid starmap.Grid, row, parity int) string {
 	var line strings.Builder
 
-	if parity == 0 {
+	// The index draws the whole grid, so its first column is 1.
+	if indented(parity, 1) {
 		line.WriteString(strings.Repeat(" ", indexHalfSlot))
 	}
 

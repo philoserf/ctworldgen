@@ -293,6 +293,21 @@ func marks(record *starmap.Record) map[starmap.Hex]starmap.Starport {
 	return marked
 }
 
+// indented reports whether the line drawing one parity of columns begins
+// half a slot in. Column c is drawn half a slot right of column c-1, so the
+// line whose first column is not the drawing's own gets the indent. Both
+// text maps ask this -- the listing's grid and the sector's index -- so the
+// p. 3 parity is written here once for the two of them.
+//
+// Which line that is depends on where the drawing starts: a subsector's and
+// the sector index begin at column 1 and their low line is indented, and
+// every member's begins at an even column -- a member's first column is
+// 8k+1, and the ring puts the window one to the left of it -- so its high
+// line is. Indenting the low line always shifts every member map by a whole
+// slot, into a grid that looks entirely tidy and disagrees with
+// Hex.Distance.
+func indented(parity, fromCol int) bool { return parity != fromCol%2 }
+
 // gridLine draws the columns of one parity across a single row of the
 // record's grid. parity is the remainder that selects them: 1 for the
 // high columns, 0 for the low.
@@ -302,16 +317,7 @@ func gridLine(
 ) string {
 	var line strings.Builder
 
-	// Column c is drawn half a slot right of column c-1, so the line whose
-	// first column is not the window's own gets the half-slot indent.
-	//
-	// Which line that is depends on the window: a subsector's begins at
-	// column 1 and its low line is indented, and every member's begins at
-	// an even column -- a member's first column is 8k+1, and the ring puts
-	// the window one to the left of it -- so its high line is. Indenting
-	// the low line always shifts every member map by a whole slot, into a
-	// grid that looks entirely tidy and disagrees with Hex.Distance.
-	if parity != draw.FromCol%2 {
+	if indented(parity, draw.FromCol) {
 		line.WriteString(strings.Repeat(" ", mapHalfSlot))
 	}
 
