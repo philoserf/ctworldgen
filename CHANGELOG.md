@@ -5,6 +5,85 @@
 Bullets as the work lands. The release pass rewrites this into whatever the
 release turns out to be.
 
+## 1.0.0-beta.4
+
+The fourth beta. Every subsector and sector this build generates is the one
+beta.3 generated from the same seed. What changed is what the documents print
+and what the read path will accept from a hand-edited record.
+
+### Install
+
+```sh
+go install github.com/philoserf/ctworldgen/cmd/ctworldgen@v1.0.0-beta.4
+```
+
+### What a referee will notice
+
+**A long note is no longer lost from the booklet.** A world's notes are the
+referee's own writing, set as one bullet, and a note longer than a page was
+drawn below the bottom edge of the sheet. The words were still in the PDF, but
+no reader would ever see them. The Markdown listing always kept the whole note,
+so nothing warned that the booklet had dropped part of it. The note now
+continues overleaf.
+
+**The technological gloss prints all ten columns of pp. 10-11.** It printed
+five: personal weapons, armour, computers, air and space. Special weapons,
+communication, water and land transport, and fuels are now included, so a
+world at index 12 reads exactly as ERRATA E009's worked example does: laser
+rifle, reflec, beam laser, Model/6, television, hovercraft, grav belts, drives
+N or less, fusion. Water and land print "Hovercraft" once where both carry it.
+
+**A hand-edited record is held to the contract it claims.** These are now
+refused at read time, each with an error that names the world or route so the
+edit can be found in the file:
+
+- a characteristic outside the range its throw can reach, such as a law level
+  of -3 or a size of 200. A value below row 0 had been described as lying above
+  the last row of its table, and a technological index outside every band was
+  glossed with a blank where the band belongs;
+- a route whose stated distance is not the distance between its two hexes, or
+  that is written from its higher hex. The map chooses its lanes by distance,
+  so a wrong one drew a different map of the same subsector;
+- an erratum not written as E plus three digits, or stamped twice; a clamp
+  below 0; and an empty `occurrence_areas` or `clamps` list.
+
+The string of digits is still carried as written, so a referee who adjusts a
+world adjusts what he reads.
+
+### What a referee's existing records do
+
+**They still reproduce.** `EngineVersion` is still `1`, `schema_version` is
+still `1`, and no throw, consumption order or RNG construction moved. The JSON
+goldens and the shipped example are byte-identical to beta.3's, and no
+record the engine writes is refused by the new checks: each range is exactly
+what its throw can reach. Only a hand-edited record outside the schema
+is refused. The Markdown listing changes only where the gloss now carries more
+columns.
+
+### Underneath
+
+- The booklet has one page-break rule. The roster and the route table had each
+  spelled their own, and the roster's continuation (its head repeated, and the
+  full width past the map's page) is now tested for the first time.
+- The sector index map is measured against the printed p. 3 grid. Its indent
+  was a separately spelled copy of the grid parity, and flipping it passed the
+  whole suite. Both text maps now take their indent from one function.
+- `internal/audit` holds `Decode` to the published schema at every bound, both
+  limits and one step past each, reading the ranges from the schema itself.
+- Hexes have a three-way `Compare` carrying ERRATA E002, and every sort reads
+  the order from it.
+- `tables.Tables` groups the charts generation throws against apart from those
+  that only describe a value, because a corrected cell in one changes what
+  every seed means and in the other changes ink.
+- T5's transport and computers columns, which no document printed, are no
+  longer carried.
+- `render/sector.go` is split by typesetter, and production code in `render`
+  is fenced off the test fixtures like every other package.
+- There is no CI. `task` is the whole gate, run locally before every merge. The
+  walkthrough is plain Markdown, formatted and checked by prettier with the
+  other documents, and each snippet in it is labelled by the file and symbol
+  it quotes.
+
 ## v1.0.0-beta.3 — 2026-09-08
 
 The third beta. One commit since beta.2, and it is the last unbuilt clause
