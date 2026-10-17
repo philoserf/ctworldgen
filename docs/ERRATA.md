@@ -594,8 +594,14 @@ which is the opposite of the obvious choice. A technological index is an
 integer, so no index ever equals one of them; but E009 reads the last
 entry at or below an index, and 1.6 is below 2. Dropping them would lose
 the ladder they carry — a world at index 2 would have villages rather
-than cities, and one at index 4 sailing ships rather than railroads — to
-make the file tidier.
+than cities — to make the file tidier.
+
+Of the twelve columns, four are carried: Era, Energy, Society and
+Environ, with the band. The other eight are not. Transport and Computers
+are not because Book 3's own pp. 10–11 columns say the same thing in the
+held page's words — grav belts and drives N or less against "gravity
+manipulation lifters to orbit", Model/6 against "Model /6" — and where
+the two books cover the same ground the held page speaks.
 
 Bands Uhigh (19–21) and Fantastic (22+) are above this tool's cap of 18
 and are not carried.

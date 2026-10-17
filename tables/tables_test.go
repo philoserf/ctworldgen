@@ -457,13 +457,9 @@ func TestATechnologicalLevelIsReadDownward(t *testing.T) {
 	}
 
 	// T5's fractional levels, which no index equals and E009 still
-	// reaches: cities are printed at 1.6 and railroads at 3.6 (E011).
+	// reaches: cities are printed at 1.6 (E011).
 	if got := levels.Level(2).Borrowed.Environ; got != "Cities." {
 		t.Errorf("index 2 lives in %q; the chart prints cities at 1.6", got)
-	}
-
-	if got := levels.Level(4).Borrowed.Transport; got != "Railroads." {
-		t.Errorf("index 4 travels by %q; the chart prints railroads at 3.6", got)
 	}
 }
 
