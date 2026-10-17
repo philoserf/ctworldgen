@@ -976,9 +976,11 @@ func TestALongNoteContinuesOverleaf(t *testing.T) {
 	}
 
 	noted := world(t, hexOf(t, 1, 1), "Regina")
+
 	noted.Notes = strings.Join(words, " ")
 
 	record := starmap.New(1, aramis, 0, nil)
+
 	record.Worlds = append(record.Worlds, noted)
 
 	doc := drawn(t, record)
