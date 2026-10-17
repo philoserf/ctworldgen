@@ -14,7 +14,7 @@ what held up is what must not break, what it did not want is not to be
 built, and what it lacked is the backlog. `docs/ERRATA.md` holds the
 recorded readings; `docs/COVERAGE.md` maps rules to implementation and
 tests. Both are live. `THEORY.md` states the design and its uncertainties;
-`WALKTHROUGH.md` is the code tour, never formatted by prettier.
+`WALKTHROUGH.md` is the code tour.
 
 [issue 1]: https://github.com/philoserf/ctworldgen/issues/1
 
@@ -222,14 +222,20 @@ ever becomes data, that is a different tool.
   test that catches it measures against the printed p. 3 grid. Never
   change the conversion without re-measuring there.
 
-  The parity lives in **three** places, and they must agree:
-  `starmap.Hex.cube`, the text map's `render.gridLine`, and the drawn
+  The parity lives in **three** encodings, and they must agree:
+  `starmap.Hex.cube`, the text maps' `render.indented`, and the drawn
   map's `render.mapFit.hexCenter`. Each has its own measurement against
   the page, because each can be flipped without the other two noticing.
   The drawn one is measured off the PDF it produced rather than off its
   own constants -- a check fed those agrees with a map drawn upside down
   -- and adjacency alone is symmetric under a flip, so the direction is
   anchored by two further assertions.
+
+  The text encoding draws two maps -- the listing's `gridLine` and the
+  sector's `indexLine`, at different slot widths -- and both take their
+  indent from `indented`, so the parity is written once for the two. Each
+  map is measured all the same: the index once spelled its indent apart,
+  and flipping that copy passed the whole suite.
 
 - **Dice-stream consumption order is load-bearing.** It fixes what a seed
   means. Two throws are deliberately _not_ made — a size-0 world's
@@ -311,7 +317,10 @@ down.
   `closerPlace`/`closerStep` -- duplicates a great deal on purpose. A
   merged harness compares the three against each other, and passes when
   all three are flipped together. (`everyHexOf` is shared and is not
-  this: it enumerates a grid and measures nothing.)
+  this: it enumerates a grid and measures nothing. Nor is the index map's
+  reuse of `mapGeometry` and `drawnTouching`: the index and the listing's
+  map are one encoding, and each is still measured against the page
+  rather than against the other.)
 
 - **`Digit`, `Starport` and `Characteristic` do not become one generic
   type.** They share a Go shape and nothing else: `Digit` is B1 p. 8's
@@ -399,8 +408,10 @@ other -- rejoining at the command.
 - **`gen`** — walks the p. 12 checklist and fills a record. `gen.go` is
   the subsector; `sector.go` is the sixteen and the seams between them.
 - **`render`** — a record to the Markdown listing or to the PDF booklet,
-  one package on purpose (see above). `lanes.go` is the lane rule both
-  documents share; `pdf.go` and `layout.go` are the booklet's alone.
+  one package on purpose (see above). `render.go` is the Markdown
+  typesetter and the middle both share; `member.go` is a sector's
+  decomposition into its sixteen and `lanes.go` the lane rule, both
+  documents' alike; `pdf.go` and `layout.go` are the booklet's alone.
 - **`cmd/ctworldgen`** — flags, file I/O, and nothing else.
 
 **`render` does not import `gen`, and that is the architecture.** The JSON
@@ -424,9 +435,9 @@ regenerate` runs.
 
 ## Commands
 
-`task` is the whole gate, and CI runs exactly `task`. Never add
-a check to CI that the local gate does not run, and never add a tool to
-the gate without also installing it there.
+`task` is the whole gate, and there is no CI: it runs locally before
+every merge, and nothing on a pull request is waited on. `main` takes a
+change only through a squash-merged pull request.
 
 `task regenerate` rewrites both golden trees, the sector's seam golden,
 and the shipped example, then you read the diff. `task ratchet:update`
