@@ -358,7 +358,12 @@ func (s *Record) Validate() error {
 		return err
 	}
 
-	return s.onItsOwnGrid()
+	err = s.onItsOwnGrid()
+	if err != nil {
+		return err
+	}
+
+	return s.routesAgreeWithTheirHexes()
 }
 
 // carriesThisToolsProvenance holds the three stamps record.schema.json
@@ -498,6 +503,36 @@ func (s *Record) onItsOwnGrid() error {
 		err = s.Grid.hold(route.To)
 		if err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+// routesAgreeWithTheirHexes holds the two things a route says about
+// itself that its two hexes already settle: how far apart they are, and
+// which is written first. Neither is in the schema's power to state, and
+// the engine cannot write either wrong -- gen computes the distance with
+// Hex.Distance and visits pairs in ascending order -- so this is for the
+// hand-edited record, which Record.Notes says the referee may make.
+//
+// It runs after onItsOwnGrid so that an end off the grid is reported as
+// that, rather than as a distance measured to a hex that is not there.
+//
+// The distance is checked where the string of digits is not (see
+// carriesThisToolsProvenance) because it is not the referee's to adjust.
+// It is grid geometry, and the lane rule consumes it: legible layers by
+// the stated distance, so a wrong one draws a different map. A referee who
+// moves a world must move its routes, and this is what tells him so.
+func (s *Record) routesAgreeWithTheirHexes() error {
+	for _, route := range s.Routes {
+		if want := route.From.Distance(route.To); route.Distance != want {
+			return fmt.Errorf("%w: the route %s to %s states %d parsecs and the hexes are %d apart",
+				ErrRouteDistance, route.From, route.To, route.Distance, want)
+		}
+
+		if !route.From.Less(route.To) {
+			return fmt.Errorf("%w: the route %s to %s", ErrRouteNotOrdered, route.From, route.To)
 		}
 	}
 

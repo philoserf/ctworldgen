@@ -357,12 +357,76 @@ func TestDecodeRejectsARouteBeyondTheJumpRoutesTable(t *testing.T) {
 	}
 
 	// The last distance the table does state is accepted, so the check
-	// bounds rather than forbids.
-	atTheLimit := strings.Replace(record, `"distance":5`, `"distance":4`, 1)
+	// bounds rather than forbids. Its ends have to be four apart, too, or
+	// it is refused for disagreeing with its own hexes instead.
+	atTheLimit := strings.Replace(record, `"to":"0605","distance":5`, `"to":"0505","distance":4`, 1)
 
 	_, err = starmap.Decode(strings.NewReader(atTheLimit))
 	if err != nil {
 		t.Errorf("a route at the table's own maximum was refused: %v", err)
+	}
+}
+
+// TestDecodeRejectsARouteThatDisagreesWithItsHexes: 0101 and 0302 are two
+// parsecs apart on the p. 3 grid, and a route between them stating four is
+// inside the table's range, so the bound above cannot see it. The lane rule
+// layers by the stated distance, so the record would draw a different map
+// of the same subsector and explain the difference falsely.
+func TestDecodeRejectsARouteThatDisagreesWithItsHexes(t *testing.T) {
+	t.Parallel()
+
+	record := `{"schema_version":1,"ruleset":"ct-1977-book3-pp1-12","engine_version":"1",` +
+		`"rng_algorithm":"go-math-rand-v2-pcg","seed":1,"errata":[],"name":"Aramis","occurrence_dm":0,` +
+		`"worlds":[],"routes":[{"from":"0101","to":"0302","distance":4}]}`
+
+	_, err := starmap.Decode(strings.NewReader(record))
+	if !errors.Is(err, starmap.ErrRouteDistance) {
+		t.Fatalf("Decode(a route stating 4 between hexes 2 apart) = %v, want %v", err, starmap.ErrRouteDistance)
+	}
+
+	// The message names what the record says and what the grid says, so
+	// the referee knows which number to correct.
+	for _, want := range []string{"0101", "0302", "states 4", "2 apart"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("the error does not name %q: %v", want, err)
+		}
+	}
+
+	// The true distance is accepted, so the check is a comparison and not
+	// a refusal of the pair.
+	truthful := strings.Replace(record, `"distance":4`, `"distance":2`, 1)
+
+	_, err = starmap.Decode(strings.NewReader(truthful))
+	if err != nil {
+		t.Errorf("a route stating its hexes' own distance was refused: %v", err)
+	}
+}
+
+// TestDecodeRejectsARouteWrittenFromItsHigherHex: a route is undirected,
+// and the record writes each from its lower hex so that one route has one
+// spelling. 0302 to 0101 is the route above written backwards; accepted, it
+// could sit beside its other spelling and be drawn twice.
+func TestDecodeRejectsARouteWrittenFromItsHigherHex(t *testing.T) {
+	t.Parallel()
+
+	record := `{"schema_version":1,"ruleset":"ct-1977-book3-pp1-12","engine_version":"1",` +
+		`"rng_algorithm":"go-math-rand-v2-pcg","seed":1,"errata":[],"name":"Aramis","occurrence_dm":0,` +
+		`"worlds":[],"routes":[{"from":"0302","to":"0101","distance":2}]}`
+
+	_, err := starmap.Decode(strings.NewReader(record))
+	if !errors.Is(err, starmap.ErrRouteNotOrdered) {
+		t.Fatalf("Decode(a route from its higher hex) = %v, want %v", err, starmap.ErrRouteNotOrdered)
+	}
+
+	if !strings.Contains(err.Error(), "0302 to 0101") {
+		t.Errorf("the error does not name the route: %v", err)
+	}
+
+	ordered := strings.Replace(record, `"from":"0302","to":"0101"`, `"from":"0101","to":"0302"`, 1)
+
+	_, err = starmap.Decode(strings.NewReader(ordered))
+	if err != nil {
+		t.Errorf("the same route written from its lower hex was refused: %v", err)
 	}
 }
 

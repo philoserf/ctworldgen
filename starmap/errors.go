@@ -79,6 +79,21 @@ var (
 		"a route is longer than the jump routes table states a target for (Book 3 p. 2)",
 	)
 
+	// ErrRouteDistance is one hex being one parsec (Book 3 p. 1): a route's
+	// distance is the distance between its two hexes and nothing a referee
+	// chooses. It is distinct from ErrRouteTooFar because a stated 4 between
+	// hexes two apart is inside the table's range and still false, and the
+	// lane rule layers by the stated number -- so it suppresses the wrong
+	// lanes and then explains the suppression in words that are untrue.
+	ErrRouteDistance = errors.New("a route's distance is not the distance between its two hexes (Book 3 p. 1)")
+
+	// ErrRouteNotOrdered is a route of Book 3 p. 2 being undirected. The
+	// record writes each one from its lower hex, which is what keeps one
+	// route from being written two ways and so drawn twice.
+	ErrRouteNotOrdered = errors.New(
+		"a route is not written from its lower hex; a route of Book 3 p. 2 has no direction",
+	)
+
 	// ErrFieldMissing is the ten fields record.schema.json requires. The
 	// schema alone rejects nothing at read time, so the two obligations are
 	// the schema and this.
