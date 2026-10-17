@@ -176,12 +176,6 @@ func (e *Engine) createWorlds(stream *dice.Stream, record *starmap.Record) error
 	return nil
 }
 
-// maxTechIndex is the one cap the book prints for a value rather than a
-// table that happens to end: "Technological index may vary from zero to
-// 18" (p. 9). It binds -- the matrix's DMs reach +14, which with a die of
-// 6 gives 20 (ERRATA E004).
-const maxTechIndex = 18
-
 // uncapped is the high bound for every characteristic but the
 // technological index. Nothing is capped because a table stops describing
 // it: a value no table names is a gap in the descriptive table, and p. 8's
@@ -239,7 +233,7 @@ func (e *Engine) detail(stream *dice.Stream, world *starmap.World) error {
 		matrix.DM(tables.ColPopulation, world.Population) +
 		matrix.DM(tables.ColGovernment, world.Government)
 
-	world.TechIndex = clamp(world, starmap.TechIndex, stream.Die()+modifier, maxTechIndex)
+	world.TechIndex = clamp(world, starmap.TechIndex, stream.Die()+modifier, starmap.MaxTechIndex)
 
 	digits, err := world.DigitString()
 	if err != nil {

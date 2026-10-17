@@ -319,8 +319,8 @@ func (w World) DigitString() (string, error) {
 
 // Validate holds a record to what record.schema.json states. That is the
 // two grids it names, the broad areas of p. 1 it carries, the three
-// provenance constants, the fields it marks required, and every hex on the
-// record's own grid.
+// provenance constants, the fields it marks required, the ranges and forms
+// it states for them, and every hex on the record's own grid.
 //
 // It is exported so that both callers can reach it: [Decode] on the read
 // path, and gen's six-hundred-seed sweep, which holds the engine's own
@@ -354,6 +354,11 @@ func (s *Record) Validate() error {
 	}
 
 	err = s.carriesTheFieldsTheSchemaRequires()
+	if err != nil {
+		return err
+	}
+
+	err = s.withinWhatTheSchemaStates()
 	if err != nil {
 		return err
 	}
@@ -475,6 +480,131 @@ func (s *Record) carriesTheFieldsTheSchemaRequires() error {
 	}
 
 	return nil
+}
+
+// MaxTechIndex is the one cap the book prints for a value rather than a
+// table that happens to end: "Technological index may vary from zero to
+// 18" (p. 9). It binds -- the matrix's DMs reach +14, which with a die of
+// 6 gives 20 (ERRATA E004).
+//
+// It lives here rather than in gen, as MaxJump does, so that the package
+// owning World.TechIndex can refuse a record above it.
+const MaxTechIndex = 18
+
+// The highest value each other characteristic's throw can reach. None of
+// them is a cap -- gen caps nothing but the technological index, and p. 8
+// leaves a value past a descriptive table's last row to the referee -- so
+// these are arithmetic on the throws, not rules: 2D-2 reaches 10, and
+// 2D-7 plus a value that reaches 10 reaches 15, and plus 15 reaches 20.
+const (
+	highestSize          = 10 // 2D-2 (p. 4)
+	highestAtmosphere    = 15 // 2D-7 + size (p. 4)
+	highestHydrographics = 15 // 2D-7 + size, less 4 where dry (p. 4)
+	highestPopulation    = 10 // 2D-2 (p. 8)
+	highestGovernment    = 15 // 2D-7 + population (p. 8)
+	highestLawLevel      = 20 // 2D-7 + government (p. 8)
+)
+
+// withinWhatTheSchemaStates holds the record to the bounds and forms
+// record.schema.json states beyond which fields are present: the seven
+// characteristics' ranges, the floor a clamp records, the errata list's
+// form, and the two lists that are absent rather than empty.
+//
+// The engine writes nothing these refuse. Every range is exactly the
+// throw's reach, the floor is clamp's own, and both lists are omitempty.
+// What they refuse is the hand edit -- a world given a size of 200 or a
+// law level of -3 -- which the documents would otherwise describe: a value
+// below row 0 read as lying above a table's last row, and a technological
+// index outside every band glossed with a blank where its band belongs.
+//
+// The schema is the data and this is where it is enforced, as it already
+// was for a route's distance. internal/audit holds the two together, so
+// neither can move without the other noticing.
+func (s *Record) withinWhatTheSchemaStates() error {
+	err := s.errataWrittenOnce()
+	if err != nil {
+		return err
+	}
+
+	if s.OccurrenceAreas != nil && len(s.OccurrenceAreas) == 0 {
+		return fmt.Errorf("%w: occurrence_areas", ErrEmptyList)
+	}
+
+	for _, world := range s.Worlds {
+		err = world.withinItsRanges()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// errataWrittenOnce is the errata list's pattern and uniqueness.
+func (s *Record) errataWrittenOnce() error {
+	stamped := make(map[string]bool, len(s.Errata))
+
+	for _, reading := range s.Errata {
+		if !isErratumID(reading) || stamped[reading] {
+			return fmt.Errorf("%w: %q", ErrNotAnErratum, reading)
+		}
+
+		stamped[reading] = true
+	}
+
+	return nil
+}
+
+// withinItsRanges is one world's seven characteristics and its clamps.
+func (w World) withinItsRanges() error {
+	for _, field := range []struct {
+		which   Characteristic
+		value   int
+		highest int
+	}{
+		{Size, w.Size, highestSize},
+		{Atmosphere, w.Atmosphere, highestAtmosphere},
+		{Hydrographics, w.Hydrographics, highestHydrographics},
+		{Population, w.Population, highestPopulation},
+		{Government, w.Government, highestGovernment},
+		{LawLevel, w.LawLevel, highestLawLevel},
+		{TechIndex, w.TechIndex, MaxTechIndex},
+	} {
+		if field.value < 0 || field.value > field.highest {
+			return fmt.Errorf("%w: %s %d, for the world at %s; the schema allows 0 to %d",
+				ErrOutOfRange, field.which, field.value, w.Hex, field.highest)
+		}
+	}
+
+	if w.Clamps != nil && len(w.Clamps) == 0 {
+		return fmt.Errorf("%w: clamps, for the world at %s", ErrEmptyList, w.Hex)
+	}
+
+	for _, clamped := range w.Clamps {
+		if clamped.Value < 0 {
+			return fmt.Errorf("%w: the %s clamp records %d, for the world at %s; every clamp floors at 0",
+				ErrOutOfRange, clamped.Characteristic, clamped.Value, w.Hex)
+		}
+	}
+
+	return nil
+}
+
+// isErratumID is the schema's ^E[0-9]{3}$.
+func isErratumID(reading string) bool {
+	const width = 4
+
+	if len(reading) != width || reading[0] != 'E' {
+		return false
+	}
+
+	for _, digit := range reading[1:] {
+		if digit < '0' || digit > '9' {
+			return false
+		}
+	}
+
+	return true
 }
 
 // onItsOwnGrid holds every hex the record carries against the grid the
