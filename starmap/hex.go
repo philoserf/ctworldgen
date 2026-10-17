@@ -183,8 +183,14 @@ func (h Hex) String() string { return fmt.Sprintf("%02d%02d", h.Col, h.Row) }
 // is the reading of ERRATA E002 and it fixes the dice stream.
 func (h Hex) Number() int { return h.Col*100 + h.Row }
 
-// Less orders hexes by ascending grid number (ERRATA E002).
-func (h Hex) Less(o Hex) bool { return h.Number() < o.Number() }
+// Compare orders hexes by ascending grid number (ERRATA E002): negative
+// when h comes first, positive when o does, zero for the same hex. It is
+// the three-way form slices.SortFunc takes, so every sort of hexes and of
+// what sits on them reads the order from here rather than spelling it out.
+func (h Hex) Compare(o Hex) int { return h.Number() - o.Number() }
+
+// Less is Compare as a predicate.
+func (h Hex) Less(o Hex) bool { return h.Compare(o) < 0 }
 
 // Distance returns the jump distance between two hexes. One hex is one
 // parsec (p. 1).
