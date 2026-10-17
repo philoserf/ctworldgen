@@ -961,6 +961,37 @@ func everyHexAWorld(t *testing.T) *starmap.Record {
 	return record
 }
 
+// TestALongNoteContinuesOverleaf: a world's notes are the referee's own
+// writing, with no length the record can promise, and they are set as one
+// bullet. A bullet longer than a page has to break inside itself and run
+// on overleaf -- reserving room for it whole starts one page and then
+// draws the rest below the bottom of it, where the file still holds the
+// words and no reader will ever see them.
+func TestALongNoteContinuesOverleaf(t *testing.T) {
+	t.Parallel()
+
+	words := make([]string, 1200)
+	for index := range words {
+		words[index] = "word" + strconv.Itoa(index)
+	}
+
+	noted := world(t, hexOf(t, 1, 1), "Regina")
+
+	noted.Notes = strings.Join(words, " ")
+
+	record := starmap.New(1, aramis, 0, nil)
+
+	record.Worlds = append(record.Worlds, noted)
+
+	doc := drawn(t, record)
+
+	assertNothingLeavesThePage(t, doc)
+
+	if !anyStampWith(everyStamp(t, doc), words[len(words)-1]) {
+		t.Errorf("the note's last word, %s, did not reach the page", words[len(words)-1])
+	}
+}
+
 // assertNothingLeavesThePage holds every drawn thing inside the margins.
 // A roster that ran past the bottom of the page would still be in the
 // file and would print as nothing at all.

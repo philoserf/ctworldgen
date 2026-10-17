@@ -788,6 +788,10 @@ func (b *booklet) bulletLine(line bullet) {
 	// gained its gloss.
 	wrapped := b.split(line.description, contentRight-textX)
 
+	// This keeps a short bullet whole. It is not what stops a long one
+	// leaving the page: ensure starts at most one page, so a referee's
+	// notes longer than a page need the per-line call below, and run on
+	// overleaf unlabelled, as a paragraph does.
 	b.ensure(bodyLead * float64(len(wrapped)))
 
 	b.pdf.SetFont("Helvetica", "B", bodySize)
@@ -797,6 +801,7 @@ func (b *booklet) bulletLine(line bullet) {
 	b.pdf.SetFont("Helvetica", "", bodySize)
 
 	for _, text := range wrapped {
+		b.ensure(bodyLead)
 		b.text(textX, b.y+bodySize, text)
 
 		b.y += bodyLead
