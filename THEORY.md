@@ -118,6 +118,15 @@ down in the errata with pages, and changing no throw, no record field and
 no stamp. `tables.Borrowed` and `tables.Held` are separate Go types so that
 this boundary is visible in the code and not only in the prose.
 
+A second line runs through the same package and matters more, because it
+is the one a seed's meaning runs along: whether generation throws against
+a chart at all. `tables.Tables` groups its fields by it. `Starports`,
+`JumpRoutes`, `TechIndexMatrix` and `StarportChart`'s base throws are rules
+inputs, so a corrected cell there is a rule change and moves
+`EngineVersion`. The descriptive tables and `TechLevels` are read only by
+`render`, so a corrected cell there changes ink and nothing else.
+`StarportChart` straddles the line, and its doc says which half is which.
+
 The pressure this design is under is constant and one-directional: a held
 page is terse, a later edition is clear, and reaching for the later edition
 is always locally reasonable. Terseness is not the test. The test is
@@ -185,8 +194,20 @@ and only for the two constraints that would otherwise compile.
 re-states it in Go, because _a schema alone rejects nothing at read time_.
 That doubling is deliberate and load-bearing: the schema ships for other
 tools, the Go checks bind this one, and `internal/audit/schema_test.go`
-holds the two together by validating everything the engine writes against
-the published schema.
+holds the two together in both directions. It validates everything the
+engine writes against the published schema, and
+`TestDecodeAndTheSchemaAgreeOnEveryBound` reads each characteristic's range
+out of the schema and requires `Decode` to give the schema's verdict at
+both limits and one step past each. A bound the schema states and the
+reader does not enforce binds nothing, and the reverse is a record the
+contract allows and the tool refuses.
+
+Two things a record says about itself are beyond any schema, and
+`Validate` holds them too: a route's distance is the distance between its
+two hexes, and a route is written from its lower hex
+(`routesAgreeWithTheirHexes`). The distance is checked where the digits are
+not, because it is grid geometry rather than the referee's to adjust, and
+the lane rule consumes it.
 
 Unknown-field rejection looks like the whole of the read-path defence and
 is not. It catches a record from a _newer_ schema that added a field. A
@@ -213,24 +234,18 @@ a test — and why no member field is stored anywhere: `MemberOf` reads the
 band straight back off the hex, so the decomposition cannot disagree with
 the grid.
 
-**The hex parity itself** lives in three _measured_ places that must agree
-and that each can be flipped without the other two noticing:
-`starmap.Hex.cube`, `render.gridLine`, and `render.mapFit.hexCenter`. Each
-has its own measurement against the printed page, and the three test
-harnesses stay separate on purpose — a merged harness compares the three
-against each other and passes when all three are flipped together. Getting
-this wrong leaves every distance internally consistent and wrong by one for
-half the map.
-
-Correction, from later in the same review that produced this document:
-there are **four** encodings, not three. `render.indexLine` — the sector
-index map — is a fourth, and nothing measures it. `code-reduction`
-mutation-tested it: flipping its indent to the wrong parity leaves
-`go test ./render` green, which is precisely the failure this section says
-cannot be caught by comparing copies against each other. `CLAUDE.md` says
-three and is wrong on the count for the same reason this paragraph
-originally was. See `.issues/indexline-is-a-fourth-copy-of-the-page-three-parity-that-nothing-measures.md`,
-which argues the right answer is to delete the copy rather than measure it.
+**The hex parity itself** is encoded four times, and every encoding is
+measured against the printed page rather than against another encoding:
+`starmap.Hex.cube` for distance, `render.gridLine` for the listing's map,
+`render.indexLine` for the sector's index, and `render.mapFit.hexCenter`
+for the drawn map. The two text maps take their indent from one function,
+`render.indented`, because they are one encoding at two slot widths. The
+index's measurement, `TestTheSectorIndexIsTheGridPrintedOnPageThree`, was
+added once a mutation flipping its indent was found to pass the suite. The
+harnesses for the three distinct encodings stay separate on purpose: a
+merged harness compares them against each other and passes when all of them
+are flipped together. Getting this wrong leaves every distance internally
+consistent and wrong by one for half the map.
 
 **The PDF font**, covered above, is a seam with the outside world that no
 amount of tooling makes safe.
@@ -308,20 +323,6 @@ a mis-drawn world.
 Marked clearly, because these are where I am inferring from code and could
 be wrong.
 
-**Five of Book 3 pp. 10–11's ten columns never reach a document.**
-`render.technological` prints Personal, Armor, Computers, Air and Space;
-Special, Communication, Water, Land and Fuels are transcribed, validated at
-load, transcribed a second time in the tests, and dropped. I cannot tell
-from the code whether this is an editorial choice about line length or an
-unfinished pass, and nothing in the errata or `CLAUDE.md` claims it. Filed
-as `pp-ten-eleven-gloss-drops-five-held-columns`.
-
-**The `internal/fixture` fence does not cover `render`.** The depguard rule
-lists `dice`, `starmap`, `tables`, `gen` and `cmd/ctworldgen`, not
-`render` — the largest production package. No production file currently
-imports the fixtures, so this is latent. Filed as
-`depguard-fixture-fence-omits-render`.
-
 **`gen.CrossingRoutes` and `render.ends` are two implementations of the same
 predicate**, on opposite sides of the record boundary, and they must agree.
 This is a _consequence_ of the boundary rather than a defect of it —
@@ -346,16 +347,9 @@ referee has hit them.
 
 **The theory of `Notes` may be thinner than it looks.** Both `Notes` fields
 are write-only from the tool's perspective and both are flattened to one
-line at render time. That is coherent, but nothing enforces that a
-hand-edited record's notes survive a regenerate cycle, and I could not find
-a test that round-trips a referee-annotated record through
-`render --format pdf`. It may exist and I may have missed it.
-
-## Index
-
-| #   | Severity | Issue                                         | Primary location                              |
-| --- | -------- | --------------------------------------------- | --------------------------------------------- |
-| 1   | medium   | `pp-ten-eleven-gloss-drops-five-held-columns` | `render/render.go:545`, `docs/COVERAGE.md:58` |
-| 2   | medium   | `depguard-fixture-fence-omits-render`         | `.golangci.yml:46`                            |
-
-**Total: 2 issues (0 critical, 0 high, 2 medium, 0 low)**
+line at render time. That is coherent, and the booklet is now held to it
+for the hardest case -- `TestALongNoteContinuesOverleaf` gives a world a
+twelve-hundred-word note and requires every line of it inside the page, so
+a note is never printed in part. What nothing enforces is that a
+hand-edited record's notes survive a regenerate cycle, which is a property
+of the referee's workflow rather than of anything the tool writes.

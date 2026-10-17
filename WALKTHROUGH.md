@@ -1,8 +1,5 @@
 # ctworldgen Walkthrough
 
-*2026-09-10T12:16:45Z by Showboat 0.6.1*
-<!-- showboat-id: a6f5904d-7504-4533-98f7-20648e5723dc -->
-
 ## Overview
 
 `ctworldgen` generates Classic Traveller subsectors from the Worlds chapter of
@@ -16,13 +13,13 @@ Two facts shape everything below, and it is worth holding them from the start.
 
 **The record is the subsector, not the world.** Whether a hex holds a world at
 all is thrown against the eighty-hex grid page 3 prints, and a commercial
-route is a statement about a *pair* of worlds. Neither fits inside a
+route is a statement about a _pair_ of worlds. Neither fits inside a
 world-shaped record, so one record is one map and a world is a row inside it.
 
 **The order in which dice are drawn is part of the contract.** There is no log
 of throws — the seed reproduces them exactly — so adding, removing or
 reordering a single throw changes what every existing seed means. You will see
-the code go out of its way to *not* draw a die several times.
+the code go out of its way to _not_ draw a die several times.
 
 The tour follows one seed from the command line to a rendered page, then
 doubles back for the sector layer.
@@ -32,11 +29,11 @@ doubles back for the sector layer.
 Six packages. The dependency graph is the design statement, so read it before
 anything else — it is derived from the source rather than drawn by hand:
 
-```bash
+```sh
 go list -f '{{.Name}} {{join .Imports ","}}' ./dice ./starmap ./tables ./gen ./render ./cmd/ctworldgen | sed 's|github.com/philoserf/ctworldgen/|@|g' | awk '{n=$1;d="";c=split($2,a,",");for(i=1;i<=c;i++)if(a[i]~/^@/){sub(/^@/,"",a[i]);d=d" "a[i]}printf "%-6s ->%s\n",n,(d==""?" (nothing of ours)":d)}'
 ```
 
-```output
+```text
 dice   -> (nothing of ours)
 starmap -> dice
 tables -> dice starmap
@@ -47,7 +44,7 @@ main   -> gen render starmap
 
 Two things in that graph are load-bearing.
 
-`render` does not import `gen`. The JSON record is the *entire* interface
+`render` does not import `gen`. The JSON record is the _entire_ interface
 between throwing dice and drawing pages: everything upstream of the record
 generates, everything downstream describes. A record written before a feature
 existed still renders, and no renderer can accidentally re-throw a die.
@@ -58,7 +55,7 @@ seeded stream, and it knows nothing about worlds.
 The three `internal/` packages are omitted above because they are not part of
 the product: `internal/fixture` is the one roster both golden trees are
 generated from, `internal/cmd/regenerate` rewrites those goldens, and
-`internal/audit` holds *no non-test file at all* — which makes it unimportable
+`internal/audit` holds _no non-test file at all_ — which makes it unimportable
 by construction, a firmer fence than a lint rule.
 
 ## The entry point
@@ -66,11 +63,9 @@ by construction, a firmer fence than a lint rule.
 `cmd/ctworldgen` is flags and file I/O and nothing else. `run` is the whole
 dispatch:
 
-```bash
-sed -n '81,102p' cmd/ctworldgen/main.go
-```
+`cmd/ctworldgen/main.go` — `run`
 
-```output
+```go
 func run(args []string, stdout, stderr io.Writer) error {
 	if len(args) == 0 {
 		_, _ = io.WriteString(stderr, usage)
@@ -100,11 +95,9 @@ two ways: which pass of the engine fills the record, and whether broad areas
 may be given at all. Both must record a seed, and this is the single place in
 the program where a number comes from anywhere but the stream:
 
-```bash
-sed -n '189,199p' cmd/ctworldgen/main.go
-```
+`cmd/ctworldgen/main.go` — `singleRecordCmd`
 
-```output
+```go
 	// A seed is always recorded, so a run is reproducible after the fact.
 	// Drawing one from OS entropy is the single exception to the
 	// seeded-stream rule, and it happens before the engine starts.
@@ -119,17 +112,15 @@ sed -n '189,199p' cmd/ctworldgen/main.go
 ```
 
 So `--seed 0` is an explicit choice and not a request for a random one — the
-flag's *presence* is what is tested, via `flags.Visit`, not its value.
+flag's _presence_ is what is tested, via `flags.Visit`, not its value.
 
 The drawn seed is masked into a smaller range than `uint64` allows, and the
 reason is worth reading in full because it is the kind of hazard that never
 shows up in a test:
 
-```bash
-sed -n '27,33p' cmd/ctworldgen/main.go
-```
+`cmd/ctworldgen/main.go` — `maxSafeSeed`
 
-```output
+```go
 // maxSafeSeed is 2^53 - 1, the largest integer an IEEE-754 double holds
 // exactly. A drawn seed is kept inside it because a record whose seed has
 // been rounded by a reader that parses JSON numbers as doubles reproduces
@@ -143,11 +134,9 @@ const maxSafeSeed = 1<<53 - 1
 
 `dice` is 58 lines and every one of them is a contract. The whole package:
 
-```bash
-sed -n '29,58p' dice/dice.go
-```
+`dice/dice.go` — `NewStream`
 
-```output
+```go
 // NewStream seeds a PCG generator from the seed a record carries. Both
 // words take that seed, so the one number reproduces the whole stream.
 func NewStream(seed uint64) *Stream {
@@ -180,7 +169,7 @@ type Target int
 func (t Target) Met(throw int) bool { return throw >= int(t) }
 ```
 
-Note what `Die` is *not* allowed to become. `IntN(36)` would be the same
+Note what `Die` is _not_ allowed to become. `IntN(36)` would be the same
 generator, under the same seed, drawing the same underlying bits — and would
 produce an entirely different subsector, because the mapping from bits to
 faces changed. `D2` is deliberately two `Die` calls rather than one draw, for
@@ -194,15 +183,13 @@ the jump routes table is a one-die target. `Met` is the entire rule.
 
 `gen.Generate` walks the page 12 checklist. Each pass is a complete sweep over
 the subsector before the next begins, and within a pass the hexes run in
-ascending grid number. That ordering is a *reading* of a page that does not
+ascending grid number. That ordering is a _reading_ of a page that does not
 say — which is why the first thing the function does after building the record
 is stamp it:
 
-```bash
-sed -n '100,155p' gen/gen.go
-```
+`gen/gen.go` — `Engine.Generate`
 
-```output
+```go
 func (e *Engine) Generate(inputs Inputs) (*starmap.Record, error) {
 	err := inputs.Validate()
 	if err != nil {
@@ -264,7 +251,7 @@ func (e *Engine) Generate(inputs Inputs) (*starmap.Record, error) {
 The `Stamp` calls are the mechanism that makes this tool trustworthy, and they
 are conditional on purpose. A record's `errata` array is not metadata about the
 program; it is the record saying which readings of a silent page actually
-governed *it*. E012 is stamped only where the referee drew a broad area, E003
+governed _it_. E012 is stamped only where the referee drew a broad area, E003
 only where there were two worlds to pair. When you add a step, deciding its
 stamping condition is part of the work.
 
@@ -272,11 +259,9 @@ stamping condition is part of the work.
 
 Eighty hexes, one die each, in ascending grid number:
 
-```bash
-sed -n '349,366p' gen/gen.go
-```
+`gen/gen.go` — `scan`
 
-```output
+```go
 func scan(stream *dice.Stream, occurrenceDM int, areas []starmap.Area) ([]starmap.Hex, error) {
 	var found []starmap.Hex
 
@@ -302,14 +287,12 @@ blank and consumes its die like any other — skipping the draw would shift
 everything after it.
 
 The broad areas of page 1 hang off this loop by exactly one addend. They vary
-the *number the throw is read against* and never the throw, its order, or its
+the _number the throw is read against_ and never the throw, its order, or its
 eighty dice:
 
-```bash
-sed -n '376,384p' gen/gen.go
-```
+`gen/gen.go` — `dmAt`
 
-```output
+```go
 func dmAt(occurrenceDM int, areas []starmap.Area, hex starmap.Hex) int {
 	for _, area := range areas {
 		if area.Contains(hex) {
@@ -336,14 +319,12 @@ need one is rejected rather than resolved.
 Page 12's checklist has three steps and no base throw. But page 1 says
 starports "will be accompanied by naval or scout bases," and the starport chart
 on page 5 prints the throws as rules. Bases are generated; the checklist is a
-summary that omits them. What the pages do not fix is *where* the throws sit,
+summary that omits them. What the pages do not fix is _where_ the throws sit,
 and the reading (E001) puts them immediately after each starport:
 
-```bash
-sed -n '290,305p' gen/gen.go
-```
+`gen/gen.go` — `Engine.starports`
 
-```output
+```go
 		if target, printed := e.charts.StarportChart.NavalBase(port); printed {
 			world.NavalBase = target.Met(stream.D2())
 			basesThrown = true
@@ -372,11 +353,9 @@ that governed none of it.
 
 Every pair of worlds, examined once:
 
-```bash
-sed -n '318,337p' gen/gen.go
-```
+`gen/gen.go` — `Engine.routes`
 
-```output
+```go
 func (e *Engine) routes(stream *dice.Stream, worlds []starmap.World) []starmap.Route {
 	routes := []starmap.Route{}
 
@@ -401,7 +380,7 @@ func (e *Engine) routes(stream *dice.Stream, worlds []starmap.World) []starmap.R
 
 The `stated` guard is the same discipline as the base throws. A pair with an X
 starport has no row in the jump routes table, and a dash cell states no number.
-Page 2 describes the throw as being made *against a stated number*, so where
+Page 2 describes the throw as being made _against a stated number_, so where
 none is stated the pair is skipped without drawing. This is also where the font
 trap bites hardest — a text extraction of that table renders its dashes as the
 digit 4, which would turn every empty cell into a target of 4+.
@@ -411,11 +390,9 @@ digit 4, which would turn every empty cell into a target of 4+.
 Each world is finished before the next is begun. The six characteristics of
 pages 4 through 8, then the technological index of page 9:
 
-```bash
-sed -n '197,224p' gen/gen.go
-```
+`gen/gen.go` — `Engine.detail`
 
-```output
+```go
 	// 2.C. Planetary atmosphere. 2D-7 + planetary size. A planet of size
 	// zero automatically has an atmosphere of zero, and no die is thrown:
 	// rolling and dropping one would shift every later world (R13).
@@ -453,16 +430,14 @@ be simpler and would shift every later world in the subsector. The same
 temptation recurs everywhere in this codebase and the answer is always the
 same.
 
-Note also that `Government` feeds `LawLevel` *already floored*. A clamped value
+Note also that `Government` feeds `LawLevel` _already floored_. A clamped value
 is the value; the raw throw is recorded but never propagated.
 
 `clamp` is that flooring, and it records itself:
 
-```bash
-sed -n '259,267p' gen/gen.go
-```
+`gen/gen.go` — `clamp`
 
-```output
+```go
 func clamp(world *starmap.World, which starmap.Characteristic, raw, high int) int {
 	value := min(max(raw, 0), high)
 
@@ -481,11 +456,11 @@ is worth looking at a real one before reading the type. The command is
 reproducible — the seed is given explicitly, so this is the same subsector
 every time:
 
-```bash
+```sh
 go run ./cmd/ctworldgen new --seed 1977 --name Aramis --occurrence-dm -1 | head -34
 ```
 
-```output
+```text
 {
   "schema_version": 1,
   "ruleset": "ct-1977-book3-pp1-12",
@@ -530,7 +505,7 @@ checking, and the read path verifies every one of them — a record claiming a
 different generator parses perfectly cleanly and would report a subsector this
 tool cannot vouch for.
 
-`errata` lists the readings that governed *this* record. E012 is absent because
+`errata` lists the readings that governed _this_ record. E012 is absent because
 no broad area was given; E006 is absent because this is not a sector.
 
 `digits` — `X9A25001` — is eight characters, the starport followed by the seven
@@ -559,11 +534,9 @@ book prints once.
 The single most dangerous function in the package is the offset-to-cube
 conversion behind `Hex.Distance`:
 
-```bash
-sed -n '240,260p' starmap/hex.go
-```
+`starmap/hex.go` — `Hex.cube`
 
-```output
+```go
 // coordinates.
 //
 // The grid prints 0101 at the top left with 0201 half a hex below it, so
@@ -592,21 +565,20 @@ one for half the map. No record-against-record test can catch it, because both
 sides of the comparison move together. The test that catches it measures
 against the grid printed on page 3.
 
-The same parity is encoded in two other places — the text map's line builder
-and the drawn map's hex centre — and each has its own independent measurement
-against the page, because each can be flipped without the other two noticing.
-Their three test harnesses are kept separate on purpose: a merged harness
-compares the three against each other and passes when all three are flipped
-together.
+The same parity is encoded in three more places: the listing's text map, the
+sector's index map, and the drawn map's hex centre. Each has its own
+measurement against the page, because each can be flipped without the others
+noticing. The two text maps are one encoding at two slot widths, so they take
+their indent from one function, `render.indented`. The harnesses for the three
+distinct encodings are kept separate on purpose: a merged harness compares
+them against each other and passes when all of them are flipped together.
 
 One subtlety that will confuse you if you meet it cold: `Hex` bounds itself by
-the *largest* grid there is, not by the page 3 grid.
+the _largest_ grid there is, not by the page 3 grid.
 
-```bash
-sed -n '262,267p' starmap/hex.go
-```
+`starmap/hex.go` — `Hex.valid`
 
-```output
+```go
 // valid bounds a hex by the largest grid there is, because a hex is an
 // identifier and the identifier is four digits either way. Whether a hex
 // is on *this* record's grid is [Grid.Contains], and the record checks it.
@@ -616,7 +588,7 @@ func (h Hex) valid() bool {
 ```
 
 An identifier is four digits whether it names a subsector hex or a sector hex,
-so `0910` parses successfully. Only the *record's own grid* refuses it, in
+so `0910` parses successfully. Only the _record's own grid_ refuses it, in
 `Grid.hold`. That split is what lets one `Hex` type serve both grids.
 
 ### The read path
@@ -624,11 +596,9 @@ so `0910` parses successfully. Only the *record's own grid* refuses it, in
 `render` starts by decoding a record, and the decode is defensive in a way that
 repays reading:
 
-```bash
-sed -n '222,251p' starmap/record.go
-```
+`starmap/record.go` — `Decode`
 
-```output
+```go
 func Decode(r io.Reader) (*Record, error) {
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
@@ -661,7 +631,7 @@ func Decode(r io.Reader) (*Record, error) {
 }
 ```
 
-`DisallowUnknownFields` catches a record from a *newer* schema that added a
+`DisallowUnknownFields` catches a record from a _newer_ schema that added a
 field. That looks like the whole of the defence and is not — a record claiming
 a different schema version, ruleset, or generator parses perfectly cleanly,
 every field reads, and the listing renders. `Validate` is what refuses those,
@@ -675,7 +645,7 @@ sixteen such files.
 records fails loudly rather than decoding the first and discarding the rest.
 
 The published schema in `docs/record.schema.json` states the same rules, and
-both exist on purpose — *a schema alone rejects nothing at read time*. The
+both exist on purpose — _a schema alone rejects nothing at read time_. The
 schema ships for other tools; the Go checks bind this one; and
 `internal/audit` holds the two together by validating everything the engine
 writes against the published schema.
@@ -683,11 +653,11 @@ writes against the published schema.
 You can watch the provenance check fire. Take the record generated above,
 corrupt one provenance field, and try to render it:
 
-```bash
+```sh
 go run ./cmd/ctworldgen new --seed 1977 | sed 's|ct-1977-book3-pp1-12|ct-1981-book3|' | go run ./cmd/ctworldgen render /dev/stdin 2>&1 | head -1
 ```
 
-```output
+```text
 ctworldgen: reading /dev/stdin: not a record of the ruleset this tool implements: the record says "ct-1981-book3" and this tool implements "ct-1977-book3-pp1-12"
 ```
 
@@ -698,18 +668,54 @@ the output before anything had been checked.
 
 The unknown-field half behaves the same way:
 
-```bash
+```sh
 go run ./cmd/ctworldgen new --seed 1977 | sed 's|"seed": 1977,|"seed": 1977, "house_rule": true,|' | go run ./cmd/ctworldgen render /dev/stdin 2>&1 | head -1
 ```
 
-```output
+```text
 ctworldgen: reading /dev/stdin: decoding the record: json: unknown field "house_rule"
 ```
+
+Past provenance and shape, `Validate` holds the values themselves. The record
+is the referee's notebook page and he may hand-edit it, so what it refuses is
+the edit no throw could have produced. Each characteristic has the range the
+schema states, which is exactly what its throw can reach. Without that check, a
+law level of -3 would be described from the wrong end of its table:
+
+```sh
+go run ./cmd/ctworldgen new --seed 1977 | perl -0pe 's/"law_level": \d+/"law_level": -3/' | go run ./cmd/ctworldgen render /dev/stdin 2>&1 | head -1
+```
+
+```text
+ctworldgen: reading /dev/stdin: a value is outside the range record.schema.json states for it (Book 3 pp. 4-9): law_level -3, for the world at 0105; the schema allows 0 to 20
+```
+
+And a route has to agree with its own two hexes, a fact no schema can state.
+The lane rule layers routes by their stated distance, so a wrong one would draw
+a different map of the same subsector:
+
+```sh
+go run ./cmd/ctworldgen new --seed 1977 | perl -0pe 's/"distance": 1/"distance": 4/' | go run ./cmd/ctworldgen render /dev/stdin 2>&1 | head -1
+```
+
+```text
+ctworldgen: reading /dev/stdin: a route's distance is not the distance between its two hexes (Book 3 p. 1): the route 0107 to 0206 states 4 parsecs and the hexes are 1 apart
+```
+
+The digits are deliberately _not_ recomputed from the values beside them: a
+referee adjusts a world, and the string is what he reads. A route's distance is
+different. It is grid geometry, not his to choose, and the lane rule consumes
+it.
 
 ## The tables, and the font trap
 
 `tables` holds every chart of pages 1-12 as embedded JSON, validated at load.
-Behind it sits the most unusual constraint in this repository.
+`tables.Tables` groups them by the one distinction that matters most. Four
+are thrown against (the starports table, the jump routes table, the
+technological index matrix, and the starport chart's base throws), so a
+corrected cell there changes what every existing seed means. The rest only
+describe a value, so a corrected cell there changes ink. Behind both sits the
+most unusual constraint in this repository.
 
 The held PDFs' embedded font maps the em-dash to the glyph `4` and the minus
 sign to `3`. A text extraction of the jump routes table therefore renders its
@@ -717,15 +723,13 @@ empty cells as the digit 4, and the size formula `2D − 2` as `2D32`. Both
 readings are wrong and — this is the part that matters — **both look like
 data**. Nothing downstream can detect it.
 
-So every table is transcribed from a *visual* read of the page and then
+So every table is transcribed from a _visual_ read of the page and then
 transcribed a second time inside the package's own tests, and the two must
 agree. Look at the row the trap would corrupt:
 
-```bash
-sed -n '1,20p' tables/data/jump_routes.json
-```
+`tables/data/jump_routes.json` — `JUMP ROUTES`
 
-```output
+```json
 {
   "table": "JUMP ROUTES",
   "page": 2,
@@ -756,11 +760,9 @@ but a second pair of eyes on the printed page catches that.
 The `null`s then have to survive into the lookup, which is why `Target` returns
 two values rather than a sentinel number:
 
-```bash
-sed -n '189,205p' tables/tables.go
-```
+`tables/tables.go` — `JumpRoutes.Target`
 
-```output
+```go
 func (j *JumpRoutes) Target(a, b starmap.Starport, distance starmap.Parsecs) (dice.Target, bool) {
 	if distance < 1 || distance > starmap.MaxJump {
 		return 0, false
@@ -784,7 +786,7 @@ Three different "no" answers — out of range, no row for X, dash cell — all
 collapse into `false`, and `gen.routes` skips without drawing. A sentinel
 target of 0 would have been met by every throw.
 
-The one exception to the double transcription is the descriptive *labels* of
+The one exception to the double transcription is the descriptive _labels_ of
 pages 5-7 — "Feudal Technocracy", "Dense, tainted". Those are editorial
 abbreviations of the book's prose rather than transcriptions of it, so retyping
 them in a test compares an abbreviation against itself. Tables of proper nouns
@@ -796,11 +798,11 @@ are never that exception.
 throws a die or decides a rule. Here is the head of the listing for the record
 we generated above:
 
-```bash
+```sh
 go run ./cmd/ctworldgen new --seed 1977 --name Aramis --occurrence-dm -1 | go run ./cmd/ctworldgen render /dev/stdin | sed -n '1,30p'
 ```
 
-````output
+````text
 # Aramis
 
 27 worlds, 44 routes, 31 drawn. Generated from seed 1977 at occurrence DM -1.
@@ -840,7 +842,19 @@ required to announce it.
 Read the map alongside `Hex.cube` above: the odd-numbered columns sit on their
 row's first line and the even-numbered ones are pushed half a slot right and
 half a row down, which is how page 3 prints the grid. This is the second of the
-three places the parity lives.
+four places the parity lives:
+
+`render/render.go` — `indented`
+
+```go
+func indented(parity, fromCol int) bool { return parity != fromCol%2 }
+```
+
+The sector's index map calls the same function from column 1, so the listing's
+map and the index cannot disagree about which line is indented.
+`TestTheSectorIndexIsTheGridPrintedOnPageThree` measures the index against
+`Hex.Distance` all the same: an earlier version spelled its indent separately,
+and flipping that copy passed the whole suite.
 
 ### The legible lane rule
 
@@ -848,15 +862,13 @@ Page 2, having observed that a jump-2 can be made over two jump-1 links, tells
 the map-drawer that some connections may be ignored because they are "already
 present". That is permission addressed to whoever draws the map, not a rule
 addressed to whoever throws the dice — so the engine examines every pair and
-the record carries every lane, and only the *drawing* is thinned.
+the record carries every lane, and only the _drawing_ is thinned.
 
 The implementation looks like a spanning forest and is deliberately not one:
 
-```bash
-sed -n '40,75p' render/lanes.go
-```
+`render/lanes.go` — `legible`
 
-```output
+```go
 func legible(routes []starmap.Route) []starmap.Route {
 	joined := newGroups()
 	keep := make(map[starmap.Route]bool, len(routes))
@@ -896,7 +908,7 @@ func legible(routes []starmap.Route) []starmap.Route {
 ```
 
 The two loops over `layer` are the whole rule, and separating them is the
-point. A distance is examined *in full* against what the shorter distances
+point. A distance is examined _in full_ against what the shorter distances
 joined, and only then does it join anything itself.
 
 Union each lane as it is examined instead — the ordinary greedy spanning forest
@@ -912,11 +924,11 @@ equal-length lanes never suppress each other.
 
 Both readings of the same record, side by side:
 
-```bash
+```sh
 go run ./cmd/ctworldgen new --seed 1977 --name Aramis --occurrence-dm -1 > /tmp/ctwg-walkthrough.json && for mode in legible all; do printf '%-8s ' "$mode"; go run ./cmd/ctworldgen render --lanes $mode /tmp/ctwg-walkthrough.json | sed -n '3p'; done; rm -f /tmp/ctwg-walkthrough.json
 ```
 
-```output
+```text
 legible  27 worlds, 44 routes, 31 drawn. Generated from seed 1977 at occurrence DM -1.
 all      27 worlds, 44 routes. Generated from seed 1977 at occurrence DM -1.
 ```
@@ -932,11 +944,9 @@ that straddle two of them.
 
 The whole of it:
 
-```bash
-sed -n '24,71p' gen/sector.go
-```
+`gen/sector.go` — `Engine.Sector`
 
-```output
+```go
 func (e *Engine) Sector(inputs Inputs) (*starmap.Record, error) {
 	// Before Validate, which holds an area against the p. 3 grid: a
 	// sector-grid rectangle refused there would be reported as off an 8x10
@@ -975,7 +985,7 @@ func (e *Engine) Sector(inputs Inputs) (*starmap.Record, error) {
 	}
 
 	// E002's order, now read across the whole grid.
-	slices.SortFunc(record.Worlds, func(a, b starmap.World) int { return a.Hex.Number() - b.Hex.Number() })
+	slices.SortFunc(record.Worlds, func(a, b starmap.World) int { return a.Hex.Compare(b.Hex) })
 
 	record.Routes = append(record.Routes,
 		e.seams(dice.NewStream(inputs.Seed+seamSeedOffset), record.Worlds)...)
@@ -995,11 +1005,9 @@ seam pass consumes a seventeenth stream at `base + 16`.
 The translation onto the sector grid rests on one arithmetic accident, and the
 comment on `Place` says which:
 
-```bash
-sed -n '41,59p' starmap/hex.go
-```
+`starmap/hex.go` — `Place`
 
-```output
+```go
 // Place translates a member's local hex onto the sector grid. Member
 // index sits at column band index mod 4 and row band index div 4, and a
 // local hex moves by whole bands (ERRATA E006 parts 1 and 2).
@@ -1028,22 +1036,22 @@ width would have flipped the parity of every second band and quietly changed
 interior distances — the same trap `Hex.cube` carries, arriving by a second
 road.
 
-Note also what is *not* stored. The record carries no member field. Which
+Note also what is _not_ stored. The record carries no member field. Which
 subsector a world belongs to is read straight back off its hex by `MemberOf`,
 so the decomposition cannot come to disagree with the grid.
 
 ### The property that makes a sector trustworthy
 
-Member *i* of `sector --seed N` is exactly the subsector `new --seed N+i`
+Member _i_ of `sector --seed N` is exactly the subsector `new --seed N+i`
 writes. Nothing about being in a sector changes a world. That is the identity a
 referee relies on when he picks one subsector out of a sector and runs a
 session in it, and it is checked directly in `gen/sector_test.go` — but it is
 also checkable from outside the program.
 
-Member 5 sits at column band 1 and row band 1, so its local hex *(c, r)* lands
-at *(c+8, r+10)* on the sector grid. Translate the band back and compare:
+Member 5 sits at column band 1 and row band 1, so its local hex _(c, r)_ lands
+at _(c+8, r+10)_ on the sector grid. Translate the band back and compare:
 
-```bash
+```sh
 go run ./cmd/ctworldgen sector --seed 1000 > /tmp/ctwg-sec.json && go run ./cmd/ctworldgen new --seed 1005 > /tmp/ctwg-m5.json && python3 -c '
 import json
 sec=json.load(open("/tmp/ctwg-sec.json")); m5=json.load(open("/tmp/ctwg-m5.json"))
@@ -1057,7 +1065,7 @@ print("identical hex and digit strings:", a==b)
 '; rm -f /tmp/ctwg-sec.json /tmp/ctwg-m5.json
 ```
 
-```output
+```text
 member 5 of sector --seed 1000 : 42 worlds
       new --seed 1005          : 42 worlds
 identical hex and digit strings: True
@@ -1067,13 +1075,11 @@ identical hex and digit strings: True
 
 Page 2 says each specific pair of worlds should be examined for jump routes
 only once. An interior pair was already examined inside its own member, so the
-sector pass examines only pairs whose two worlds are in *different* members:
+sector pass examines only pairs whose two worlds are in _different_ members:
 
-```bash
-sed -n '118,146p' gen/sector.go
-```
+`gen/sector.go` — `Engine.seams`
 
-```output
+```go
 func (e *Engine) seams(stream *dice.Stream, worlds []starmap.World) []starmap.Route {
 	routes := []starmap.Route{}
 
@@ -1113,7 +1119,7 @@ the few within four parsecs, and a spatial index is the obvious fix. It stays
 quadratic on purpose. The loop's visit order **is** the order the seam stream
 is drawn in, so an index reaching the same pairs in a different order writes a
 different sector from the same seed, silently. The safe optimisation is an
-early-out on column distance *inside* this loop, which preserves the order
+early-out on column distance _inside_ this loop, which preserves the order
 exactly.
 
 This is the single best example of the rule stated at the top of this document:
@@ -1130,11 +1136,11 @@ the sixteen subsector listings its members would have had, each on its own page
 The contents table names each member by index, hex range, and the seed that
 writes it standalone:
 
-```bash
+```sh
 go run ./cmd/ctworldgen sector --seed 1000 > /tmp/ctwg-sec.json && go run ./cmd/ctworldgen render /tmp/ctwg-sec.json | grep -A 5 '^| Subsector | Hexes'; rm -f /tmp/ctwg-sec.json
 ```
 
-```output
+```text
 | Subsector | Hexes | Worlds | Lanes within | Crossing | Seed |
 | --- | --- | --- | --- | --- | --- |
 | 0 | 0101 to 0810 | 35 | 51 | 28 | 1000 |
@@ -1146,11 +1152,11 @@ go run ./cmd/ctworldgen sector --seed 1000 > /tmp/ctwg-sec.json && go run ./cmd/
 And each member section opens by making the identity actionable — the referee
 who wants this one subsector and nothing else can generate it from the heading:
 
-```bash
+```sh
 go run ./cmd/ctworldgen sector --seed 1000 > /tmp/ctwg-sec.json && go run ./cmd/ctworldgen render /tmp/ctwg-sec.json | grep -A 4 '^## Subsector 5 '; rm -f /tmp/ctwg-sec.json
 ```
 
-```output
+```text
 ## Subsector 5 &mdash; 0911 to 1620
 
 Member 5 of this sector. `ctworldgen new --seed 1005` writes this sub-sector on its own p. 3 grid, where its first hex is 0101; here it is laid on the sector's, and that hex is 0911 (ERRATA E006).
@@ -1165,30 +1171,35 @@ pages govern. An index and a seed are things the tool itself established.
 Two counts in that summary are worth distinguishing. "Lanes within it" are the
 routes both of whose ends are at home; "crossing" are the ones a referee
 generating sixteen subsectors one at a time could never have found. A crossing
-lane is listed under *both* the subsectors it joins, so the sixteen tables
+lane is listed under _both_ the subsectors it joins, so the sixteen tables
 together carry more rows than the record has lanes — and the document says so
 where the tables begin.
 
 ## The gate
 
-There is one gate and CI runs exactly it — tidy, vet, golangci-lint, NilAway,
-`go test -race`, and a coverage ratchet. The workflow is a single line, which
-is the point:
+There is one gate and no CI: `task` runs tidy, vet, golangci-lint, NilAway,
+`go test -race`, a coverage ratchet and prettier, and it is run locally before
+every merge. `main` takes a change only through a squash-merged pull request,
+and nothing on the pull request is waited on, so the local gate is the whole
+check:
 
-```bash
-sed -n '45,49p' .github/workflows/ci.yml
-```
+`Taskfile.yml` — `default`
 
-```output
-
-      # CI runs exactly `task`. Never add a check here that the local gate
-      # does not run, and never add a tool to the gate without also
-      # installing it above.
-      - run: task
+```yaml
+  default:
+    desc: The whole gate, in the order a failure is cheapest to read
+    cmds:
+      - task: tidy
+      - task: vet
+      - task: lint
+      - task: nilaway
+      - task: test
+      - task: ratchet
+      - task: docs
 ```
 
 The toolchain is deliberately unpinned. The gate is meant to fail when a tool
-*moves* rather than drift behind it, so a red gate on code you did not touch is
+_moves_ rather than drift behind it, so a red gate on code you did not touch is
 the signal working. Answer the finding; do not pin a tool or add a linter
 disable to silence it.
 
@@ -1197,10 +1208,12 @@ parallel test harness. It stays because it is the check that catches the day
 someone adds concurrency, which the sixteen independent members make a live
 temptation rather than a theoretical one.
 
-The coverage ratchet counts *uncovered statements per package* rather than a
+The coverage ratchet counts _uncovered statements per package_ rather than a
 percentage, and fails in both directions. A percentage holds still while a
 guarded branch adds one covered statement and one uncovered, and it grows more
-forgiving as the repository grows.
+forgiving as the repository grows. It is counted per package, so a check
+exercised only from `internal/audit` still leaves its own package's statements
+uncovered.
 
 ### A test that cannot fail looks exactly like one that passes
 
@@ -1209,7 +1222,7 @@ Almost everything the program asserts is an invariant over dice, and a broken
 invariant check is indistinguishable from a passing one. It has happened
 repeatedly here and has never once surfaced as a red suite:
 
-- The base and route throws could have had their sense *inverted* and every
+- The base and route throws could have had their sense _inverted_ and every
   invariant still passed, because the checks only asked whether the routes and
   bases that exist are legal.
 - Five world-creation assertions were written, and the edit meant to call them
@@ -1217,7 +1230,7 @@ repeatedly here and has never once surfaced as a red suite:
   dead, and the suite went green.
 - A roster check searched the whole listing for each world's hex — which the
   world's own detail page satisfies — so dropping half the roster passed.
-- The map's parity check ran on a record with *no worlds*, where every cell is
+- The map's parity check ran on a record with _no worlds_, where every cell is
   the same width, so a bug that shifts a row only where a starport letter is
   drawn could not be expressed by the fixture at all.
 
@@ -1230,7 +1243,7 @@ Three things make that harder here than elsewhere. `TestGoldens` compares
 against fixtures the code under test wrote, so a mutation moves them and the
 suite fails for the wrong reason — run `task regenerate` first. A mutation
 aimed at something no fixture exercises is a no-op that reads as a surviving
-mutant. And the fixture has to be able to *express* the bug: a world-less map
+mutant. And the fixture has to be able to _express_ the bug: a world-less map
 cannot show a mis-drawn world.
 
 ## Where to go next
@@ -1240,44 +1253,3 @@ thinnest. `docs/ERRATA.md` holds every reading of a silent page, with its cite
 and its stamping condition. `docs/COVERAGE.md` maps rule to code to test. And
 `CLAUDE.md` keeps the standing list of things that look like slack and are not
 — the changes that are locally defensible and globally wrong.
-
-## Findings from this pass
-
-Tracing the code end to end turned up two things a reader of this document
-should not have to rediscover. Both are filed in `.issues/`.
-
-## Index
-
-| #   | Severity | Issue                                                         | Primary location                                   |
-| --- | -------- | ------------------------------------------------------------- | -------------------------------------------------- |
-| 1   | low      | `hex-less-is-the-named-ordering-rule-and-nothing-production-calls-it` | `starmap/hex.go:186`, `gen/sector.go:62`     |
-| 2   | low      | `render-sector-go-holds-both-typesetters-breaking-the-package-file-split` | `render/sector.go:174`, `render/sector.go:276` |
-
-**Total: 2 issues (0 critical, 0 high, 0 medium, 2 low)**
-
-### Corrections to this document, from later passes in the same review
-
-Two claims above were written before the reduction and refactor passes ran over
-the same tree, and both should be read with these attached.
-
-**The parity is encoded in four places, not three.** Sections above say the page
-3 column parity lives in `starmap.Hex.cube`, `render.gridLine` and
-`render.mapFit.hexCenter`, each with its own measurement against the printed
-page. `CLAUDE.md` says the same. There is a fourth — `render.indexLine`, which
-draws the sector index map — and nothing measures it. `code-reduction`
-mutation-tested it: flipping its indent to the wrong parity leaves
-`go test ./render` green. That is exactly the failure the "three separate
-harnesses" argument exists to prevent, occurring in the one copy the argument
-did not count. Its finding argues the right answer is to delete the copy rather
-than measure it, by folding the index map into the listing's own grid drawer.
-
-**Finding 1 below is contested and both later passes rejected it.**
-`code-reduction` and `code-refactor` each concluded that closed GitHub issue #32
-("Exported surface that exists only for tests") settled the exported-for-tests
-question deliberately rather than by oversight, and that `Hex.Number` already
-carries the ERRATA E002 cite in its own doc comment — which undercuts the
-finding's premise that the production sorts carry no cite. Read
-`.issues/000-reduction.md` and `.issues/000-refactor.md` before acting on it.
-The file is left in place because the issues protocol does not delete findings,
-not because the objection is weak.
-

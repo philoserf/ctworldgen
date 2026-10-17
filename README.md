@@ -178,6 +178,15 @@ Nothing else is admitted. Every other key the record does not define is
 still refused, which is what makes the generated fields worth trusting;
 `notes` is a field the record names rather than a hole in that rule.
 
+A hand-edited record is read back under the same rules it was written
+under. A characteristic outside the range its throw can reach is refused
+-- a law level of -3, a size of 200 -- and so is a route whose distance
+disagrees with its own two hexes, because the map's lanes are chosen by
+it. The error names the world or the route, so the edit can be found in
+the file. The string of digits is the exception, and deliberately: it is
+carried as written, so a referee who adjusts a world adjusts what he
+reads.
+
 ## Where the rules come from
 
 Rules come only from the held PDFs of the FFE reprints, never from memory.
@@ -216,9 +225,8 @@ consumption order -- that a change to this code has to respect.
 `THEORY.md` is the account of why the code is shaped as it is: what a
 maintainer has to hold in mind to change it without damaging it, and where
 that account is uncertain. `WALKTHROUGH.md` is the tour of how it runs,
-entry point to output, and every fenced block in it is executable -- `uvx
-showboat verify WALKTHROUGH.md` re-runs them all and diffs the captured
-output, so the document cannot quietly stop being true.
+entry point to output, and every snippet in it is labelled with the file and
+the symbol it quotes.
 
 ## Development
 
@@ -227,13 +235,14 @@ task              # the whole gate: tidy, vet, lint (formatting included), nilaw
 task regenerate   # rewrite the golden fixtures and the complete example, then read the diff
 ```
 
-CI runs exactly `task`. The toolchain is deliberately unpinned: the gate is
+There is no CI: `task` is run locally before every merge, and it is the
+whole check. The toolchain is deliberately unpinned: the gate is
 meant to fail when a tool moves rather than drift behind it, so a red gate
 on code you did not touch is the signal working. Answer the finding; do not
 pin a tool or add a linter disable to silence it.
 
-`main` is protected -- pull request, a green gate, linear history, no
-bypass -- so work lands on a branch and merges through CI.
+`main` is protected -- a pull request, squash merges only, linear history,
+no bypass -- so work lands on a branch and merges once its gate is green.
 
 ## Licence
 
