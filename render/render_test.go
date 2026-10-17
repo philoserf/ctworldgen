@@ -1363,6 +1363,102 @@ func noteLine(t *testing.T, written, heading string) string {
 	return line(strings.TrimLeft(section(t, written, heading), "\n"))
 }
 
+// TestTheSectorIndexIsTheGridPrintedOnPageThree is the parity check the
+// main map has, pointed at the sector's index. The index is the same
+// monospace encoding at a two-character slot, and the seam test beside it
+// counts cells and bars -- every one of which is unchanged when the indent
+// goes on the wrong line, which draws the whole sector half a slot out of
+// true. So the index is measured against Hex.Distance as the main map is:
+// drawn touching is one parsec apart, and one parsec apart is drawn
+// touching, for all 1,280 hexes.
+func TestTheSectorIndexIsTheGridPrintedOnPageThree(t *testing.T) {
+	t.Parallel()
+
+	renderer, err := render.New(render.LegibleLanes)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var whole strings.Builder
+
+	err = renderer.Listing(&whole, sectorListingRecord(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	places := indexPlaces(t, fencedTextBlock(t, whole.String()))
+
+	assertTheseAreTheHexesDrawn(t, places, everyHexOf(starmap.SectorGrid()))
+
+	slot, step := mapGeometry(t, places)
+
+	for hex := range places {
+		touching := drawnTouching(places, hex, slot, step)
+
+		for other := range touching {
+			if apart := hex.Distance(other); apart != 1 {
+				t.Fatalf("the index draws %s touching %s, and the p. 3 grid puts them %d parsecs apart",
+					hex, other, apart)
+			}
+		}
+
+		for other := range places {
+			if hex.Distance(other) == 1 && !touching[other] {
+				t.Fatalf("%s and %s are one parsec apart on the p. 3 grid and the index draws them apart",
+					hex, other)
+			}
+		}
+	}
+}
+
+// indexPlaces reads back where the index drew every hex. The index prints
+// no hex numbers, so a cell is known by its place in the reading order the
+// map is written in: each row of the grid is two lines, the odd columns
+// and then the even ones, and the cells of a line are its columns in
+// ascending order. Where on the line each cell lands is what is measured,
+// and is the one thing this does not assume.
+//
+// The seam bars are taken out first. Each is drawn at the same column
+// boundary on both lines of a row, so removing it moves both alike; their
+// placement is the seam test's to hold, not this one's. The blank lines
+// between bands of members are skipped for the same reason.
+func indexPlaces(t *testing.T, block string) map[starmap.Hex]hexPlace {
+	t.Helper()
+
+	places := make(map[starmap.Hex]hexPlace)
+	drawnLine := 0
+
+	for text := range strings.SplitSeq(block, "\n") {
+		if strings.TrimSpace(text) == "" {
+			continue
+		}
+
+		text = strings.ReplaceAll(text, "| ", "")
+
+		row, firstCol := drawnLine/2+1, 1+drawnLine%2
+		cell := 0
+
+		for char, r := range text {
+			if r == ' ' {
+				continue
+			}
+
+			hex := starmap.Hex{Col: firstCol + 2*cell, Row: row}
+
+			places[hex] = hexPlace{line: drawnLine, char: char}
+			cell++
+		}
+
+		drawnLine++
+	}
+
+	if len(places) == 0 {
+		t.Fatal("the index drew no cells to measure")
+	}
+
+	return places
+}
+
 // TestTheSectorIndexMapSeamsSitOnMemberBoundaries measures the seam bars
 // of the sector's index map against the p. 3 parity, and nothing else
 // holds them. The sector listing's golden is one member's section
