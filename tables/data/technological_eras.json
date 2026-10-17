@@ -1,7 +1,7 @@
 {
   "table": "TECH LEVEL CHART",
   "source": "Traveller5 Core Rules Book 2 Starships, pp. 230-232 (Tech Level Chart 1, 2 and 3), copyright (c) 2015-2019 Far Future Enterprises. Printed page and PDF page are the same number. Cited for description only, and named in every document that uses it (ERRATA E011).",
-  "comment": "Six of the charts' columns, which are the six the gloss reads. Levels 0-18: T5's scale runs to 21 and this tool's index caps at 18 (E004). The fractional levels are kept as printed -- no index equals one, but E009 reads the last entry at or below an index and 1.6 is below 2, so a world at index 2 has cities rather than villages. A null is read as the entry above it carrying forward (E009). Where the three pages disagree, the two that agree govern: level 3 is p. 231's 'Industrialization' on that page alone and 'Industrial Revolution' on pp. 230 and 232. Cells printed over two lines are joined with one space.",
+  "comment": "Four of the charts' columns, which are the four the gloss reads: era, energy, society and environ. T5's transport and computers columns are not carried, because Book 3's own pp. 10-11 columns say the same thing in the held page's words. Levels 0-18: T5's scale runs to 21 and this tool's index caps at 18 (E004). The fractional levels are kept as printed -- no index equals one, but E009 reads the last entry at or below an index and 1.6 is below 2, so a world at index 2 has cities rather than villages. A null is read as the entry above it carrying forward (E009). Where the three pages disagree, the two that agree govern: level 3 is p. 231's 'Industrialization' on that page alone and 'Industrial Revolution' on pp. 230 and 232. Cells printed over two lines are joined with one space.",
   "bands": {
     "comment": "read off p. 232, where the brackets are tightest (E011)",
     "Vlow": [
@@ -33,9 +33,7 @@
     "era",
     "energy",
     "society",
-    "environ",
-    "transport",
-    "computers"
+    "environ"
   ],
   "rows": [
     {
@@ -44,9 +42,7 @@
       "era": "Primitive Stone Age",
       "energy": "Personal Effort. Fire",
       "society": "Tribe. Clan.",
-      "environ": "Natural. Crude Shelters.",
-      "transport": "Walking.",
-      "computers": "Counting."
+      "environ": "Natural. Crude Shelters."
     },
     {
       "level": 1,
@@ -54,9 +50,7 @@
       "era": "Bronze Age 3500 BC",
       "energy": "Water Power",
       "society": "Ethnic Groups.",
-      "environ": "Settlement. Villages.",
-      "transport": "Beasts of Burden.",
-      "computers": "Abacus Quipu."
+      "environ": "Settlement. Villages."
     },
     {
       "level": 1.3,
@@ -64,9 +58,7 @@
       "era": "Iron Age 1300 BC",
       "energy": null,
       "society": null,
-      "environ": "Towns. Roads. Canals.",
-      "transport": "Wheel.",
-      "computers": null
+      "environ": "Towns. Roads. Canals."
     },
     {
       "level": 1.6,
@@ -74,9 +66,7 @@
       "era": "Middle Ages 600 AD",
       "energy": null,
       "society": "Kingdoms.",
-      "environ": "Cities.",
-      "transport": "Galleys.",
-      "computers": null
+      "environ": "Cities."
     },
     {
       "level": 2,
@@ -84,9 +74,7 @@
       "era": "Age Of Sail 1500 AD",
       "energy": "Wind. Sail.",
       "society": "Nations.",
-      "environ": null,
-      "transport": "Sailing Ships.",
-      "computers": "Algebra."
+      "environ": null
     },
     {
       "level": 3,
@@ -94,9 +82,7 @@
       "era": "Industrial Revolution 1700 AD",
       "energy": "Coal. Steam.",
       "society": "Democracies.",
-      "environ": null,
-      "transport": null,
-      "computers": "Calculus."
+      "environ": null
     },
     {
       "level": 3.3,
@@ -104,9 +90,7 @@
       "era": "1800 AD",
       "energy": null,
       "society": null,
-      "environ": null,
-      "transport": "Steamships.",
-      "computers": null
+      "environ": null
     },
     {
       "level": 3.6,
@@ -114,9 +98,7 @@
       "era": "1850 AD",
       "energy": null,
       "society": null,
-      "environ": null,
-      "transport": "Railroads.",
-      "computers": null
+      "environ": null
     },
     {
       "level": 4,
@@ -124,9 +106,7 @@
       "era": "Mechanization 1900 AD",
       "energy": "Electricity.",
       "society": null,
-      "environ": "Skyscrapers",
-      "transport": null,
-      "computers": "Analog Computers."
+      "environ": "Skyscrapers"
     },
     {
       "level": 5,
@@ -134,9 +114,7 @@
       "era": "1930 AD",
       "energy": "Oil. Petrochemicals.",
       "society": "Dictators.",
-      "environ": null,
-      "transport": "Groundcars.",
-      "computers": "Electric Calculators."
+      "environ": null
     },
     {
       "level": 6,
@@ -144,9 +122,7 @@
       "era": "Nuclear Age 1950 AD",
       "energy": "Nuclear Fission.",
       "society": "Superpowers.",
-      "environ": "Suburbs.",
-      "transport": null,
-      "computers": "Model /1."
+      "environ": "Suburbs."
     },
     {
       "level": 7,
@@ -154,9 +130,7 @@
       "era": "1975 AD",
       "energy": "Geothermal. Solar.",
       "society": null,
-      "environ": null,
-      "transport": "Rockets to Orbit.",
-      "computers": "Model /2."
+      "environ": null
     },
     {
       "level": 8,
@@ -164,9 +138,7 @@
       "era": "2000 AD",
       "energy": "Renewables.",
       "society": null,
-      "environ": null,
-      "transport": null,
-      "computers": null
+      "environ": null
     },
     {
       "level": 9,
@@ -174,9 +146,7 @@
       "era": "2050 AD",
       "energy": "Early Fusion.",
       "society": null,
-      "environ": "Arcologies",
-      "transport": "NAFAL.",
-      "computers": "Model /3."
+      "environ": "Arcologies"
     },
     {
       "level": 10,
@@ -184,9 +154,7 @@
       "era": "2100 AD",
       "energy": "Practical Fusion.",
       "society": "Non-Geographic Communities.",
-      "environ": null,
-      "transport": "Gravity Manipulation Lifters to Orbit.",
-      "computers": "Model /4."
+      "environ": null
     },
     {
       "level": 11,
@@ -194,9 +162,7 @@
       "era": "Imperial Average Circa Year Zero",
       "energy": "[FusionPlus].",
       "society": null,
-      "environ": null,
-      "transport": null,
-      "computers": "Semi-Organic Brain. Model /5."
+      "environ": null
     },
     {
       "level": 12,
@@ -204,9 +170,7 @@
       "era": null,
       "energy": null,
       "society": null,
-      "environ": null,
-      "transport": null,
-      "computers": "Positronic Brain. Model /6."
+      "environ": null
     },
     {
       "level": 13,
@@ -214,9 +178,7 @@
       "era": "Imperial Maximum Circa 550",
       "energy": null,
       "society": "Robots.",
-      "environ": null,
-      "transport": null,
-      "computers": "Wafer Technology. Model /7."
+      "environ": null
     },
     {
       "level": 14,
@@ -224,9 +186,7 @@
       "era": null,
       "energy": "Exotics. Collectors.",
       "society": "Temporary Personality Transfer",
-      "environ": null,
-      "transport": null,
-      "computers": "Self Aware Model /8."
+      "environ": null
     },
     {
       "level": 15,
@@ -234,9 +194,7 @@
       "era": "Imperial Maximum Circa 1107",
       "energy": null,
       "society": "Mindwipe.",
-      "environ": null,
-      "transport": null,
-      "computers": "Model /9."
+      "environ": null
     },
     {
       "level": 16,
@@ -244,9 +202,7 @@
       "era": "Darrian Maximum",
       "energy": "Experimental AM.",
       "society": "Artificial Persons. The Under Society.",
-      "environ": null,
-      "transport": null,
-      "computers": "True AI Artificial Intelligence."
+      "environ": null
     },
     {
       "level": 17,
@@ -254,9 +210,7 @@
       "era": null,
       "energy": null,
       "society": "Permanent Personality Transfer",
-      "environ": null,
-      "transport": null,
-      "computers": null
+      "environ": null
     },
     {
       "level": 18,
@@ -264,9 +218,7 @@
       "era": null,
       "energy": "Exotics. Collectors.",
       "society": null,
-      "environ": null,
-      "transport": null,
-      "computers": null
+      "environ": null
     }
   ]
 }

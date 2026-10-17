@@ -599,13 +599,11 @@ func (l ladder) at(level float64) string {
 // well as in the document. Nothing here is Book 3's, and a document that
 // prints one of these fields says whose statement it is.
 type Borrowed struct {
-	Band      string
-	Era       string
-	Energy    string
-	Society   string
-	Environ   string
-	Transport string
-	Computers string
+	Band    string
+	Era     string
+	Energy  string
+	Society string
+	Environ string
 }
 
 // Held is what Book 3 pp. 10-11 print a world at a level can build.
@@ -639,7 +637,7 @@ type TechLevels struct {
 	band      []bandRow
 	spanLevel float64
 
-	era, energy, society, environ, transport, borrowedComputers ladder
+	era, energy, society, environ ladder
 
 	personal, armor, special, computers, communication ladder
 	water, land, air, space, fuels                     ladder
@@ -657,13 +655,11 @@ func (t *TechLevels) Level(index int) TechLevel {
 
 	return TechLevel{
 		Borrowed: Borrowed{
-			Band:      t.bandAt(index),
-			Era:       t.era.at(asLevel),
-			Energy:    t.energy.at(asLevel),
-			Society:   t.society.at(asLevel),
-			Environ:   t.environ.at(asLevel),
-			Transport: t.transport.at(asLevel),
-			Computers: t.borrowedComputers.at(asLevel),
+			Band:    t.bandAt(index),
+			Era:     t.era.at(asLevel),
+			Energy:  t.energy.at(asLevel),
+			Society: t.society.at(asLevel),
+			Environ: t.environ.at(asLevel),
 		},
 		Held: Held{
 			Personal:        t.personal.at(asLevel),
@@ -761,14 +757,12 @@ func (t *TechLevels) loadBorrowed(data []byte) error {
 	var doc struct {
 		Bands map[string]json.RawMessage `json:"bands"`
 		Rows  []struct {
-			Level     float64 `json:"level"`
-			Band      string  `json:"band"`
-			Era       *string `json:"era"`
-			Energy    *string `json:"energy"`
-			Society   *string `json:"society"`
-			Environ   *string `json:"environ"`
-			Transport *string `json:"transport"`
-			Computers *string `json:"computers"`
+			Level   float64 `json:"level"`
+			Band    string  `json:"band"`
+			Era     *string `json:"era"`
+			Energy  *string `json:"energy"`
+			Society *string `json:"society"`
+			Environ *string `json:"environ"`
 		} `json:"rows"`
 	}
 
@@ -800,8 +794,6 @@ func (t *TechLevels) loadBorrowed(data []byte) error {
 		t.energy = climb(t.energy, row.Level, row.Energy)
 		t.society = climb(t.society, row.Level, row.Society)
 		t.environ = climb(t.environ, row.Level, row.Environ)
-		t.transport = climb(t.transport, row.Level, row.Transport)
-		t.borrowedComputers = climb(t.borrowedComputers, row.Level, row.Computers)
 	}
 
 	// Every index the tool can produce must sit in a band, or a world

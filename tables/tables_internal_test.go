@@ -78,8 +78,6 @@ func TestTheBorrowedTechnologyChartIsThePrintedPages(t *testing.T) {
 	assertLadder(t, "energy", levels.energy, printedEnergy())
 	assertLadder(t, "society", levels.society, printedSociety())
 	assertLadder(t, "environ", levels.environ, printedEnviron())
-	assertLadder(t, "transport", levels.transport, printedTransport())
-	assertLadder(t, "computing", levels.borrowedComputers, printedComputing())
 }
 
 // TestTheBandsAreTheBracketsOnPageTwoThirtyTwo is the last thing T5's
@@ -375,45 +373,6 @@ func printedEnviron() ladder {
 		{4, "Skyscrapers"},
 		{6, "Suburbs."},
 		{9, "Arcologies"},
-	}
-}
-
-// T5 Core Book 2 p. 231, Tech Level Chart 2.
-
-func printedTransport() ladder {
-	return ladder{
-		{0, "Walking."},
-		{1, "Beasts of Burden."},
-		{1.3, "Wheel."},
-		{1.6, "Galleys."},
-		{2, "Sailing Ships."},
-		{3.3, "Steamships."},
-		{3.6, "Railroads."},
-		{5, "Groundcars."},
-		{7, "Rockets to Orbit."},
-		{9, "NAFAL."},
-		{10, "Gravity Manipulation Lifters to Orbit."},
-	}
-}
-
-func printedComputing() ladder {
-	return ladder{
-		{0, "Counting."},
-		{1, "Abacus Quipu."},
-		{2, "Algebra."},
-		{3, "Calculus."},
-		{4, "Analog Computers."},
-		{5, "Electric Calculators."},
-		{6, "Model /1."},
-		{7, "Model /2."},
-		{9, "Model /3."},
-		{10, "Model /4."},
-		{11, "Semi-Organic Brain. Model /5."},
-		{12, "Positronic Brain. Model /6."},
-		{13, "Wafer Technology. Model /7."},
-		{14, "Self Aware Model /8."},
-		{15, "Model /9."},
-		{16, "True AI Artificial Intelligence."},
 	}
 }
 
