@@ -728,8 +728,8 @@ func described(labels tables.Labels, value int) string {
 	// Getting past Label means above the last printed row: R14 floors
 	// every characteristic at 0 and every table prints a row 0, so a value
 	// the engine wrote can only run off the top. A record hand-edited
-	// below 0 is outside the contract the schema states, and Decode does
-	// not check it; it would read this note in the wrong direction.
+	// below 0 is outside the contract the schema states, and Decode
+	// refuses it before it reaches here.
 	return aboveThePrintedRows
 }
 

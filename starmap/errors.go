@@ -99,6 +99,23 @@ var (
 	// the schema and this.
 	ErrFieldMissing = errors.New("the record is missing a field the schema requires")
 
+	// ErrOutOfRange is a characteristic outside what its throw can reach,
+	// or a clamp recording a value below the floor every clamp applies.
+	// The ranges are record.schema.json's, and each is the highest value of
+	// a throw of pp. 4-9 or the one cap the book prints (p. 9); a value
+	// beyond one is a hand edit no world could have, and the documents
+	// would describe it from the wrong end of a table.
+	ErrOutOfRange = errors.New("a value is outside the range record.schema.json states for it (Book 3 pp. 4-9)")
+
+	// ErrNotAnErratum is the record's errata list, which names readings of
+	// docs/ERRATA.md -- each an E and three digits, and each once.
+	ErrNotAnErratum = errors.New("not an ERRATA.md reading written once, as E005")
+
+	// ErrEmptyList is the two lists the record writes only when they have
+	// an entry: the broad areas and a world's clamps. An empty one would be
+	// a second spelling of the field being absent.
+	ErrEmptyList = errors.New("an empty list where the record leaves the field out")
+
 	// ErrNotOneCharacter is the shape the record prints these in.
 	ErrNotOneCharacter = errors.New("not a single character")
 )

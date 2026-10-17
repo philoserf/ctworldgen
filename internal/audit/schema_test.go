@@ -2,6 +2,8 @@ package audit_test
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -396,4 +398,165 @@ func TestASectorRecordValidates(t *testing.T) {
 	if err != nil {
 		t.Errorf("a sector record does not validate:\n%v", err)
 	}
+}
+
+// TestDecodeAndTheSchemaAgreeOnEveryBound is the other half of the two
+// obligations for the bounds the schema states. Each characteristic is set
+// to its two limits and one past each, read from the schema itself rather
+// than retyped, and the errata, clamp and list forms are pushed past theirs.
+// At every edge starmap.Decode has to give the schema's verdict: a bound
+// the schema states and the reader does not enforce binds nothing, and one
+// the reader enforces and the schema does not is a record the published
+// contract allows and the tool refuses.
+func TestDecodeAndTheSchemaAgreeOnEveryBound(t *testing.T) {
+	t.Parallel()
+
+	repoRoot := root(t)
+	compiled := schema(t, repoRoot)
+
+	for _, edge := range slices.Concat(characteristicEdges(t, repoRoot), formEdges()) {
+		t.Run(edge.name, func(t *testing.T) {
+			t.Parallel()
+
+			record := loadRecord(t, filepath.Join(repoRoot, "docs", "examples", "complete.json"))
+
+			edge.mutate(record, firstObject(t, record, "worlds"), clampedWorld(t, record))
+
+			// The case has to mean what its name says, or agreement proves
+			// nothing: a limit the schema refused, or a step past it the
+			// schema allowed, would be two halves agreeing about the wrong
+			// value.
+			schemaAccepts := compiled.Validate(any(record)) == nil
+			if schemaAccepts != edge.accepted {
+				t.Fatalf("the schema's verdict is %t and the case expects %t", schemaAccepts, edge.accepted)
+			}
+
+			b, err := json.Marshal(record)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, err = starmap.Decode(bytes.NewReader(b))
+			if decodeAccepts := err == nil; decodeAccepts != schemaAccepts {
+				t.Errorf("the schema's verdict is %t and Decode's is %t (%v)", schemaAccepts, decodeAccepts, err)
+			}
+		})
+	}
+}
+
+// boundEdge is one value at or past a bound, and the verdict the schema
+// gives it.
+type boundEdge struct {
+	name     string
+	accepted bool
+	mutate   func(record, world, clamped map[string]any)
+}
+
+// characteristicEdges reads the seven ranges out of the schema and makes
+// four cases of each: the two limits, and one step beyond either.
+func characteristicEdges(t *testing.T, repoRoot string) []boundEdge {
+	t.Helper()
+
+	doc := loadRecord(t, filepath.Join(repoRoot, "docs", "record.schema.json"))
+	world := object(t, object(t, object(t, doc, "$defs"), "world"), "properties")
+
+	var edges []boundEdge
+
+	for _, field := range []string{
+		"size", "atmosphere", "hydrographics", "population", "government", "law_level", "tech_index",
+	} {
+		bounds := object(t, world, field)
+		low, high := integer(t, bounds, "minimum"), integer(t, bounds, "maximum")
+
+		for _, edge := range []struct {
+			value    int
+			accepted bool
+		}{{low - 1, false}, {low, true}, {high, true}, {high + 1, false}} {
+			edges = append(edges, boundEdge{
+				name:     fmt.Sprintf("%s at %d", field, edge.value),
+				accepted: edge.accepted,
+				mutate:   func(_, world, _ map[string]any) { world[field] = edge.value },
+			})
+		}
+	}
+
+	return edges
+}
+
+// formEdges is the errata list's pattern and uniqueness, the floor a clamp
+// records, and the two lists the record leaves out rather than writes empty.
+func formEdges() []boundEdge {
+	return []boundEdge{
+		{"an erratum not written as E and three digits", false, func(record, _, _ map[string]any) {
+			record["errata"] = []any{"E1"}
+		}},
+		{"an erratum stamped twice", false, func(record, _, _ map[string]any) {
+			record["errata"] = []any{"E001", "E001"}
+		}},
+		{"a clamp at its floor", true, func(_, _, clamped map[string]any) {
+			firstClamp(clamped)["value"] = 0
+		}},
+		{"a clamp below its floor", false, func(_, _, clamped map[string]any) {
+			firstClamp(clamped)["value"] = -1
+		}},
+		{"an empty list of clamps", false, func(_, _, clamped map[string]any) {
+			clamped["clamps"] = []any{}
+		}},
+		{"an empty list of broad areas", false, func(record, _, _ map[string]any) {
+			record["occurrence_areas"] = []any{}
+		}},
+	}
+}
+
+// clampedWorld returns the complete example's first world with a clamp,
+// which the clamp cases mutate.
+func clampedWorld(t *testing.T, record map[string]any) map[string]any {
+	t.Helper()
+
+	worlds, _ := record["worlds"].([]any)
+
+	for _, entry := range worlds {
+		world, isObject := entry.(map[string]any)
+		if clamps, carries := world["clamps"].([]any); isObject && carries && len(clamps) > 0 {
+			return world
+		}
+	}
+
+	t.Fatal("the complete example has no clamped world for a mutation to target")
+
+	return nil
+}
+
+func firstClamp(world map[string]any) map[string]any {
+	clamps, _ := world["clamps"].([]any)
+	clamp, _ := clamps[0].(map[string]any)
+
+	return clamp
+}
+
+func object(t *testing.T, parent map[string]any, key string) map[string]any {
+	t.Helper()
+
+	child, isObject := parent[key].(map[string]any)
+	if !isObject {
+		t.Fatalf("%q is not an object", key)
+	}
+
+	return child
+}
+
+func integer(t *testing.T, parent map[string]any, key string) int {
+	t.Helper()
+
+	number, isNumber := parent[key].(json.Number)
+	if !isNumber {
+		t.Fatalf("%q is not a number", key)
+	}
+
+	value, err := number.Int64()
+	if err != nil {
+		t.Fatalf("%q: %v", key, err)
+	}
+
+	return int(value)
 }

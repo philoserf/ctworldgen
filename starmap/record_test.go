@@ -634,3 +634,44 @@ func TestDecodeRejectsARouteEndOffTheRecordsGrid(t *testing.T) {
 		}
 	}
 }
+
+// TestDecodeRejectsACharacteristicNoThrowReaches: a size of 200 or a law
+// level of -3 is a hand edit no world could have, and the documents would
+// describe it from the wrong end of a table -- a value below row 0 read as
+// lying above the last one. internal/audit holds every bound to the
+// schema; this holds the message, which has to let the referee find the
+// world in his own file.
+func TestDecodeRejectsACharacteristicNoThrowReaches(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		field string
+		value string
+	}{
+		{"size", "200"},
+		{"law_level", "-3"},
+	} {
+		world := `{"hex":"0304","name":"","starport":"A","naval_base":false,"scout_base":false,` +
+			`"size":5,"atmosphere":5,"hydrographics":5,"population":5,"government":5,"law_level":5,` +
+			`"tech_index":5,"digits":"A555555-5"}`
+
+		world = strings.Replace(world, `"`+tc.field+`":5`, `"`+tc.field+`":`+tc.value, 1)
+
+		record := `{"schema_version":1,"ruleset":"ct-1977-book3-pp1-12","engine_version":"1",` +
+			`"rng_algorithm":"go-math-rand-v2-pcg","seed":1,"errata":[],"name":"Aramis","occurrence_dm":0,` +
+			`"worlds":[` + world + `],"routes":[]}`
+
+		_, err := starmap.Decode(strings.NewReader(record))
+		if !errors.Is(err, starmap.ErrOutOfRange) {
+			t.Errorf("Decode(%s %s) = %v, want %v", tc.field, tc.value, err, starmap.ErrOutOfRange)
+
+			continue
+		}
+
+		for _, want := range []string{tc.field + " " + tc.value, "0304"} {
+			if !strings.Contains(err.Error(), want) {
+				t.Errorf("the error does not name %q: %v", want, err)
+			}
+		}
+	}
+}
