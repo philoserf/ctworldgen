@@ -675,3 +675,52 @@ func TestDecodeRejectsACharacteristicNoThrowReaches(t *testing.T) {
 		}
 	}
 }
+
+// TestDecodeRejectsAFormTheSchemaRefuses: the errata list's pattern and
+// uniqueness, the floor a clamp records, and the two lists the record
+// leaves out rather than writes empty. internal/audit holds the verdicts
+// to the schema; this holds each to its own error.
+func TestDecodeRejectsAFormTheSchemaRefuses(t *testing.T) {
+	t.Parallel()
+
+	const clamped = `,"clamps":[{"characteristic":"law_level","raw":-2,"value":0}]`
+
+	for _, edit := range []struct {
+		name, errata, areas, clamps string
+		want                        error
+	}{
+		{"an erratum too short", `"E1"`, "", "", starmap.ErrNotAnErratum},
+		{"an erratum without its E", `"X001"`, "", "", starmap.ErrNotAnErratum},
+		{"an erratum with a letter for a digit", `"E0A1"`, "", "", starmap.ErrNotAnErratum},
+		{"an erratum stamped twice", `"E001","E001"`, "", "", starmap.ErrNotAnErratum},
+		{"an empty list of broad areas", "", `,"occurrence_areas":[]`, "", starmap.ErrEmptyList},
+		{"an empty list of clamps", "", "", `,"clamps":[]`, starmap.ErrEmptyList},
+		{"a clamp below its floor", "", "", strings.Replace(clamped, `"value":0`, `"value":-1`, 1), starmap.ErrOutOfRange},
+	} {
+		world := `{"hex":"0304","name":"","starport":"A","naval_base":false,"scout_base":false,` +
+			`"size":5,"atmosphere":5,"hydrographics":5,"population":5,"government":5,"law_level":0,` +
+			`"tech_index":5,"digits":"A555550-5"` + edit.clamps + `}`
+
+		record := `{"schema_version":1,"ruleset":"ct-1977-book3-pp1-12","engine_version":"1",` +
+			`"rng_algorithm":"go-math-rand-v2-pcg","seed":1,"errata":[` + edit.errata + `],"name":"Aramis",` +
+			`"occurrence_dm":0` + edit.areas + `,"worlds":[` + world + `],"routes":[]}`
+
+		_, err := starmap.Decode(strings.NewReader(record))
+		if !errors.Is(err, edit.want) {
+			t.Errorf("Decode(%s) = %v, want %v", edit.name, err, edit.want)
+		}
+	}
+
+	// The same world with a clamp at its floor and a well-formed list is
+	// accepted, so each case above is refused for its edit alone.
+	record := `{"schema_version":1,"ruleset":"ct-1977-book3-pp1-12","engine_version":"1",` +
+		`"rng_algorithm":"go-math-rand-v2-pcg","seed":1,"errata":["E001","E004"],"name":"Aramis",` +
+		`"occurrence_dm":0,"worlds":[{"hex":"0304","name":"","starport":"A","naval_base":false,` +
+		`"scout_base":false,"size":5,"atmosphere":5,"hydrographics":5,"population":5,"government":5,` +
+		`"law_level":0,"tech_index":5,"digits":"A555550-5"` + clamped + `}],"routes":[]}`
+
+	_, err := starmap.Decode(strings.NewReader(record))
+	if err != nil {
+		t.Errorf("Decode(a well-formed record) = %v", err)
+	}
+}
