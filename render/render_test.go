@@ -726,15 +726,23 @@ func glossedLevels(matterTransport string) []glossedLevel {
 		},
 		{
 			hex:    "0102",
-			reason: "level 1: every entry is its own row, so nothing is carried",
-			says:   []string{"Bronze Age 3500 BC", "Dagger, pike, Sword", "Jack", "Abacus"},
+			reason: "level 1: every entry is its own row, so nothing is carried, and water and land differ",
+			says: []string{
+				"Bronze Age 3500 BC", "Dagger, pike, Sword", "Jack", "Abacus",
+				"Catapult", "Heliograph", "Galley", "Wagons", "Muscle",
+			},
 			silent: []string{"Cities"},
 		},
 		{
 			hex:    "0103",
-			reason: "level 12: the weapon is printed at 9 and the armour at 10; only the drive is its own row",
-			says:   []string{"High Tech (T5)", "Laser Rifle", "Reflec", "Model/6", "Drives N or less"},
-			silent: []string{matterTransport},
+			reason: "level 12, ERRATA E009's worked example: only the drive is its own row, and water and land collapse",
+			says: []string{
+				"High Tech (T5)", "Laser Rifle", "Reflec", "Beam Laser", "Model/6", "Television",
+				// T5's "[FusionPlus]" contains "Fusion", so p. 11's fuel is
+				// held by its neighbour rather than by the word alone.
+				"Hovercraft", "Grav belts", "Drives N or less; Fusion",
+			},
+			silent: []string{matterTransport, "Hovercraft; Hovercraft"},
 		},
 		{
 			hex:    "0104",

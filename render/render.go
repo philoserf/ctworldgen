@@ -543,6 +543,11 @@ const technologyNote = "What a technological index means is described in two hal
 // own air, space and computers columns say the same thing in the held
 // page's words -- grav belts and drives N or less against "gravity
 // manipulation lifters to orbit", Model/6 against "Model /6".
+//
+// The held half prints all ten of the page's columns, p. 10's five and
+// then p. 11's, in the order they are printed. Every one was transcribed
+// twice to reach a reader, and ERRATA E009's worked example names items
+// from all of them.
 func technological(charts *tables.Tables, index int) string {
 	level := charts.TechLevels.Level(index)
 
@@ -555,9 +560,14 @@ func technological(charts *tables.Tables, index int) string {
 	held := clauses(
 		level.Held.Personal,
 		level.Held.Armor,
+		level.Held.Special,
 		level.Held.Computers,
+		level.Held.Communication,
+		level.Held.Water,
+		level.Held.Land,
 		level.Held.Air,
 		level.Held.Space,
+		level.Held.Fuels,
 	)
 
 	if level.Held.MatterTransport {
