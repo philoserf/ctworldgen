@@ -59,7 +59,7 @@ func (e *Engine) Sector(inputs Inputs) (*starmap.Record, error) {
 	}
 
 	// E002's order, now read across the whole grid.
-	slices.SortFunc(record.Worlds, func(a, b starmap.World) int { return a.Hex.Number() - b.Hex.Number() })
+	slices.SortFunc(record.Worlds, func(a, b starmap.World) int { return a.Hex.Compare(b.Hex) })
 
 	record.Routes = append(record.Routes,
 		e.seams(dice.NewStream(inputs.Seed+seamSeedOffset), record.Worlds)...)
@@ -150,10 +150,10 @@ func (e *Engine) seams(stream *dice.Stream, worlds []starmap.World) []starmap.Ro
 // at a seam.
 func routeOrder(a, b starmap.Route) int {
 	if a.From != b.From {
-		return a.From.Number() - b.From.Number()
+		return a.From.Compare(b.From)
 	}
 
-	return a.To.Number() - b.To.Number()
+	return a.To.Compare(b.To)
 }
 
 // CrossingRoutes returns the routes whose two ends sit in different
