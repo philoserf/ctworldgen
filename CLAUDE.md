@@ -447,7 +447,7 @@ unreachable code and test-support packages, not for skipping a test.
 `task --list` is the rest. The two you will reach for are `task fix`,
 which applies every autofix the enabled linters offer and is deliberately
 outside the gate, and `task build`. The gate wants `task`,
-`golangci-lint`, `nilaway` and `prettier` on `PATH`. Install golangci-lint
+`golangci-lint`, `nilaway` and `bun` on `PATH`. Install golangci-lint
 from its released binary, never `go install`: that is not a supported path
 and can build a linter that disagrees with the release about the rules.
 

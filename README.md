@@ -231,7 +231,7 @@ the symbol it quotes.
 ## Development
 
 ```sh
-task              # the whole gate: tidy, vet, lint (formatting included), nilaway, test -race, coverage ratchet, prettier
+task              # the whole gate: tidy, vet, lint (formatting included), nilaway, test -race, coverage ratchet, bun fmt
 task regenerate   # rewrite the golden fixtures and the complete example, then read the diff
 ```
 
