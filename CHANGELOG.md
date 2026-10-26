@@ -5,6 +5,10 @@
 Bullets as the work lands. The release pass rewrites this into whatever the
 release turns out to be.
 
+- The gate formats Markdown, JSON and YAML with `bun fmt` instead of prettier.
+  It reads the same `.prettierrc.json` and `.prettierignore`, and changes no
+  formatting. The gate now wants `bun` on `PATH` in place of `prettier`.
+
 ## 1.0.0-beta.4
 
 The fourth beta. Every subsector and sector this build generates is the one
