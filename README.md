@@ -11,7 +11,7 @@ with the hex map drawn and the routes joined.
 ## Install
 
 ```sh
-go install github.com/philoserf/ctworldgen/cmd/ctworldgen@v1.0.0-beta.4
+go install github.com/philoserf/ctworldgen/cmd/ctworldgen@v1.0.0-beta.5
 ```
 
 ## What is built, and what is not

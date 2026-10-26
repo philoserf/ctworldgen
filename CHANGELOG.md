@@ -5,9 +5,34 @@
 Bullets as the work lands. The release pass rewrites this into whatever the
 release turns out to be.
 
+## 1.0.0-beta.5
+
+The fifth beta. Three commits since beta.4, and none of them touches the
+program: every subsector and sector this build generates is the one beta.4
+generated from the same seed, and both documents print what they printed.
+What changed is the gate.
+
+### Install
+
+```sh
+go install github.com/philoserf/ctworldgen/cmd/ctworldgen@v1.0.0-beta.5
+```
+
+### What a referee's existing records do
+
+**They still reproduce.** `EngineVersion` is still `1`, `schema_version` is
+still `1`, and no Go source moved. The goldens and the shipped example are
+beta.4's.
+
+### Underneath
+
 - The gate formats Markdown, JSON and YAML with `bun fmt` instead of prettier.
   It reads the same `.prettierrc.json` and `.prettierignore`, and changes no
   formatting. The gate now wants `bun` on `PATH` in place of `prettier`.
+- The Taskfile's comments no longer speak of CI. There is none; `task` is the
+  whole gate, run locally before every merge.
+- `.release-gate` drops its dependency-check override. The release gate's Go
+  default now checks the same modules, those the build and tests link.
 
 ## 1.0.0-beta.4
 
