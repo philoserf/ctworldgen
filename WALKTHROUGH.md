@@ -1178,7 +1178,7 @@ where the tables begin.
 ## The gate
 
 There is one gate and no CI: `task` runs tidy, vet, golangci-lint, NilAway,
-`go test -race`, a coverage ratchet and `bun fmt`, and it is run locally before
+govulncheck, `go test -race`, a coverage ratchet and `bun fmt`, and it is run locally before
 every merge. `main` takes a change only through a squash-merged pull request,
 and nothing on the pull request is waited on, so the local gate is the whole
 check:
@@ -1193,6 +1193,7 @@ check:
       - task: vet
       - task: lint
       - task: nilaway
+      - task: vuln
       - task: test
       - task: ratchet
       - task: docs
