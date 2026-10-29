@@ -8,16 +8,16 @@ linters:
   default: all
   disable:
     # All three are deprecated, and each is replaced by a linter that is
-    # enabled and reports nothing: exhaustruct by exhaustruct_v5, wsl by
-    # wsl_v5, gomodguard by gomodguard_v2. They are named here only because
-    # `default: all` would otherwise switch the deprecated one on and warn
-    # about it -- so this is the whole disable list, and it disables no
-    # check that is not already being made.
+    # enabled: exhaustruct by exhaustruct_v5, wsl by wsl_v5, gomodguard by
+    # gomodguard_v2. They are named here only because `default: all` would
+    # otherwise switch the deprecated one on and warn about it -- so this
+    # is the whole disable list, and it disables no check that is not
+    # already being made.
     #
     # Every other linter `default: all` enables is on, and its findings
     # are answered rather than configured away. A linter added to this
-    # list needs the same: a count, and a reason that survives reading the
-    # findings.
+    # list needs a reason that survives reading the findings, and no count
+    # of them: a count goes stale with every change to the code.
     - exhaustruct
     - wsl
     - gomodguard
